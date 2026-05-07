@@ -9,11 +9,84 @@
 <style>
 * { margin:0; padding:0; box-sizing:border-box }
 body { background:#000; display:flex; align-items:center; justify-content:center; width:100vw; height:100dvh; overflow:hidden }
-#wrap { position:relative; overflow:visible }
-#hud { position:absolute; pointer-events:none }
+#wrap { position:relative }
+#hud  { position:absolute; pointer-events:none }
+
+/* ── 縦画面オーバーレイ ───────────────────────────────────────── */
+#rotate-screen {
+  display: none;
+  position: fixed; inset: 0; z-index: 9999;
+  background: #020208;
+  flex-direction: column; align-items: center; justify-content: center; gap: 28px;
+}
+@media (orientation: portrait) {
+  #rotate-screen { display: flex; }
+}
+
+.rot-phone {
+  position: relative;
+  width: 46px; height: 78px;
+  border: 3px solid #00e8ff;
+  border-radius: 10px;
+  box-shadow: 0 0 18px #00e8ff66, inset 0 0 8px #00e8ff22;
+  animation: phone-tilt 2.6s ease-in-out infinite;
+  will-change: transform;
+}
+.rot-phone::before {           /* speaker */
+  content: ''; position: absolute;
+  top: 8px; left: 50%; transform: translateX(-50%);
+  width: 16px; height: 4px; border-radius: 2px;
+  background: #00e8ff;
+}
+.rot-phone::after {            /* home button */
+  content: ''; position: absolute;
+  bottom: 7px; left: 50%; transform: translateX(-50%);
+  width: 16px; height: 16px; border-radius: 50%;
+  border: 2px solid #00e8ff;
+}
+.rot-arrow {
+  position: absolute;
+  bottom: -30px; right: -30px;
+  font-size: 32px; color: #00e8ff;
+  text-shadow: 0 0 12px #00e8ff;
+  animation: arrow-pulse 2.6s ease-in-out infinite;
+  will-change: opacity;
+}
+@keyframes phone-tilt {
+  0%,  20%  { transform: rotate(0deg); }
+  55%,  80% { transform: rotate(90deg); }
+  100%      { transform: rotate(0deg); }
+}
+@keyframes arrow-pulse {
+  0%,  20%  { opacity: 0; }
+  40%        { opacity: 1; }
+  65%,  80% { opacity: 0.8; }
+  100%      { opacity: 0; }
+}
+
+.rot-icon-wrap { position: relative; }
+.rot-title {
+  font: bold 18px/1.4 monospace;
+  color: #00e8ff;
+  text-shadow: 0 0 14px #00e8ff;
+  text-align: center;
+}
+.rot-sub {
+  font: 12px/1 monospace;
+  color: rgba(140, 180, 220, 0.55);
+  text-align: center;
+}
 </style>
 </head>
 <body>
+<div id="rotate-screen">
+  <div class="rot-icon-wrap">
+    <div class="rot-phone"></div>
+    <span class="rot-arrow">↻</span>
+  </div>
+  <p class="rot-title">横向きにしてください</p>
+  <p class="rot-sub">Please rotate your device</p>
+</div>
 <div id="wrap"><canvas id="hud"></canvas></div>
 
 <script type="importmap">
@@ -51,30 +124,15 @@ hudCanvas.style.position = 'absolute';
 const HX = hudCanvas.getContext('2d');
 
 function resize() {
-  const portrait = innerHeight > innerWidth;
-  // portrait: VH side maps to screen width, VW side maps to screen height
-  const s = portrait
-    ? Math.min(innerWidth / VH, innerHeight / VW)
-    : Math.min(innerWidth / VW, innerHeight / VH);
+  const s = Math.min(innerWidth / VW, innerHeight / VH);
   const cssW = VW * s, cssH = VH * s;
-
-  // wrap occupies the visual footprint of the rotated canvas
-  const wrapW = portrait ? cssH : cssW;
-  const wrapH = portrait ? cssW : cssH;
-  wrap.style.width  = wrapW + 'px';
-  wrap.style.height = wrapH + 'px';
-
-  // canvas center must coincide with wrap center
-  const ol = (wrapW - cssW) / 2;  // negative in portrait — canvas overflows wrap sides
-  const ot = (wrapH - cssH) / 2;
-
+  wrap.style.width  = cssW + 'px';
+  wrap.style.height = cssH + 'px';
   for (const el of [renderer.domElement, hudCanvas]) {
-    el.style.width           = cssW + 'px';
-    el.style.height          = cssH + 'px';
-    el.style.left            = ol + 'px';
-    el.style.top             = ot + 'px';
-    el.style.transformOrigin = 'center center';
-    el.style.transform       = portrait ? 'rotate(90deg)' : 'none';
+    el.style.width  = cssW + 'px';
+    el.style.height = cssH + 'px';
+    el.style.left   = '0';
+    el.style.top    = '0';
   }
 }
 resize();
