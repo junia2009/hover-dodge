@@ -2,13 +2,15 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>HOVER DODGE</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box }
-body { background:#000; display:flex; align-items:center; justify-content:center; width:100vw; height:100vh; overflow:hidden }
-#wrap { position:relative; flex-shrink:0 }
-#hud { position:absolute; top:0; left:0; pointer-events:none }
+body { background:#000; display:flex; align-items:center; justify-content:center; width:100vw; height:100dvh; overflow:hidden }
+#wrap { position:relative; overflow:visible }
+#hud { position:absolute; pointer-events:none }
 </style>
 </head>
 <body>
@@ -41,19 +43,39 @@ renderer.toneMappingExposure = 0.9;
 
 const wrap = document.getElementById('wrap');
 wrap.appendChild(renderer.domElement);
+renderer.domElement.style.position = 'absolute';
 
 const hudCanvas = document.getElementById('hud');
 hudCanvas.width = VW; hudCanvas.height = VH;
+hudCanvas.style.position = 'absolute';
 const HX = hudCanvas.getContext('2d');
 
-let CSF = 1;
 function resize() {
-  const s = Math.min(innerWidth / VW, innerHeight / VH);
-  renderer.domElement.style.width  = VW * s + 'px';
-  renderer.domElement.style.height = VH * s + 'px';
-  hudCanvas.style.width  = VW * s + 'px';
-  hudCanvas.style.height = VH * s + 'px';
-  CSF = s;
+  const portrait = innerHeight > innerWidth;
+  // portrait: VH side maps to screen width, VW side maps to screen height
+  const s = portrait
+    ? Math.min(innerWidth / VH, innerHeight / VW)
+    : Math.min(innerWidth / VW, innerHeight / VH);
+  const cssW = VW * s, cssH = VH * s;
+
+  // wrap occupies the visual footprint of the rotated canvas
+  const wrapW = portrait ? cssH : cssW;
+  const wrapH = portrait ? cssW : cssH;
+  wrap.style.width  = wrapW + 'px';
+  wrap.style.height = wrapH + 'px';
+
+  // canvas center must coincide with wrap center
+  const ol = (wrapW - cssW) / 2;  // negative in portrait — canvas overflows wrap sides
+  const ot = (wrapH - cssH) / 2;
+
+  for (const el of [renderer.domElement, hudCanvas]) {
+    el.style.width           = cssW + 'px';
+    el.style.height          = cssH + 'px';
+    el.style.left            = ol + 'px';
+    el.style.top             = ot + 'px';
+    el.style.transformOrigin = 'center center';
+    el.style.transform       = portrait ? 'rotate(90deg)' : 'none';
+  }
 }
 resize();
 addEventListener('resize', resize);
