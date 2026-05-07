@@ -189,7 +189,7 @@ composer.addPass(new OutputPass());
 
 // ── Lighting ──────────────────────────────────────────────────────────────────
 scene.add(new THREE.AmbientLight(0x1a3355, 1.8));
-const shipLight = new THREE.PointLight(0x0088ff, 4, 140);
+const shipLight = new THREE.PointLight(0x33ddff, 4, 140);
 scene.add(shipLight);
 const rimLight = new THREE.DirectionalLight(0x334488, 0.8);
 rimLight.position.set(-1, 1, 2);
@@ -216,7 +216,7 @@ function buildShipGroup() {
 
   const hullMesh = new THREE.Mesh(
     new THREE.ExtrudeGeometry(hull, { depth: 5, bevelEnabled: true, bevelSize: 0.7, bevelThickness: 0.7, bevelSegments: 2 }),
-    new THREE.MeshPhongMaterial({ color: 0x0088cc, emissive: 0x001a33, shininess: 140, specular: 0x66ccff })
+    new THREE.MeshPhongMaterial({ color: 0x00d8ff, emissive: 0x006688, shininess: 140, specular: 0xaaeeff })
   );
   hullMesh.position.z = -2.5; // center hull depth around z=0
   g.add(hullMesh);
@@ -232,7 +232,7 @@ function buildShipGroup() {
     ws.closePath();
     const wm = new THREE.Mesh(
       new THREE.ExtrudeGeometry(ws, { depth: 2.5, bevelEnabled: false }),
-      new THREE.MeshPhongMaterial({ color: 0x004f80, emissive: 0x000d1a, shininess: 50 })
+      new THREE.MeshPhongMaterial({ color: 0x33b8e0, emissive: 0x003a55, shininess: 50 })
     );
     wm.position.z = -1.25;
     g.add(wm);
