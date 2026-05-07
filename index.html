@@ -37,7 +37,7 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 3));
 renderer.setSize(VW, VH);
 renderer.toneMapping = THREE.ReinhardToneMapping;
-renderer.toneMappingExposure = 1.3;
+renderer.toneMappingExposure = 0.9;
 
 const wrap = document.getElementById('wrap');
 wrap.appendChild(renderer.domElement);
@@ -76,7 +76,7 @@ function W(x, y, z = 0) {
 // ── Post-processing ───────────────────────────────────────────────────────────
 const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
-const bloom = new UnrealBloomPass(new THREE.Vector2(VW, VH), 1.5, 0.65, 0.08);
+const bloom = new UnrealBloomPass(new THREE.Vector2(VW, VH), 0.7, 0.35, 0.22);
 composer.addPass(bloom);
 composer.addPass(new OutputPass());
 
@@ -195,7 +195,7 @@ scene.add(gridMesh);
 for (const [nx, ny, nr, col] of [[160,70,110,0x220066],[660,370,100,0x001f88],[400,220,85,0x003355]]) {
   const m = new THREE.Mesh(
     new THREE.SphereGeometry(nr, 10, 10),
-    new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.045, depthWrite: false })
+    new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.022, depthWrite: false })
   );
   m.position.copy(W(nx, ny, -45));
   scene.add(m);
@@ -530,9 +530,9 @@ function syncScene() {
     rec.botM.position.copy(W(cx, w.gapY + w.gap + botH / 2, 0));
 
     rec.edgeT.position.copy(W(cx, w.gapY, 2));
-    rec.edgeT.material.color.setRGB(p * 0.8 + 0.2, p * 0.67 * 0.8, 1.0 * p);
+    rec.edgeT.material.color.setRGB(p * 0.45, p * 0.22, p * 0.65);
     rec.edgeB.position.copy(W(cx, w.gapY + w.gap, 2));
-    rec.edgeB.material.color.setRGB(p * 0.8 + 0.2, p * 0.67 * 0.8, 1.0 * p);
+    rec.edgeB.material.color.setRGB(p * 0.45, p * 0.22, p * 0.65);
   }
 
   // Enemies
