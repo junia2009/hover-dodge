@@ -139,7 +139,7 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 3));
 renderer.setSize(VW, VH);
 renderer.toneMapping = THREE.ReinhardToneMapping;
-renderer.toneMappingExposure = 0.9;
+renderer.toneMappingExposure = 1.15;
 
 const wrap = document.getElementById('wrap');
 wrap.appendChild(renderer.domElement);
@@ -188,7 +188,7 @@ composer.addPass(bloom);
 composer.addPass(new OutputPass());
 
 // ── Lighting ──────────────────────────────────────────────────────────────────
-scene.add(new THREE.AmbientLight(0x112244, 1.2));
+scene.add(new THREE.AmbientLight(0x1a3355, 1.8));
 const shipLight = new THREE.PointLight(0x0088ff, 4, 140);
 scene.add(shipLight);
 const rimLight = new THREE.DirectionalLight(0x334488, 0.8);
@@ -283,7 +283,7 @@ for (let i = 0; i < STAR_N; i++) {
 const starGeom = new THREE.BufferGeometry();
 starGeom.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
 scene.add(new THREE.Points(starGeom,
-  new THREE.PointsMaterial({ color: 0xddeeff, size: 2.8, sizeAttenuation: true })));
+  new THREE.PointsMaterial({ color: 0x99bbff, size: 1.8, sizeAttenuation: true })));
 
 // ── Grid ──────────────────────────────────────────────────────────────────────
 function buildGrid() {
