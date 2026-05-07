@@ -329,13 +329,13 @@ function getOrCreateWall(w) {
   if (wallMeshMap.has(w)) return wallMeshMap.get(w);
   const grp = new THREE.Group();
   const topM = new THREE.Mesh(WALL_UNIT_GEOM,
-    new THREE.MeshPhongMaterial({ color: 0x0e0c38, emissive: 0x050320, shininess: 30 }));
+    new THREE.MeshPhongMaterial({ color: 0xff2bd6, emissive: 0xb8009a, shininess: 60 }));
   const botM = new THREE.Mesh(WALL_UNIT_GEOM,
-    new THREE.MeshPhongMaterial({ color: 0x0e0c38, emissive: 0x050320, shininess: 30 }));
+    new THREE.MeshPhongMaterial({ color: 0xff2bd6, emissive: 0xb8009a, shininess: 60 }));
   const edgeT = new THREE.Mesh(WALL_EDGE_GEOM,
-    new THREE.MeshBasicMaterial({ color: 0xccaaff }));
+    new THREE.MeshBasicMaterial({ color: 0xffd0ff }));
   const edgeB = new THREE.Mesh(WALL_EDGE_GEOM,
-    new THREE.MeshBasicMaterial({ color: 0xccaaff }));
+    new THREE.MeshBasicMaterial({ color: 0xffd0ff }));
   topM.name='top'; botM.name='bot'; edgeT.name='edgeT'; edgeB.name='edgeB';
   grp.add(topM, botM, edgeT, edgeB);
   scene.add(grp);
@@ -700,9 +700,9 @@ function syncScene() {
     rec.botM.position.copy(W(cx, w.gapY + w.gap + botH / 2, 0));
 
     rec.edgeT.position.copy(W(cx, w.gapY, 2));
-    rec.edgeT.material.color.setRGB(p * 0.45, p * 0.22, p * 0.65);
+    rec.edgeT.material.color.setRGB(Math.min(1, p * 1.0), Math.min(1, p * 0.55), Math.min(1, p * 1.0));
     rec.edgeB.position.copy(W(cx, w.gapY + w.gap, 2));
-    rec.edgeB.material.color.setRGB(p * 0.45, p * 0.22, p * 0.65);
+    rec.edgeB.material.color.setRGB(Math.min(1, p * 1.0), Math.min(1, p * 0.55), Math.min(1, p * 1.0));
   }
 
   // Enemies
