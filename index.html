@@ -309,21 +309,24 @@ function removeEnemyMesh(e) {
 const sparkMeshPool = [];
 
 // ── Input ─────────────────────────────────────────────────────────────────────
-const mouse = { x: VW/2, y: VH/2 };
-const keys  = {};
-renderer.domElement.addEventListener('mousemove', e => {
-  const r = renderer.domElement.getBoundingClientRect();
-  mouse.x = (e.clientX - r.left) / CSF;
-  mouse.y = (e.clientY - r.top)  / CSF;
+const GRAVITY   = 0.32;
+const FLAP_VY   = -8.0;  // upward impulse (canvas y-down, so negative = up)
+let   spaceDown = false;
+
+function flap() {
+  if (gstate !== 'play') { startGame(); return; }
+  P.vy = FLAP_VY;
+}
+
+renderer.domElement.addEventListener('click', flap);
+renderer.domElement.addEventListener('touchstart', e => { e.preventDefault(); flap(); }, { passive: false });
+addEventListener('keydown', e => {
+  if (e.code === 'Space') {
+    e.preventDefault();
+    if (!spaceDown) { spaceDown = true; flap(); }
+  }
 });
-renderer.domElement.addEventListener('touchmove', e => {
-  e.preventDefault();
-  const r = renderer.domElement.getBoundingClientRect(), t = e.touches[0];
-  mouse.x = (t.clientX - r.left) / CSF;
-  mouse.y = (t.clientY - r.top)  / CSF;
-}, { passive: false });
-addEventListener('keydown', e => { keys[e.code] = true; if (e.code==='Space') e.preventDefault(); });
-addEventListener('keyup',   e => { keys[e.code] = false; });
+addEventListener('keyup', e => { if (e.code === 'Space') spaceDown = false; });
 
 // ── Game state ────────────────────────────────────────────────────────────────
 let gstate = 'menu';
@@ -360,7 +363,6 @@ function startGame() {
   for (const sm of sparkMeshPool) scene.remove(sm);
   sparkMeshPool.length = 0;
   walls = []; enemies = []; sparks = [];
-  mouse.x = VW/2; mouse.y = VH/2;
   for (let i = 0; i < 4; i++) addWall(VW + i*265);
 }
 
@@ -387,10 +389,6 @@ function die() {
   }
 }
 
-function handleAction() { if (gstate !== 'play') startGame(); }
-renderer.domElement.addEventListener('click', handleAction);
-renderer.domElement.addEventListener('touchend', e => { e.preventDefault(); handleAction(); });
-addEventListener('keydown', e => { if (e.code==='Space') handleAction(); });
 
 // ── Update (game logic) ───────────────────────────────────────────────────────
 function update() {
@@ -427,18 +425,10 @@ function update() {
   frame++; score += 1/60;
   spd = Math.min(10, 3 + Math.sqrt(score) * 0.35);
 
-  // Player movement
-  P.vx += (mouse.x - P.x) * 0.07;
-  P.vy += (mouse.y - P.y) * 0.07;
-  if (keys['ArrowUp']    || keys['KeyW']) P.vy -= 0.8;
-  if (keys['ArrowDown']  || keys['KeyS']) P.vy += 0.8;
-  if (keys['ArrowLeft']  || keys['KeyA']) P.vx -= 0.4;
-  if (keys['ArrowRight'] || keys['KeyD']) P.vx += 0.4;
-  P.vx *= 0.80; P.vy *= 0.80;
-  const vm = Math.hypot(P.vx, P.vy);
-  if (vm > 11) { P.vx = P.vx/vm*11; P.vy = P.vy/vm*11; }
-  P.x = Math.max(P.r, Math.min(VW-P.r, P.x+P.vx));
-  P.y = Math.max(P.r, Math.min(VH-P.r, P.y+P.vy));
+  // Player — gravity + flap impulse (Flappy-Bird style)
+  P.vy += GRAVITY;
+  if (P.vy > 14) P.vy = 14;
+  P.y = Math.max(P.r, Math.min(VH - P.r, P.y + P.vy));
 
   const bankTarget = Math.max(-0.40, Math.min(0.40, P.vy * 0.052));
   P.bankAngle += (bankTarget - P.bankAngle) * 0.10;
@@ -589,7 +579,7 @@ function drawHUD() {
     HX.shadowColor='#8899ff'; HX.shadowBlur=14; HX.fillStyle='#99aaff';
     HX.font='21px monospace'; HX.fillText('壁と敵をよけ続けろ！', VW/2, VH/2-18);
     HX.shadowBlur=0; HX.fillStyle='rgba(145,165,205,0.58)';
-    HX.font='14px monospace'; HX.fillText('マウス移動 / 矢印キーで操作', VW/2, VH/2+20);
+    HX.font='14px monospace'; HX.fillText('タップ / SPACE キーで浮き上がる', VW/2, VH/2+20);
     const p = 0.5 + Math.sin(tick*0.06)*0.5;
     HX.globalAlpha=p; HX.shadowColor='#ffffff'; HX.shadowBlur=16; HX.fillStyle='#ffffff';
     HX.font='bold 19px monospace'; HX.fillText('クリック または SPACE でスタート', VW/2, VH/2+58);
