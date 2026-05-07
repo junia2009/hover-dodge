@@ -83,6 +83,27 @@ body { background:#000; display:flex; align-items:center; justify-content:center
   color: rgba(100, 140, 180, 0.38);
   margin-top: 8px;
 }
+
+/* ── Pulse skill button ──────────────────────────────────────────────── */
+#pulse-btn {
+  position: absolute; right: 16px; bottom: 16px;
+  width: 60px; height: 60px; border-radius: 50%;
+  border: 2px solid rgba(0, 200, 255, 0.30);
+  background: rgba(0, 200, 255, 0.06);
+  color: rgba(0, 200, 255, 0.35);
+  font: bold 11px/1 monospace;
+  cursor: pointer; z-index: 2;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 3px;
+  -webkit-user-select: none; user-select: none;
+  transition: border-color 0.25s, color 0.25s, box-shadow 0.25s;
+  pointer-events: auto;
+}
+#pulse-btn.ready {
+  border-color: #00e8ff; color: #00e8ff;
+  box-shadow: 0 0 18px #00e8ff55;
+}
+#pulse-sub { font-size: 8px; opacity: 0.7; }
 </style>
 </head>
 <body>
@@ -95,7 +116,7 @@ body { background:#000; display:flex; align-items:center; justify-content:center
   <p class="rot-sub">Please rotate your device</p>
   <p class="rot-version">Ver 1.0.0</p>
 </div>
-<div id="wrap"><canvas id="hud"></canvas></div>
+<div id="wrap"><canvas id="hud"></canvas><button id="pulse-btn" type="button"><span id="pulse-label">PULSE</span><span id="pulse-sub">[Z]</span></button></div>
 
 <script type="importmap">
 {
@@ -396,6 +417,12 @@ function removeEnemyMesh(e) {
 // ── Sparks ────────────────────────────────────────────────────────────────────
 const sparkMeshPool = [];
 
+// ── Pulse skill ───────────────────────────────────────────────────────────────
+const PULSE_COOLDOWN = 300;  // frames (~5 sec)
+const PULSE_MAX_R    = 130;  // canvas units
+let   pulseCooldown  = 0;
+let   pulseRings     = [];
+
 // ── Input ─────────────────────────────────────────────────────────────────────
 const GRAVITY   = 0.26;
 const FLAP_VY   = -5.2;  // upward impulse (canvas y-down, so negative = up)
@@ -406,6 +433,35 @@ function flap() {
   P.vy = FLAP_VY;
 }
 
+function firePulse() {
+  if (gstate !== 'play' || pulseCooldown > 0) return;
+  pulseCooldown = PULSE_COOLDOWN;
+
+  // 発射時バーストスパーク
+  for (let i = 0; i < 10; i++) {
+    const a = Math.random()*Math.PI*2, v = 3+Math.random()*5;
+    const sp = { x:P.x, y:P.y, vx:Math.cos(a)*v, vy:Math.sin(a)*v, life:1, sz:0.8+Math.random()*2, hue:185 };
+    sparks.push(sp);
+    const sm = new THREE.Mesh(new THREE.SphereGeometry(sp.sz*0.8,4,4),
+      new THREE.MeshBasicMaterial({ color:0x00e8ff, transparent:true }));
+    sm.userData.sp = sp; scene.add(sm); sparkMeshPool.push(sm);
+  }
+
+  // 二重拡張リング
+  const makeRing = (color, z) => {
+    const m = new THREE.Mesh(
+      new THREE.TorusGeometry(1, 0.018, 6, 64),
+      new THREE.MeshBasicMaterial({ color, transparent:true, depthWrite:false })
+    );
+    m.position.copy(W(P.x, P.y, z));
+    scene.add(m);
+    return m;
+  };
+  pulseRings.push({ r:0, prevR:0, x:P.x, y:P.y,
+    mesh:  makeRing(0x00e8ff, 8),
+    mesh2: makeRing(0xaa44ff, 6) });
+}
+
 renderer.domElement.addEventListener('click', flap);
 renderer.domElement.addEventListener('touchstart', e => { e.preventDefault(); flap(); }, { passive: false });
 addEventListener('keydown', e => {
@@ -413,8 +469,15 @@ addEventListener('keydown', e => {
     e.preventDefault();
     if (!spaceDown) { spaceDown = true; flap(); }
   }
+  if (e.code === 'KeyZ') { e.preventDefault(); firePulse(); }
 });
 addEventListener('keyup', e => { if (e.code === 'Space') spaceDown = false; });
+
+const pulseBtn   = document.getElementById('pulse-btn');
+const pulseLabel = document.getElementById('pulse-label');
+const pulseSub   = document.getElementById('pulse-sub');
+pulseBtn.addEventListener('click',      e => { e.stopPropagation(); firePulse(); });
+pulseBtn.addEventListener('touchstart', e => { e.preventDefault(); e.stopPropagation(); firePulse(); }, { passive:false });
 
 // ── Game state ────────────────────────────────────────────────────────────────
 let gstate = 'menu';
@@ -451,6 +514,11 @@ function startGame() {
   for (const sm of sparkMeshPool) scene.remove(sm);
   sparkMeshPool.length = 0;
   walls = []; enemies = []; sparks = [];
+  for (const pr of pulseRings) {
+    scene.remove(pr.mesh);  pr.mesh.geometry.dispose();  pr.mesh.material.dispose();
+    scene.remove(pr.mesh2); pr.mesh2.geometry.dispose(); pr.mesh2.material.dispose();
+  }
+  pulseRings = []; pulseCooldown = 0;
   for (let i = 0; i < 4; i++) addWall(VW + i*265);
 }
 
@@ -509,6 +577,16 @@ function update() {
   const gOff = (gstate === 'play' ? frame*spd*0.32 : tick*0.55) % 80;
   gridMesh.position.x = -gOff;
 
+  // Pulse cooldown + button visual (always)
+  if (pulseCooldown > 0) pulseCooldown--;
+  if (pulseCooldown === 0) {
+    pulseBtn.classList.add('ready');
+    pulseLabel.textContent = 'PULSE'; pulseSub.textContent = '[Z]';
+  } else {
+    pulseBtn.classList.remove('ready');
+    pulseLabel.textContent = Math.ceil(pulseCooldown/60) + 's'; pulseSub.textContent = '';
+  }
+
   if (gstate !== 'play') return;
   frame++; score += 1/60;
   spd = Math.min(10, 3 + Math.sqrt(score) * 0.35);
@@ -554,6 +632,35 @@ function update() {
   }
   enemies = enemies.filter(e => {
     if (e.x<-60 || e.x>VW+70 || e.y<-60 || e.y>VH+60) { removeEnemyMesh(e); return false; }
+    return true;
+  });
+
+  // Pulse rings — 輪が掃過した敵を撃破
+  for (const pr of pulseRings) {
+    pr.prevR = pr.r;
+    pr.r += (PULSE_MAX_R - pr.r) * 0.10 + 2;
+    enemies = enemies.filter(e => {
+      const dist = Math.hypot(pr.x - e.x, pr.y - e.y);
+      if (dist > pr.r + e.r || dist < pr.prevR - e.r) return true;
+      for (let i = 0; i < 12; i++) {
+        const a = Math.random()*Math.PI*2, v = 2+Math.random()*5;
+        const sp = { x:e.x, y:e.y, vx:Math.cos(a)*v, vy:Math.sin(a)*v,
+          life:1, sz:0.8+Math.random()*3, hue:e.type==='b' ? 20 : 35 };
+        sparks.push(sp);
+        const sm = new THREE.Mesh(new THREE.SphereGeometry(sp.sz*0.8,4,4),
+          new THREE.MeshBasicMaterial({ color:new THREE.Color(`hsl(${sp.hue},100%,70%)`), transparent:true }));
+        sm.userData.sp = sp; scene.add(sm); sparkMeshPool.push(sm);
+      }
+      removeEnemyMesh(e);
+      return false;
+    });
+  }
+  pulseRings = pulseRings.filter(pr => {
+    if (pr.r >= PULSE_MAX_R) {
+      scene.remove(pr.mesh);  pr.mesh.geometry.dispose();  pr.mesh.material.dispose();
+      scene.remove(pr.mesh2); pr.mesh2.geometry.dispose(); pr.mesh2.material.dispose();
+      return false;
+    }
     return true;
   });
 
@@ -636,6 +743,17 @@ function syncScene() {
       // facing is canvas-angle (y down), convert to world rotation (y up)
       grp.rotation.z = -e.facing;
     }
+  }
+
+  // Pulse rings
+  for (const pr of pulseRings) {
+    const alpha = 1 - pr.r / PULSE_MAX_R;
+    pr.mesh.scale.set(pr.r, pr.r, 1);
+    pr.mesh.position.copy(W(P.x, P.y, 8));
+    pr.mesh.material.opacity = alpha;
+    pr.mesh2.scale.set(pr.r * 0.80, pr.r * 0.80, 1);
+    pr.mesh2.position.copy(W(P.x, P.y, 6));
+    pr.mesh2.material.opacity = alpha * 0.6;
   }
 
   // Sparks
