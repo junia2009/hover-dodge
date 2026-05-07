@@ -321,14 +321,24 @@ const slMat = new THREE.LineBasicMaterial({ color: 0x99ccff, transparent: true, 
 scene.add(new THREE.LineSegments(slGeom, slMat));
 
 // ── Ribbon trail ──────────────────────────────────────────────────────────────
-const RIB_MAX = 30;
+const RIB_MAX    = 40;
+const RIB_RECENT = 14;
 const ribPos = new Float32Array(RIB_MAX * 3);
 const ribGeom = new THREE.BufferGeometry();
 ribGeom.setAttribute('position', new THREE.BufferAttribute(ribPos, 3));
 ribGeom.setDrawRange(0, 0);
 const ribbonLine = new THREE.Line(ribGeom,
-  new THREE.LineBasicMaterial({ color: 0x0099ff, transparent: true, opacity: 0.7 }));
+  new THREE.LineBasicMaterial({ color: 0x0055bb, transparent: true, opacity: 0.40 }));
 scene.add(ribbonLine);
+
+// 直近だけ明るく光るレイヤー
+const ribGlowPos = new Float32Array(RIB_RECENT * 3);
+const ribGlowGeom = new THREE.BufferGeometry();
+ribGlowGeom.setAttribute('position', new THREE.BufferAttribute(ribGlowPos, 3));
+ribGlowGeom.setDrawRange(0, 0);
+const ribbonGlow = new THREE.Line(ribGlowGeom,
+  new THREE.LineBasicMaterial({ color: 0x55ddff, transparent: true, opacity: 0.92 }));
+scene.add(ribbonGlow);
 
 // ── Wall mesh pool ────────────────────────────────────────────────────────────
 const wallMeshMap = new Map();
@@ -689,6 +699,7 @@ function syncScene() {
     shipGroup.position.copy(W(mx, my, 0));
     shipGroup.rotation.z = Math.sin(tick * 0.04) * 0.08;
     shipLight.position.copy(W(mx, my, 25));
+    shipLight.intensity = 5 + Math.sin(tick * 0.065) * 3.5;  // 呼吸グロー
   } else if (P.inv > 0 && tick % 6 < 3) {
     shipGroup.visible = false;
     shipLight.position.copy(W(P.x, P.y, 25));
@@ -697,9 +708,10 @@ function syncScene() {
     shipGroup.position.copy(W(P.x, P.y + hover, 0)).add(sk);
     shipGroup.rotation.z = -P.bankAngle;
     shipLight.position.copy(W(P.x, P.y, 25));
+    shipLight.intensity = 4;
   }
 
-  // Ribbon
+  // Ribbon — 全体(淡) + 直近(明)
   const pts = P.ribbon;
   for (let i = 0; i < RIB_MAX; i++) {
     const pt = pts[i] ?? pts[0] ?? { x: P.x, y: P.y };
@@ -708,6 +720,16 @@ function syncScene() {
   }
   ribGeom.attributes.position.needsUpdate = true;
   ribGeom.setDrawRange(0, pts.length);
+
+  const recentStart = Math.max(0, pts.length - RIB_RECENT);
+  const rpts = pts.slice(recentStart);
+  for (let i = 0; i < RIB_RECENT; i++) {
+    const pt = rpts[i] ?? rpts[0] ?? { x: P.x, y: P.y };
+    const wp = W(pt.x, pt.y, -1);
+    ribGlowPos[i*3] = wp.x; ribGlowPos[i*3+1] = wp.y; ribGlowPos[i*3+2] = wp.z;
+  }
+  ribGlowGeom.attributes.position.needsUpdate = true;
+  ribGlowGeom.setDrawRange(0, rpts.length);
 
   // Walls
   for (const w of walls) {
