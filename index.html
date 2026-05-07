@@ -449,7 +449,7 @@ let   spaceDown = false;
 
 function flap() {
   if (gstate === 'menu') return;             // require start button on title
-  if (gstate === 'dead') { startGame(); return; }
+  if (gstate === 'dead') { gotoMenu(); return; }
   P.vy = FLAP_VY;
 }
 
@@ -533,9 +533,7 @@ function addEnemy() {
 }
 
 // ── Game flow ─────────────────────────────────────────────────────────────────
-function startGame() {
-  gstate = 'play'; score = frame = 0; spd = 3;
-  P.x = 150; P.y = VH/2; P.vx = P.vy = 0; P.bankAngle = 0; P.inv = 90;
+function clearWorld() {
   for (const w of walls) removeWallMesh(w);
   for (const e of enemies) removeEnemyMesh(e);
   for (const sm of sparkMeshPool) scene.remove(sm);
@@ -546,7 +544,19 @@ function startGame() {
     scene.remove(pr.mesh2); pr.mesh2.geometry.dispose(); pr.mesh2.material.dispose();
   }
   pulseRings = []; pulseCooldown = 0;
+  shakeX = 0; shakeY = 0;
+}
+
+function startGame() {
+  gstate = 'play'; score = frame = 0; spd = 3;
+  P.x = 150; P.y = VH/2; P.vx = P.vy = 0; P.bankAngle = 0; P.inv = 90;
+  clearWorld();
   for (let i = 0; i < 4; i++) addWall(VW + i*265);
+}
+
+function gotoMenu() {
+  clearWorld();
+  gstate = 'menu';
 }
 
 function die() {
@@ -851,7 +861,7 @@ function drawHUD() {
     }
     const ep = 0.5 + Math.sin(tick*0.055)*0.5;
     HX.globalAlpha=ep; HX.shadowColor='#aaffaa'; HX.shadowBlur=10; HX.fillStyle='#aaffaa';
-    HX.font='18px monospace'; HX.fillText('クリック または SPACE でリトライ', VW/2, VH/2+105);
+    HX.font='18px monospace'; HX.fillText('クリック または SPACE でタイトルへ', VW/2, VH/2+105);
     HX.globalAlpha=1; HX.shadowBlur=0; HX.textAlign='left';
   }
 }
