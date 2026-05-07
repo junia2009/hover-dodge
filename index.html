@@ -89,9 +89,9 @@ rimLight.position.set(-1, 1, 2);
 scene.add(rimLight);
 
 // ── Shared geometries ─────────────────────────────────────────────────────────
-const WALL_W = 26;
-const WALL_UNIT_GEOM = new THREE.BoxGeometry(WALL_W, 1, 14);
-const WALL_EDGE_GEOM = new THREE.BoxGeometry(WALL_W - 4, 1.8, 14);
+const WALL_W = 16;
+const WALL_UNIT_GEOM = new THREE.BoxGeometry(WALL_W, 1, 8);
+const WALL_EDGE_GEOM = new THREE.BoxGeometry(WALL_W - 2, 1.4, 8);
 
 // ── Ship builder ──────────────────────────────────────────────────────────────
 function buildShipGroup() {
@@ -156,7 +156,7 @@ function buildShipGroup() {
   flameMesh.position.set(-16, 0, 2.5); flameMesh.name = 'flame';
   g.add(flameMesh);
 
-  g.scale.setScalar(1.5);
+  g.scale.setScalar(0.85);
   return g;
 }
 
@@ -259,13 +259,13 @@ function getOrCreateEnemy(e) {
   if (e.type === 'b') {
     // Plasma orb
     grp.add(new THREE.Mesh(
-      new THREE.SphereGeometry(8, 18, 18),
+      new THREE.SphereGeometry(5, 18, 18),
       new THREE.MeshPhongMaterial({ color: 0xff5522, emissive: 0xff2200, shininess: 80 })
     ));
-    const r1 = new THREE.Mesh(new THREE.TorusGeometry(12, 0.9, 4, 36),
+    const r1 = new THREE.Mesh(new THREE.TorusGeometry(8, 0.6, 4, 36),
       new THREE.MeshBasicMaterial({ color: 0xff7744 }));
     r1.name = 'r1';
-    const r2 = new THREE.Mesh(new THREE.TorusGeometry(9, 0.7, 4, 36),
+    const r2 = new THREE.Mesh(new THREE.TorusGeometry(6, 0.5, 4, 36),
       new THREE.MeshBasicMaterial({ color: 0xff4422 }));
     r2.name = 'r2'; r2.rotation.x = Math.PI / 3;
     grp.add(r1, r2);
@@ -294,7 +294,7 @@ function getOrCreateEnemy(e) {
     eye.position.set(5, 0, 4); eye.name = 'eye';
     grp.add(eye);
   }
-  grp.scale.setScalar(1.2);
+  grp.scale.setScalar(0.8);
   scene.add(grp);
   enemyMeshMap.set(e, grp);
   return grp;
@@ -309,8 +309,8 @@ function removeEnemyMesh(e) {
 const sparkMeshPool = [];
 
 // ── Input ─────────────────────────────────────────────────────────────────────
-const GRAVITY   = 0.32;
-const FLAP_VY   = -8.0;  // upward impulse (canvas y-down, so negative = up)
+const GRAVITY   = 0.26;
+const FLAP_VY   = -5.2;  // upward impulse (canvas y-down, so negative = up)
 let   spaceDown = false;
 
 function flap() {
@@ -334,7 +334,7 @@ let score = 0, hiScore = +localStorage.getItem('hd_hi') || 0;
 let frame = 0, tick = 0, spd = 3;
 let shakeX = 0, shakeY = 0;
 
-const P = { x: 150, y: VH/2, vx: 0, vy: 0, bankAngle: 0, r: 10, ribbon: [], inv: 0 };
+const P = { x: 150, y: VH/2, vx: 0, vy: 0, bankAngle: 0, r: 6, ribbon: [], inv: 0 };
 let walls = [], enemies = [], sparks = [];
 
 // ── Spawners ──────────────────────────────────────────────────────────────────
@@ -347,9 +347,9 @@ function addEnemy() {
   const seeker = Math.random() < 0.45;
   const y = 45 + Math.random() * (VH - 90);
   if (seeker) {
-    enemies.push({ x: VW+15, y, vx: -(spd+0.8), vy: 0, r: 8, type: 's', pulse: 0, facing: Math.PI, spin: 0 });
+    enemies.push({ x: VW+15, y, vx: -(spd+0.8), vy: 0, r: 5, type: 's', pulse: 0, facing: Math.PI, spin: 0 });
   } else {
-    enemies.push({ x: VW+15, y, vx: -(spd+2.5+Math.random()*2), vy: (Math.random()-.5)*2.5, r: 7, type: 'b', spin: 0 });
+    enemies.push({ x: VW+15, y, vx: -(spd+2.5+Math.random()*2), vy: (Math.random()-.5)*2.5, r: 5, type: 'b', spin: 0 });
   }
 }
 
