@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon-192.png">
 <title>HOVER DODGE</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box }
@@ -844,8 +842,18 @@ function drawHUD() {
 })();
 </script>
 <script>
-if ('serviceWorker' in navigator && location.protocol !== 'file:') {
-  navigator.serviceWorker.register('./sw.js').catch(e => console.warn('SW:', e));
+if (location.protocol !== 'file:') {
+  const mf = document.createElement('link');
+  mf.rel = 'manifest'; mf.href = 'manifest.json';
+  document.head.appendChild(mf);
+
+  const ic = document.createElement('link');
+  ic.rel = 'apple-touch-icon'; ic.href = 'icon-192.png';
+  document.head.appendChild(ic);
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(e => console.warn('SW:', e));
+  }
 }
 </script>
 </body>
