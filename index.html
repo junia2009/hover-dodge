@@ -882,8 +882,11 @@ if (location.protocol !== 'file:') {
   document.head.appendChild(mf);
 
   const ic = document.createElement('link');
-  ic.rel = 'apple-touch-icon'; ic.href = 'icon-192.png';
+  ic.rel = 'apple-touch-icon'; ic.setAttribute('sizes', '180x180'); ic.href = 'icon-180.png';
   document.head.appendChild(ic);
+  const ic2 = document.createElement('link');
+  ic2.rel = 'apple-touch-icon'; ic2.setAttribute('sizes', '192x192'); ic2.href = 'icon-192.png';
+  document.head.appendChild(ic2);
 
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js').catch(e => console.warn('SW:', e));
