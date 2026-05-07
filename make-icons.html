@@ -8,15 +8,25 @@
   canvas { border: 1px solid #0ef; margin: 8px; display: block; }
   button { background: #0ef; color: #000; border: none; padding: 8px 20px; font: bold 14px monospace; cursor: pointer; margin: 4px; }
   p { margin: 8px 0; color: #8af; }
+  .row { display: inline-block; vertical-align: top; margin-right: 16px; }
 </style>
 </head>
 <body>
 <h2>HOVER DODGE — Icon Generator</h2>
 <p>icon.svg を読み込んでPNGを生成します。生成後、各ボタンでダウンロードしてください。</p>
-<canvas id="c192" width="192" height="192"></canvas>
-<button onclick="dl('c192','icon-192.png')">icon-192.png をダウンロード</button>
-<canvas id="c512" width="512" height="512"></canvas>
-<button onclick="dl('c512','icon-512.png')">icon-512.png をダウンロード</button>
+
+<div class="row">
+  <canvas id="c180" width="180" height="180"></canvas>
+  <button onclick="dl('c180','icon-180.png')">icon-180.png (iPhone)</button>
+</div>
+<div class="row">
+  <canvas id="c192" width="192" height="192"></canvas>
+  <button onclick="dl('c192','icon-192.png')">icon-192.png</button>
+</div>
+<div class="row">
+  <canvas id="c512" width="512" height="512"></canvas>
+  <button onclick="dl('c512','icon-512.png')">icon-512.png</button>
+</div>
 
 <script>
 const svgUrl = './icon.svg';
@@ -45,6 +55,7 @@ function dl(canvasId, filename) {
 }
 
 (async () => {
+  await renderToCanvas('c180', 180);
   await renderToCanvas('c192', 192);
   await renderToCanvas('c512', 512);
   document.querySelector('p').textContent = '✓ 生成完了。各ボタンからダウンロードしてください。';
