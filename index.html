@@ -102,6 +102,35 @@ body { background:#000; display:flex; align-items:center; justify-content:center
   box-shadow: 0 0 18px #00e8ff55;
 }
 #pulse-sub { font-size: 8px; opacity: 0.7; }
+
+/* ── Start button (title / retry overlay) ────────────────────────────── */
+#start-btn {
+  position: absolute;
+  left: 50%; top: 64%;
+  transform: translate(-50%, -50%);
+  padding: 14px 46px;
+  border-radius: 999px;
+  border: 2px solid #00e8ff;
+  background: rgba(0, 200, 255, 0.10);
+  color: #00e8ff;
+  font: bold 22px/1 monospace;
+  letter-spacing: 4px;
+  cursor: pointer;
+  z-index: 3;
+  box-shadow: 0 0 22px #00e8ff66, inset 0 0 10px #00e8ff33;
+  text-shadow: 0 0 12px #00e8ff;
+  -webkit-user-select: none; user-select: none;
+  pointer-events: auto;
+  display: none;
+  animation: start-pulse 1.6s ease-in-out infinite;
+  transition: background 0.15s, transform 0.1s;
+}
+#start-btn:hover  { background: rgba(0, 200, 255, 0.20); }
+#start-btn:active { transform: translate(-50%, -50%) scale(0.94); }
+@keyframes start-pulse {
+  0%, 100% { box-shadow: 0 0 22px #00e8ff66, inset 0 0 10px #00e8ff33; }
+  50%      { box-shadow: 0 0 38px #00e8ffaa, inset 0 0 18px #00e8ff66; }
+}
 </style>
 </head>
 <body>
@@ -114,7 +143,7 @@ body { background:#000; display:flex; align-items:center; justify-content:center
   <p class="rot-sub">Please rotate your device</p>
   <p class="rot-version">Ver 1.0.0</p>
 </div>
-<div id="wrap"><canvas id="hud"></canvas><button id="pulse-btn" type="button"><span id="pulse-label">PULSE</span><span id="pulse-sub">[Z]</span></button></div>
+<div id="wrap"><canvas id="hud"></canvas><button id="start-btn" type="button">START</button><button id="pulse-btn" type="button"><span id="pulse-label">PULSE</span><span id="pulse-sub">[Z]</span></button></div>
 
 <script type="importmap">
 {
@@ -419,7 +448,8 @@ const FLAP_VY   = -5.2;  // upward impulse (canvas y-down, so negative = up)
 let   spaceDown = false;
 
 function flap() {
-  if (gstate !== 'play') { startGame(); return; }
+  if (gstate === 'menu') return;             // require start button on title
+  if (gstate === 'dead') { startGame(); return; }
   P.vy = FLAP_VY;
 }
 
@@ -457,7 +487,11 @@ renderer.domElement.addEventListener('touchstart', e => { e.preventDefault(); fl
 addEventListener('keydown', e => {
   if (e.code === 'Space') {
     e.preventDefault();
-    if (!spaceDown) { spaceDown = true; flap(); }
+    if (!spaceDown) {
+      spaceDown = true;
+      if (gstate === 'menu') startGame();
+      else flap();
+    }
   }
   if (e.code === 'KeyZ') { e.preventDefault(); firePulse(); }
 });
@@ -468,6 +502,10 @@ const pulseLabel = document.getElementById('pulse-label');
 const pulseSub   = document.getElementById('pulse-sub');
 pulseBtn.addEventListener('click',      e => { e.stopPropagation(); firePulse(); });
 pulseBtn.addEventListener('touchstart', e => { e.preventDefault(); e.stopPropagation(); firePulse(); }, { passive:false });
+
+const startBtn = document.getElementById('start-btn');
+startBtn.addEventListener('click',      e => { e.stopPropagation(); startGame(); });
+startBtn.addEventListener('touchstart', e => { e.preventDefault(); e.stopPropagation(); startGame(); }, { passive:false });
 
 // ── Game state ────────────────────────────────────────────────────────────────
 let gstate = 'menu';
@@ -750,24 +788,33 @@ function syncScene() {
 }
 
 // ── HUD (2D canvas overlay) ───────────────────────────────────────────────────
+let lastStartBtnVisible = null;
+function syncStartBtn() {
+  const want = (gstate === 'menu');
+  if (want !== lastStartBtnVisible) {
+    startBtn.style.display = want ? 'inline-block' : 'none';
+    lastStartBtnVisible = want;
+  }
+}
 function drawHUD() {
   HX.clearRect(0, 0, VW, VH);
+  syncStartBtn();
 
   if (gstate === 'menu') {
     HX.textAlign = 'center';
     HX.shadowColor='#00ffff'; HX.shadowBlur=52; HX.fillStyle='#00ffff';
-    HX.font='bold 62px monospace'; HX.fillText('HOVER DODGE', VW/2, VH/2-70);
+    HX.font='bold 62px monospace'; HX.fillText('HOVER DODGE', VW/2, VH/2-78);
     HX.shadowColor='#8899ff'; HX.shadowBlur=14; HX.fillStyle='#99aaff';
-    HX.font='21px monospace'; HX.fillText('壁と敵をよけ続けろ！', VW/2, VH/2-18);
+    HX.font='21px monospace'; HX.fillText('壁と敵をよけ続けろ！', VW/2, VH/2-26);
     HX.shadowBlur=0; HX.fillStyle='rgba(145,165,205,0.58)';
-    HX.font='14px monospace'; HX.fillText('タップ / SPACE キーで浮き上がる', VW/2, VH/2+20);
-    const p = 0.5 + Math.sin(tick*0.06)*0.5;
-    HX.globalAlpha=p; HX.shadowColor='#ffffff'; HX.shadowBlur=16; HX.fillStyle='#ffffff';
-    HX.font='bold 19px monospace'; HX.fillText('クリック または SPACE でスタート', VW/2, VH/2+58);
-    HX.globalAlpha=1; HX.shadowBlur=0;
+    HX.font='13px monospace'; HX.fillText('タップ / SPACE で浮上 ・ Z でパルス', VW/2, VH/2+4);
     if (hiScore > 0) {
-      HX.shadowColor='#ffdd44'; HX.shadowBlur=10; HX.fillStyle='#ffdd44';
-      HX.font='16px monospace'; HX.fillText(`ベストスコア:  ${hiScore} 秒`, VW/2, VH/2+98);
+      HX.shadowColor='#ffdd44'; HX.shadowBlur=10; HX.fillStyle='#ffcc44';
+      HX.font='bold 13px monospace'; HX.fillText('★ BEST RECORD ★', VW/2, VH/2+108);
+      HX.shadowColor='#ffee66'; HX.shadowBlur=18; HX.fillStyle='#ffee88';
+      HX.font='bold 30px monospace'; HX.fillText(`${hiScore}`, VW/2-14, VH/2+142);
+      HX.shadowBlur=10; HX.fillStyle='#ffd066';
+      HX.font='bold 16px monospace'; HX.fillText('秒', VW/2+22, VH/2+142);
       HX.shadowBlur=0;
     }
     HX.textAlign='left';
