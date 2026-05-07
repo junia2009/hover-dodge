@@ -321,24 +321,6 @@ const slMat = new THREE.LineBasicMaterial({ color: 0x99ccff, transparent: true, 
 scene.add(new THREE.LineSegments(slGeom, slMat));
 
 // ── Ribbon trail ──────────────────────────────────────────────────────────────
-const RIB_MAX    = 40;
-const RIB_RECENT = 14;
-const ribPos = new Float32Array(RIB_MAX * 3);
-const ribGeom = new THREE.BufferGeometry();
-ribGeom.setAttribute('position', new THREE.BufferAttribute(ribPos, 3));
-ribGeom.setDrawRange(0, 0);
-const ribbonLine = new THREE.Line(ribGeom,
-  new THREE.LineBasicMaterial({ color: 0x0055bb, transparent: true, opacity: 0.40 }));
-scene.add(ribbonLine);
-
-// 直近だけ明るく光るレイヤー
-const ribGlowPos = new Float32Array(RIB_RECENT * 3);
-const ribGlowGeom = new THREE.BufferGeometry();
-ribGlowGeom.setAttribute('position', new THREE.BufferAttribute(ribGlowPos, 3));
-ribGlowGeom.setDrawRange(0, 0);
-const ribbonGlow = new THREE.Line(ribGlowGeom,
-  new THREE.LineBasicMaterial({ color: 0x55ddff, transparent: true, opacity: 0.92 }));
-scene.add(ribbonGlow);
 
 // ── Wall mesh pool ────────────────────────────────────────────────────────────
 const wallMeshMap = new Map();
@@ -493,7 +475,7 @@ let score = 0, hiScore = +localStorage.getItem('hd_hi') || 0;
 let frame = 0, tick = 0, spd = 3;
 let shakeX = 0, shakeY = 0;
 
-const P = { x: 150, y: VH/2, vx: 0, vy: 0, bankAngle: 0, r: 6, ribbon: [], inv: 0 };
+const P = { x: 150, y: VH/2, vx: 0, vy: 0, bankAngle: 0, r: 6, inv: 0 };
 let walls = [], enemies = [], sparks = [];
 
 // ── Spawners ──────────────────────────────────────────────────────────────────
@@ -515,8 +497,7 @@ function addEnemy() {
 // ── Game flow ─────────────────────────────────────────────────────────────────
 function startGame() {
   gstate = 'play'; score = frame = 0; spd = 3;
-  P.x = 150; P.y = VH/2; P.vx = P.vy = 0; P.bankAngle = 0;
-  P.ribbon = []; P.inv = 90;
+  P.x = 150; P.y = VH/2; P.vx = P.vy = 0; P.bankAngle = 0; P.inv = 90;
   for (const w of walls) removeWallMesh(w);
   for (const e of enemies) removeEnemyMesh(e);
   for (const sm of sparkMeshPool) scene.remove(sm);
@@ -606,9 +587,6 @@ function update() {
 
   const bankTarget = Math.max(-0.40, Math.min(0.40, P.vy * 0.052));
   P.bankAngle += (bankTarget - P.bankAngle) * 0.10;
-
-  P.ribbon.push({ x: P.x, y: P.y });
-  if (P.ribbon.length > RIB_MAX) P.ribbon.shift();
 
   // Walls
   const spacing = Math.max(190, 265 - score*0.4);
@@ -700,9 +678,6 @@ function syncScene() {
     shipGroup.rotation.z = Math.sin(tick * 0.04) * 0.08;
     shipLight.position.copy(W(mx, my, 25));
     shipLight.intensity = 5 + Math.sin(tick * 0.065) * 3.5;  // 呼吸グロー
-  } else if (P.inv > 0 && tick % 6 < 3) {
-    shipGroup.visible = false;
-    shipLight.position.copy(W(P.x, P.y, 25));
   } else {
     shipGroup.visible = true;
     shipGroup.position.copy(W(P.x, P.y + hover, 0)).add(sk);
@@ -710,26 +685,6 @@ function syncScene() {
     shipLight.position.copy(W(P.x, P.y, 25));
     shipLight.intensity = 4;
   }
-
-  // Ribbon — 全体(淡) + 直近(明)
-  const pts = P.ribbon;
-  for (let i = 0; i < RIB_MAX; i++) {
-    const pt = pts[i] ?? pts[0] ?? { x: P.x, y: P.y };
-    const wp = W(pt.x, pt.y, -2);
-    ribPos[i*3] = wp.x; ribPos[i*3+1] = wp.y; ribPos[i*3+2] = wp.z;
-  }
-  ribGeom.attributes.position.needsUpdate = true;
-  ribGeom.setDrawRange(0, pts.length);
-
-  const recentStart = Math.max(0, pts.length - RIB_RECENT);
-  const rpts = pts.slice(recentStart);
-  for (let i = 0; i < RIB_RECENT; i++) {
-    const pt = rpts[i] ?? rpts[0] ?? { x: P.x, y: P.y };
-    const wp = W(pt.x, pt.y, -1);
-    ribGlowPos[i*3] = wp.x; ribGlowPos[i*3+1] = wp.y; ribGlowPos[i*3+2] = wp.z;
-  }
-  ribGlowGeom.attributes.position.needsUpdate = true;
-  ribGlowGeom.setDrawRange(0, rpts.length);
 
   // Walls
   for (const w of walls) {
