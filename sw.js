@@ -9,9 +9,17 @@ const PRECACHE = [
 ];
 
 self.addEventListener('install', e => {
+  // 個別にキャッシュ — 1ファイル失敗しても他を止めない
   e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(PRECACHE.map(u => new Request(u, { cache: 'reload' }))))
-      .then(() => self.skipWaiting())
+    caches.open(CACHE).then(cache =>
+      Promise.all(
+        PRECACHE.map(url =>
+          fetch(new Request(url, { cache: 'reload' }))
+            .then(res => res.ok ? cache.put(url, res) : null)
+            .catch(() => null)
+        )
+      )
+    ).then(() => self.skipWaiting())
   );
 });
 
@@ -26,7 +34,7 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
 
-  // CDN (Three.js) → cache-first, store on first load
+  // CDN (Three.js) → cache-first, 初回ロード時に保存
   if (url.hostname.includes('cdn.jsdelivr.net') || url.hostname.includes('unpkg.com')) {
     e.respondWith(
       caches.match(e.request).then(hit => hit || fetch(e.request).then(res => {
@@ -38,7 +46,7 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // Same-origin → stale-while-revalidate
+  // 同一オリジン → stale-while-revalidate
   if (url.origin === self.location.origin) {
     e.respondWith(
       caches.open(CACHE).then(cache =>
