@@ -103,10 +103,10 @@ body { background:#000; display:flex; align-items:center; justify-content:center
 }
 #pulse-sub { font-size: 8px; opacity: 0.7; }
 
-/* ── Start button (title / retry overlay) ────────────────────────────── */
-#start-btn {
+/* ── Start / Retry button (shared style) ─────────────────────────────── */
+#start-btn, #retry-btn {
   position: absolute;
-  left: 50%; top: 64%;
+  left: 50%;
   transform: translate(-50%, -50%);
   padding: 14px 46px;
   border-radius: 999px;
@@ -125,8 +125,10 @@ body { background:#000; display:flex; align-items:center; justify-content:center
   animation: start-pulse 1.6s ease-in-out infinite;
   transition: background 0.15s, transform 0.1s;
 }
-#start-btn:hover  { background: rgba(0, 200, 255, 0.20); }
-#start-btn:active { transform: translate(-50%, -50%) scale(0.94); }
+#start-btn { top: 64%; }
+#retry-btn { top: 76%; padding: 12px 40px; font-size: 20px; }
+#start-btn:hover, #retry-btn:hover  { background: rgba(0, 200, 255, 0.20); }
+#start-btn:active, #retry-btn:active { transform: translate(-50%, -50%) scale(0.94); }
 @keyframes start-pulse {
   0%, 100% { box-shadow: 0 0 22px #00e8ff66, inset 0 0 10px #00e8ff33; }
   50%      { box-shadow: 0 0 38px #00e8ffaa, inset 0 0 18px #00e8ff66; }
@@ -135,7 +137,7 @@ body { background:#000; display:flex; align-items:center; justify-content:center
 /* ── Title (back-to-menu) button on GAME OVER ────────────────────────── */
 #title-btn {
   position: absolute;
-  left: 50%; top: 86%;
+  left: 50%; top: 88%;
   transform: translate(-50%, -50%);
   padding: 9px 26px;
   border-radius: 999px;
@@ -164,9 +166,9 @@ body { background:#000; display:flex; align-items:center; justify-content:center
   </div>
   <p class="rot-title">横向きにしてください</p>
   <p class="rot-sub">Please rotate your device</p>
-  <p class="rot-version">Ver 1.0.2</p>
+  <p class="rot-version">Ver 1.0.3</p>
 </div>
-<div id="wrap"><canvas id="hud"></canvas><button id="start-btn" type="button">START</button><button id="title-btn" type="button">TITLE<span class="kbd">[ESC]</span></button><button id="pulse-btn" type="button"><span id="pulse-label">PULSE</span><span id="pulse-sub">[Z]</span></button></div>
+<div id="wrap"><canvas id="hud"></canvas><button id="start-btn" type="button">START</button><button id="retry-btn" type="button">RETRY</button><button id="title-btn" type="button">TITLE<span class="kbd">[ESC]</span></button><button id="pulse-btn" type="button"><span id="pulse-label">PULSE</span><span id="pulse-sub">[Z]</span></button></div>
 
 <script type="importmap">
 {
@@ -472,10 +474,7 @@ let   spaceDown = false;
 
 function flap() {
   if (gstate === 'menu') return;             // require start button on title
-  if (gstate === 'dead') {
-    if (deadCooldown <= 0) startGame();
-    return;
-  }
+  if (gstate === 'dead') return;             // require RETRY button on game over
   P.vy = FLAP_VY;
   sfxFlap();
 }
@@ -521,6 +520,7 @@ addEventListener('keydown', e => {
     if (!spaceDown) {
       spaceDown = true;
       if (gstate === 'menu') startGame();
+      else if (gstate === 'dead') { if (deadCooldown <= 0) startGame(); }
       else flap();
     }
   }
@@ -545,9 +545,15 @@ const startBtn = document.getElementById('start-btn');
 startBtn.addEventListener('click',      e => { e.stopPropagation(); startGame(); });
 startBtn.addEventListener('touchstart', e => { e.preventDefault(); e.stopPropagation(); startGame(); }, { passive:false });
 
+const retryBtn = document.getElementById('retry-btn');
+const handleRetry = () => { if (gstate === 'dead' && deadCooldown <= 0) startGame(); };
+retryBtn.addEventListener('click',      e => { e.stopPropagation(); handleRetry(); });
+retryBtn.addEventListener('touchstart', e => { e.preventDefault(); e.stopPropagation(); handleRetry(); }, { passive:false });
+
 const titleBtn = document.getElementById('title-btn');
-titleBtn.addEventListener('click',      e => { e.stopPropagation(); if (gstate === 'dead' && deadCooldown <= 0) gotoMenu(); });
-titleBtn.addEventListener('touchstart', e => { e.preventDefault(); e.stopPropagation(); if (gstate === 'dead' && deadCooldown <= 0) gotoMenu(); }, { passive:false });
+const handleTitle = () => { if (gstate === 'dead' && deadCooldown <= 0) gotoMenu(); };
+titleBtn.addEventListener('click',      e => { e.stopPropagation(); handleTitle(); });
+titleBtn.addEventListener('touchstart', e => { e.preventDefault(); e.stopPropagation(); handleTitle(); }, { passive:false });
 
 // ── Audio (WebAudio synth) ────────────────────────────────────────────────────
 let audioCtx = null;
@@ -1010,6 +1016,7 @@ function syncScene() {
 
 // ── HUD (2D canvas overlay) ───────────────────────────────────────────────────
 let lastStartBtnVisible = null;
+let lastRetryBtnVisible = null;
 let lastTitleBtnVisible = null;
 function syncOverlayBtns() {
   const wantStart = (gstate === 'menu');
@@ -1017,10 +1024,14 @@ function syncOverlayBtns() {
     startBtn.style.display = wantStart ? 'inline-block' : 'none';
     lastStartBtnVisible = wantStart;
   }
-  const wantTitle = (gstate === 'dead' && deadCooldown <= 0);
-  if (wantTitle !== lastTitleBtnVisible) {
-    titleBtn.style.display = wantTitle ? 'inline-block' : 'none';
-    lastTitleBtnVisible = wantTitle;
+  const wantDead = (gstate === 'dead' && deadCooldown <= 0);
+  if (wantDead !== lastRetryBtnVisible) {
+    retryBtn.style.display = wantDead ? 'inline-block' : 'none';
+    lastRetryBtnVisible = wantDead;
+  }
+  if (wantDead !== lastTitleBtnVisible) {
+    titleBtn.style.display = wantDead ? 'inline-block' : 'none';
+    lastTitleBtnVisible = wantDead;
   }
 }
 function drawHUD() {
@@ -1127,9 +1138,6 @@ function drawHUD() {
       HX.font='bold 22px monospace'; HX.fillText('★  NEW RECORD  ★', VW/2, VH/2+64);
       HX.globalAlpha=1;
     }
-    const ep = deadCooldown > 0 ? 0.25 : 0.5 + Math.sin(tick*0.055)*0.5;
-    HX.globalAlpha=ep; HX.shadowColor='#aaffaa'; HX.shadowBlur=10; HX.fillStyle='#aaffaa';
-    HX.font='18px monospace'; HX.fillText('タップ / SPACE で RETRY', VW/2, VH/2+102);
     HX.globalAlpha=1; HX.shadowBlur=0; HX.textAlign='left';
   }
 }
