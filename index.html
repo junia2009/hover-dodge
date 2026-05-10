@@ -16,11 +16,116 @@ body { background:#000; display:flex; align-items:center; justify-content:center
 #rotate-screen {
   display: none;
   position: fixed; inset: 0; z-index: 9999;
-  background: #020208;
-  flex-direction: column; align-items: center; justify-content: center; gap: 28px;
+  background: #02020a;
+  color: #00e8ff;
+  overflow: hidden;
+  font-family: monospace;
+  flex-direction: column; align-items: center; justify-content: center; gap: 22px;
 }
 @media (orientation: portrait) {
   #rotate-screen { display: flex; }
+}
+
+/* Animated neon grid background */
+#rotate-screen::before {
+  content: '';
+  position: absolute; inset: -50px;
+  background-image:
+    linear-gradient(rgba(0,232,255,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,232,255,0.06) 1px, transparent 1px);
+  background-size: 36px 36px;
+  animation: rot-grid-shift 6s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+@keyframes rot-grid-shift {
+  to { transform: translate(36px, 36px); }
+}
+
+/* CRT scanlines */
+#rotate-screen::after {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    repeating-linear-gradient(0deg, rgba(0,232,255,0.05) 0 1px, transparent 1px 4px),
+    radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(0,0,0,0.55) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Corner brackets */
+.rot-bracket {
+  position: absolute;
+  width: 26px; height: 26px;
+  border: 2px solid #00e8ff;
+  box-shadow: 0 0 10px #00e8ff, inset 0 0 6px rgba(0,232,255,0.3);
+  animation: rot-bracket-flicker 4.2s ease-in-out infinite;
+  z-index: 2;
+}
+.rot-bracket.tl { top: 24px; left: 22px; border-right:none; border-bottom:none; }
+.rot-bracket.tr { top: 24px; right: 22px; border-left:none;  border-bottom:none; }
+.rot-bracket.bl { bottom: 24px; left: 22px; border-right:none; border-top:none; }
+.rot-bracket.br { bottom: 24px; right: 22px; border-left:none;  border-top:none; }
+@keyframes rot-bracket-flicker {
+  0%, 90%, 100% { opacity: 1; }
+  92% { opacity: 0.25; }
+  94% { opacity: 1; }
+  96% { opacity: 0.5; }
+}
+
+/* Top chrome */
+.rot-chrome-top {
+  position: absolute;
+  top: 60px; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 8px; align-items: center;
+  font-size: 9px; letter-spacing: 2px;
+  z-index: 3;
+}
+.rot-tag {
+  border: 1px solid #00e8ff;
+  padding: 3px 7px;
+  color: #00e8ff;
+  background: rgba(0,232,255,0.08);
+  box-shadow: 0 0 8px rgba(0,232,255,0.45);
+}
+.rot-tag-mag {
+  border: 1px solid #ff44d6;
+  padding: 3px 7px;
+  color: #ff66e0;
+  background: rgba(255,68,214,0.08);
+  box-shadow: 0 0 8px rgba(255,68,214,0.55);
+  animation: rot-blink 1.4s steps(2) infinite;
+}
+.rot-stat {
+  color: rgba(160,200,230,0.7);
+  border-bottom: 1px dashed rgba(0,232,255,0.4);
+  padding-bottom: 2px;
+}
+@keyframes rot-blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0.3; }
+}
+
+/* Phone icon with pulse rings */
+.rot-icon-wrap {
+  position: relative;
+  z-index: 3;
+}
+.rot-icon-wrap::before, .rot-icon-wrap::after {
+  content: '';
+  position: absolute; left: 50%; top: 50%;
+  width: 60px; height: 60px;
+  border: 1.5px solid #00e8ff;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  pointer-events: none;
+  animation: rot-pulse-ring 2.8s ease-out infinite;
+}
+.rot-icon-wrap::after { animation-delay: 1.4s; border-color: #aa44ff; }
+@keyframes rot-pulse-ring {
+  0%   { width: 50px; height: 50px; opacity: 0.7; }
+  100% { width: 220px; height: 220px; opacity: 0; }
 }
 
 .rot-phone {
@@ -32,13 +137,13 @@ body { background:#000; display:flex; align-items:center; justify-content:center
   animation: phone-tilt 2.6s ease-in-out infinite;
   will-change: transform;
 }
-.rot-phone::before {           /* speaker */
+.rot-phone::before {
   content: ''; position: absolute;
   top: 8px; left: 50%; transform: translateX(-50%);
   width: 16px; height: 4px; border-radius: 2px;
   background: #00e8ff;
 }
-.rot-phone::after {            /* home button */
+.rot-phone::after {
   content: ''; position: absolute;
   bottom: 7px; left: 50%; transform: translateX(-50%);
   width: 16px; height: 16px; border-radius: 50%;
@@ -54,32 +159,143 @@ body { background:#000; display:flex; align-items:center; justify-content:center
 }
 @keyframes phone-tilt {
   0%,  20%  { transform: rotate(0deg); }
-  55%,  80% { transform: rotate(90deg); }
+  55%, 80%  { transform: rotate(90deg); }
   100%      { transform: rotate(0deg); }
 }
 @keyframes arrow-pulse {
   0%,  20%  { opacity: 0; }
-  40%        { opacity: 1; }
-  65%,  80% { opacity: 0.8; }
+  40%       { opacity: 1; }
+  65%, 80%  { opacity: 0.8; }
   100%      { opacity: 0; }
 }
 
-.rot-icon-wrap { position: relative; }
+/* Glitch title */
 .rot-title {
-  font: bold 18px/1.4 monospace;
+  position: relative;
+  font: bold 20px/1.4 monospace;
   color: #00e8ff;
-  text-shadow: 0 0 14px #00e8ff;
   text-align: center;
+  text-shadow: 0 0 14px #00e8ff;
+  letter-spacing: 2px;
+  z-index: 3;
 }
+.rot-title::before, .rot-title::after {
+  content: attr(data-text);
+  position: absolute;
+  left: 0; right: 0; top: 0;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+.rot-title::before {
+  color: #ff2bd6;
+  text-shadow: 0 0 6px #ff2bd6;
+  animation: rot-glitch-r 3.2s steps(1, end) infinite;
+}
+.rot-title::after {
+  color: #44ff99;
+  text-shadow: 0 0 6px #44ff99;
+  animation: rot-glitch-l 3.2s steps(1, end) infinite;
+}
+@keyframes rot-glitch-r {
+  0%, 91%, 100% { transform: translate(0); opacity: 0; }
+  92% { transform: translate(2px, -1px); opacity: 0.7; }
+  94% { transform: translate(-1px, 1px); opacity: 0.5; }
+  96% { transform: translate(1px, 0); opacity: 0.6; }
+}
+@keyframes rot-glitch-l {
+  0%, 87%, 100% { transform: translate(0); opacity: 0; }
+  88% { transform: translate(-2px, 1px); opacity: 0.5; }
+  90% { transform: translate(1px, -1px); opacity: 0.7; }
+  92% { transform: translate(-1px, 0); opacity: 0.4; }
+}
+
 .rot-sub {
   font: 12px/1 monospace;
-  color: rgba(140, 180, 220, 0.55);
+  color: rgba(160, 200, 230, 0.7);
   text-align: center;
+  letter-spacing: 1px;
+  z-index: 3;
 }
+.rot-sub::before { content: '> '; color: #00e8ff; }
+.rot-sub::after  { content: '_'; color: #00e8ff; animation: rot-cursor 1s steps(2) infinite; margin-left: 2px; }
+@keyframes rot-cursor {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+/* Loading bar (indeterminate sweep) */
+.rot-bar-wrap {
+  width: 220px; height: 5px;
+  border: 1px solid rgba(0,232,255,0.45);
+  background: rgba(0,232,255,0.05);
+  overflow: hidden;
+  position: relative;
+  box-shadow: 0 0 8px rgba(0,232,255,0.3), inset 0 0 4px rgba(0,232,255,0.2);
+  z-index: 3;
+}
+.rot-bar-fill {
+  position: absolute;
+  top: 0; bottom: 0; left: -40%;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, #00e8ff, #aa44ff, transparent);
+  box-shadow: 0 0 10px #00e8ff;
+  animation: rot-bar-slide 1.6s ease-in-out infinite;
+}
+@keyframes rot-bar-slide {
+  to { left: 100%; }
+}
+
+/* Bottom status data block */
+.rot-data {
+  position: absolute;
+  bottom: 70px; left: 50%; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: stretch;
+  gap: 4px;
+  font-size: 10px; letter-spacing: 1.5px;
+  z-index: 3;
+  min-width: 220px;
+}
+.rot-data-row {
+  display: flex; justify-content: space-between;
+  border-bottom: 1px dashed rgba(0,232,255,0.18);
+  padding: 2px 0;
+  color: rgba(160,200,230,0.55);
+}
+.rot-data-row .k { color: rgba(0,232,255,0.7); }
+.rot-data-row .v { color: rgba(220,235,250,0.85); text-shadow: 0 0 4px rgba(0,232,255,0.4); }
+.rot-data-row .v.warn {
+  color: #ff66e0; text-shadow: 0 0 6px #ff44d6;
+  animation: rot-blink 1.4s steps(2) infinite;
+}
+.rot-data-row .v.warn::before { content: '⚠ '; }
+
 .rot-version {
-  font: 11px/1 monospace;
-  color: rgba(100, 140, 180, 0.38);
-  margin-top: 8px;
+  position: absolute;
+  bottom: 32px; left: 50%; transform: translateX(-50%);
+  font: 10px/1 monospace;
+  color: rgba(100,140,180,0.55);
+  letter-spacing: 3px;
+  z-index: 3;
+}
+
+/* Top-right "noise" hex code block */
+.rot-noise {
+  position: absolute;
+  top: 24px; right: 60px;
+  font-size: 8px; letter-spacing: 1px;
+  color: rgba(0,232,255,0.30);
+  text-align: right;
+  line-height: 1.5;
+  z-index: 2;
+  pointer-events: none;
+  font-variant-numeric: tabular-nums;
+}
+.rot-noise span { display: block; animation: rot-noise-flick 0.5s steps(1) infinite; }
+.rot-noise span:nth-child(2) { animation-duration: 0.7s; }
+.rot-noise span:nth-child(3) { animation-duration: 0.4s; }
+@keyframes rot-noise-flick {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 0.18; }
 }
 
 /* ── Pulse skill button ──────────────────────────────────────────────── */
@@ -160,13 +376,40 @@ body { background:#000; display:flex; align-items:center; justify-content:center
 </head>
 <body>
 <div id="rotate-screen">
+  <div class="rot-bracket tl"></div>
+  <div class="rot-bracket tr"></div>
+  <div class="rot-bracket bl"></div>
+  <div class="rot-bracket br"></div>
+
+  <div class="rot-noise">
+    <span>0x4F2A:E81D</span>
+    <span>0x73AF:0066</span>
+    <span>0x12C0:FFEE</span>
+  </div>
+
+  <div class="rot-chrome-top">
+    <span class="rot-tag">SYS</span>
+    <span class="rot-stat">CONNECTION ESTABLISHED</span>
+    <span class="rot-tag-mag">! ATTN</span>
+  </div>
+
   <div class="rot-icon-wrap">
     <div class="rot-phone"></div>
     <span class="rot-arrow">↻</span>
   </div>
-  <p class="rot-title">横向きにしてください</p>
+  <p class="rot-title" data-text="横向きにしてください">横向きにしてください</p>
   <p class="rot-sub">Please rotate your device</p>
-  <p class="rot-version">Ver 1.0.3</p>
+
+  <div class="rot-bar-wrap"><div class="rot-bar-fill"></div></div>
+
+  <div class="rot-data">
+    <div class="rot-data-row"><span class="k">DEVICE</span><span class="v">MOBILE_TERMINAL</span></div>
+    <div class="rot-data-row"><span class="k">EXPECTED</span><span class="v">LANDSCAPE</span></div>
+    <div class="rot-data-row"><span class="k">CURRENT</span><span class="v warn">PORTRAIT</span></div>
+    <div class="rot-data-row"><span class="k">STATUS</span><span class="v">AWAITING_ROTATE</span></div>
+  </div>
+
+  <p class="rot-version">SYS_REV  1.0.4</p>
 </div>
 <div id="wrap"><canvas id="hud"></canvas><button id="start-btn" type="button">START</button><button id="retry-btn" type="button">RETRY</button><button id="title-btn" type="button">TITLE<span class="kbd">[ESC]</span></button><button id="pulse-btn" type="button"><span id="pulse-label">PULSE</span><span id="pulse-sub">[Z]</span></button></div>
 
