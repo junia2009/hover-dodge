@@ -449,13 +449,21 @@ let   spaceDown = false;
 
 function flap() {
   if (gstate === 'menu') return;             // require start button on title
-  if (gstate === 'dead') { gotoMenu(); return; }
+  if (gstate === 'dead') {
+    if (deadCooldown <= 0) startGame();
+    return;
+  }
   P.vy = FLAP_VY;
+  sfxFlap();
 }
 
 function firePulse() {
   if (gstate !== 'play' || pulseCooldown > 0) return;
   pulseCooldown = PULSE_COOLDOWN;
+  sfxPulse();
+  vibrate(20);
+  pulseUsedThisRun = true;
+  nopulseStreak = 0;
 
   // 発射時バーストスパーク
   for (let i = 0; i < 10; i++) {
@@ -494,6 +502,13 @@ addEventListener('keydown', e => {
     }
   }
   if (e.code === 'KeyZ') { e.preventDefault(); firePulse(); }
+  if (e.code === 'Escape' && gstate === 'dead' && deadCooldown <= 0) {
+    e.preventDefault(); gotoMenu();
+  }
+  if (e.code === 'KeyM') {
+    audioMuted = !audioMuted;
+    localStorage.setItem('hd_mute', audioMuted ? 1 : 0);
+  }
 });
 addEventListener('keyup', e => { if (e.code === 'Space') spaceDown = false; });
 
@@ -507,29 +522,119 @@ const startBtn = document.getElementById('start-btn');
 startBtn.addEventListener('click',      e => { e.stopPropagation(); startGame(); });
 startBtn.addEventListener('touchstart', e => { e.preventDefault(); e.stopPropagation(); startGame(); }, { passive:false });
 
+// ── Audio (WebAudio synth) ────────────────────────────────────────────────────
+let audioCtx = null;
+let audioMuted = +localStorage.getItem('hd_mute') === 1;
+function getAudio() {
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+    catch (e) { audioCtx = null; }
+  }
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+function tone(freq, dur, type='triangle', vol=0.18, freq2=null) {
+  if (audioMuted) return;
+  const a = getAudio(); if (!a) return;
+  const o = a.createOscillator(), g = a.createGain();
+  o.type = type;
+  o.frequency.setValueAtTime(freq, a.currentTime);
+  if (freq2 != null) o.frequency.exponentialRampToValueAtTime(Math.max(20, freq2), a.currentTime + dur);
+  g.gain.setValueAtTime(vol, a.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + dur);
+  o.connect(g).connect(a.destination);
+  o.start(); o.stop(a.currentTime + dur);
+}
+function noiseBurst(dur, vol=0.25, filterFreq=1200, sweep=null) {
+  if (audioMuted) return;
+  const a = getAudio(); if (!a) return;
+  const buf = a.createBuffer(1, Math.floor(a.sampleRate * dur), a.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < data.length; i++) data[i] = Math.random()*2-1;
+  const src = a.createBufferSource(); src.buffer = buf;
+  const filt = a.createBiquadFilter(); filt.type='lowpass';
+  filt.frequency.setValueAtTime(filterFreq, a.currentTime);
+  if (sweep != null) filt.frequency.exponentialRampToValueAtTime(Math.max(60, sweep), a.currentTime+dur);
+  const g = a.createGain();
+  g.gain.setValueAtTime(vol, a.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.0001, a.currentTime+dur);
+  src.connect(filt).connect(g).connect(a.destination);
+  src.start(); src.stop(a.currentTime+dur);
+}
+const sfxFlap   = () => tone(380, 0.08, 'triangle', 0.14, 560);
+const sfxPulse  = () => { noiseBurst(0.18, 0.22, 1800, 200); tone(140, 0.18, 'sawtooth', 0.10, 60); };
+const sfxHit    = () => { noiseBurst(0.45, 0.32, 1400, 80); tone(220, 0.45, 'square', 0.18, 55); };
+const sfxScore  = () => tone(880, 0.06, 'sine', 0.12);
+const sfxBonus  = () => tone(1320, 0.05, 'sine', 0.10);
+
+function vibrate(pattern) {
+  if (navigator.vibrate) { try { navigator.vibrate(pattern); } catch (e) {} }
+}
+
+// ── Phases / difficulty ───────────────────────────────────────────────────────
+const PHASE_CONFIG = [
+  { gapMin:170, gapBase:230, spawnBase:99999, seekerProb:0.00, spdCap:4.0, name:'PHASE 1' }, // 0-20s walls only
+  { gapMin:140, gapBase:200, spawnBase:170,   seekerProb:0.00, spdCap:5.5, name:'PHASE 2' }, // 20-50s + bullets
+  { gapMin:120, gapBase:180, spawnBase:130,   seekerProb:0.30, spdCap:7.0, name:'PHASE 3' }, // 50-100s + seekers
+  { gapMin:100, gapBase:160, spawnBase: 95,   seekerProb:0.45, spdCap:10,  name:'PHASE 4' }, // 100s+ all
+];
+function getPhase(s) {
+  if (s < 20)  return 0;
+  if (s < 50)  return 1;
+  if (s < 100) return 2;
+  return 3;
+}
+
+// ── Time ──────────────────────────────────────────────────────────────────────
+// dtScale: 1.0 == one 60Hz frame. Capped to avoid huge jumps after tab-resume.
+let dtScale = 1;
+
 // ── Game state ────────────────────────────────────────────────────────────────
 let gstate = 'menu';
 let score = 0, hiScore = +localStorage.getItem('hd_hi') || 0;
 let frame = 0, tick = 0, spd = 3;
 let shakeX = 0, shakeY = 0;
+let enemySpawnTimer = 0;     // dt-accumulator for enemy spawning
+let deadCooldown = 0;        // prevent insta-retry
+let curPhase = 0, lastPhase = -1;
+let phaseFlash = 0;          // shows "PHASE N" banner after transition
+let bonusPopups = [];        // floating "+10" texts
+let killCount = 0, nearMissCount = 0;
+let nopulseStreak = 0;       // seconds since last pulse use
+let lastMilestone = 0;       // last 10-second beep
+let pulseUsedThisRun = false;
 
 const P = { x: 150, y: VH/2, vx: 0, vy: 0, bankAngle: 0, r: 6, inv: 0 };
 let walls = [], enemies = [], sparks = [];
 
 // ── Spawners ──────────────────────────────────────────────────────────────────
 function addWall(startX) {
-  const margin = 55, gap = Math.max(100, 200 - score * 0.15);
+  const cfg = PHASE_CONFIG[curPhase];
+  const margin = 55;
+  const gap = Math.max(cfg.gapMin, cfg.gapBase - score * 0.18);
   const gapY = margin + Math.random() * (VH - margin*2 - gap);
-  walls.push({ x: startX ?? VW+10, gapY, gap, w: WALL_W, pulse: Math.random()*Math.PI*2 });
+  walls.push({ x: startX ?? VW+10, gapY, gap, w: WALL_W, pulse: Math.random()*Math.PI*2, passed: false });
 }
 function addEnemy() {
-  const seeker = Math.random() < 0.45;
+  const cfg = PHASE_CONFIG[curPhase];
+  const seeker = Math.random() < cfg.seekerProb;
   const y = 45 + Math.random() * (VH - 90);
   if (seeker) {
-    enemies.push({ x: VW+15, y, vx: -(spd+0.8), vy: 0, r: 5, type: 's', pulse: 0, facing: Math.PI, spin: 0 });
+    enemies.push({
+      x: VW+15, y, vx: -(spd+0.5), vy: 0, r: 5, type: 's',
+      pulse: 0, facing: Math.PI, spin: 0,
+      life: 540,                    // ~9s lifespan to prevent infinite stalking
+    });
   } else {
-    enemies.push({ x: VW+15, y, vx: -(spd+2.5+Math.random()*2), vy: (Math.random()-.5)*2.5, r: 5, type: 'b', spin: 0 });
+    enemies.push({
+      x: VW+15, y, vx: -(spd+2.5+Math.random()*2), vy: (Math.random()-.5)*2.5,
+      r: 5, type: 'b', spin: 0, life: 600,
+    });
   }
+}
+
+function pushBonus(x, y, text, color) {
+  bonusPopups.push({ x, y, text, color, life: 1 });
 }
 
 // ── Game flow ─────────────────────────────────────────────────────────────────
@@ -550,17 +655,27 @@ function clearWorld() {
 function startGame() {
   gstate = 'play'; score = frame = 0; spd = 3;
   P.x = 150; P.y = VH/2; P.vx = P.vy = 0; P.bankAngle = 0; P.inv = 90;
+  enemySpawnTimer = 120;   // grace period before first enemy
+  curPhase = 0; lastPhase = -1; phaseFlash = 0;
+  killCount = 0; nearMissCount = 0;
+  nopulseStreak = 0; lastMilestone = 0; pulseUsedThisRun = false;
+  bonusPopups = [];
   clearWorld();
   for (let i = 0; i < 4; i++) addWall(VW + i*265);
+  getAudio();   // user-gesture audio unlock
 }
 
 function gotoMenu() {
   clearWorld();
+  bonusPopups = [];
   gstate = 'menu';
 }
 
 function die() {
   gstate = 'dead';
+  deadCooldown = 30;
+  sfxHit();
+  vibrate([60, 40, 90]);
   const s = Math.floor(score);
   if (s > hiScore) { hiScore = s; localStorage.setItem('hd_hi', s); }
   shakeX = 12; shakeY = 9;
@@ -584,16 +699,20 @@ function die() {
 
 
 // ── Update (game logic) ───────────────────────────────────────────────────────
-function update() {
-  tick++;
-  shakeX *= 0.70; shakeY *= 0.70;
+function update(dt) {
+  tick += dt;
+  // Exponential decay approximated linearly for small dt
+  const decay = Math.min(1, 0.30 * dt);
+  shakeX *= (1 - decay); shakeY *= (1 - decay);
   if (Math.abs(shakeX) < 0.05) shakeX = 0;
   if (Math.abs(shakeY) < 0.05) shakeY = 0;
+
+  if (deadCooldown > 0) deadCooldown -= dt;
 
   // Stars scroll
   const ws = gstate === 'play' ? spd : 2;
   for (let i = 0; i < STAR_N; i++) {
-    starPos[i*3] -= starSpd[i] * (ws / 3) * 0.45;
+    starPos[i*3] -= starSpd[i] * (ws / 3) * 0.45 * dt;
     if (starPos[i*3] < -VW/2) { starPos[i*3] = VW/2; starPos[i*3+1] = (Math.random()-0.5)*VH; }
   }
   starGeom.attributes.position.needsUpdate = true;
@@ -603,7 +722,7 @@ function update() {
   slMat.opacity = tsl * 0.45;
   for (let i = 0; i < SL_N; i++) {
     const sl = slData[i];
-    sl.x -= sl.spd * (ws / 3);
+    sl.x -= sl.spd * (ws / 3) * dt;
     if (sl.x + sl.len < 0) { sl.x = VW + sl.len; sl.y = Math.random() * VH; }
     const p1 = W(sl.x, sl.y, -8), p2 = W(sl.x + sl.len * Math.min(1, tsl*1.5), sl.y, -8);
     slPos.set([p1.x,p1.y,p1.z, p2.x,p2.y,p2.z], i*6);
@@ -615,8 +734,9 @@ function update() {
   gridMesh.position.x = -gOff;
 
   // Pulse cooldown + button visual (always)
-  if (pulseCooldown > 0) pulseCooldown--;
-  if (pulseCooldown === 0) {
+  if (pulseCooldown > 0) pulseCooldown -= dt;
+  if (pulseCooldown <= 0) {
+    pulseCooldown = 0;
     pulseBtn.classList.add('ready');
     pulseLabel.textContent = 'PULSE'; pulseSub.textContent = '[Z]';
   } else {
@@ -624,55 +744,109 @@ function update() {
     pulseLabel.textContent = Math.ceil(pulseCooldown/60) + 's'; pulseSub.textContent = '';
   }
 
+  // Bonus popups (decay regardless of state for visual continuity)
+  for (const bp of bonusPopups) bp.life -= 0.018 * dt;
+  bonusPopups = bonusPopups.filter(bp => bp.life > 0);
+  if (phaseFlash > 0) phaseFlash -= dt;
+
   if (gstate !== 'play') return;
-  frame++; score += 1/60;
-  spd = Math.min(10, 3 + Math.sqrt(score) * 0.35);
+  frame += dt;
+  score += dt / 60;
+
+  // Phase progression
+  curPhase = getPhase(score);
+  if (curPhase !== lastPhase) {
+    if (lastPhase >= 0) { phaseFlash = 90; sfxBonus(); }
+    lastPhase = curPhase;
+  }
+  const cfg = PHASE_CONFIG[curPhase];
+  spd = Math.min(cfg.spdCap, 3 + Math.sqrt(score) * 0.35);
+
+  // Score milestone beeps every 10s
+  if (Math.floor(score / 10) > lastMilestone) {
+    lastMilestone = Math.floor(score / 10);
+    sfxScore();
+  }
+
+  // No-pulse streak counter
+  nopulseStreak += dt / 60;
 
   // Player — gravity + flap impulse (Flappy-Bird style)
-  P.vy += GRAVITY;
+  P.vy += GRAVITY * dt;
   if (P.vy > 14) P.vy = 14;
-  P.y = Math.max(P.r, Math.min(VH - P.r, P.y + P.vy));
+  P.y = Math.max(P.r, Math.min(VH - P.r, P.y + P.vy * dt));
 
   const bankTarget = Math.max(-0.40, Math.min(0.40, P.vy * 0.052));
-  P.bankAngle += (bankTarget - P.bankAngle) * 0.10;
+  P.bankAngle += (bankTarget - P.bankAngle) * Math.min(0.5, 0.10 * dt);
 
   // Walls
   const spacing = Math.max(190, 265 - score*0.4);
   if (!walls.length || walls[walls.length-1].x < VW-spacing) addWall();
-  for (const w of walls) { w.x -= spd; w.pulse += 0.042; }
+  for (const w of walls) {
+    w.x -= spd * dt;
+    w.pulse += 0.042 * dt;
+    // Near-miss detection: when wall trailing edge crosses player x
+    if (!w.passed && w.x + w.w < P.x) {
+      w.passed = true;
+      const cy = w.gapY + w.gap / 2;
+      const distFromCenter = Math.abs(P.y - cy);
+      const halfGap = w.gap / 2;
+      const margin = halfGap - distFromCenter; // distance from nearest edge
+      if (margin < halfGap * 0.30) {
+        // Tight pass! +bonus
+        const bonus = margin < halfGap * 0.15 ? 25 : 10;
+        score += bonus / 60;  // convert "score points" to seconds (~minor add)
+        nearMissCount++;
+        pushBonus(P.x, P.y - 22, `+${bonus} NEAR!`, '#ffee44');
+        sfxBonus();
+        vibrate(8);
+      }
+    }
+  }
   walls = walls.filter(w => {
     if (w.x + w.w <= -10) { removeWallMesh(w); return false; }
     return true;
   });
 
-  // Enemies
-  const eInterval = Math.max(70, 220 - score);
-  if (frame % Math.round(eInterval) === 0) addEnemy();
+  // Enemies — timer-based spawn (dt-stable)
+  const eInterval = Math.max(60, cfg.spawnBase - score*0.6);
+  enemySpawnTimer -= dt;
+  if (enemySpawnTimer <= 0) {
+    addEnemy();
+    enemySpawnTimer = eInterval;
+  }
   for (const e of enemies) {
-    e.spin += e.type === 'b' ? 0.17 : 0.05;
+    e.spin += (e.type === 'b' ? 0.17 : 0.05) * dt;
+    if (e.life != null) e.life -= dt;
     if (e.type === 's') {
-      const dx = P.x-e.x, dy = P.y-e.y, d = Math.max(1, Math.hypot(dx, dy));
-      e.vx += dx/d*0.13; e.vy += dy/d*0.13;
-      const em = Math.hypot(e.vx, e.vy), cap = spd+1.8;
-      if (em > cap) { e.vx=e.vx/em*cap; e.vy=e.vy/em*cap; }
-      e.pulse += 0.08;
+      const dx = P.x-e.x, dy = P.y-e.y;
       const tf = Math.atan2(dy, dx);
       let df = tf - e.facing;
       while (df >  Math.PI) df -= Math.PI*2;
       while (df < -Math.PI) df += Math.PI*2;
-      e.facing += df * 0.09;
+      // Capped turn rate — sharp player movement can shake the seeker off
+      const turnRate = 0.045;
+      e.facing += Math.max(-turnRate, Math.min(turnRate, df * 0.5)) * dt;
+      // Velocity clamped below player flap potential
+      const seekerSpd = Math.min(spd * 0.85 + 0.4, 4.5);
+      e.vx = Math.cos(e.facing) * seekerSpd;
+      e.vy = Math.sin(e.facing) * seekerSpd;
+      e.pulse += 0.08 * dt;
     }
-    e.x += e.vx; e.y += e.vy;
+    e.x += e.vx * dt;
+    e.y += e.vy * dt;
   }
   enemies = enemies.filter(e => {
     if (e.x<-60 || e.x>VW+70 || e.y<-60 || e.y>VH+60) { removeEnemyMesh(e); return false; }
+    if (e.life != null && e.life <= 0)               { removeEnemyMesh(e); return false; }
     return true;
   });
 
   // Pulse rings — 輪が掃過した敵を撃破
   for (const pr of pulseRings) {
     pr.prevR = pr.r;
-    pr.r += (PULSE_MAX_R - pr.r) * 0.10 + 2;
+    const ringStep = ((PULSE_MAX_R - pr.r) * 0.10 + 2) * dt;
+    pr.r += ringStep;
     enemies = enemies.filter(e => {
       const dist = Math.hypot(pr.x - e.x, pr.y - e.y);
       if (dist > pr.r + e.r || dist < pr.prevR - e.r) return true;
@@ -685,6 +859,11 @@ function update() {
           new THREE.MeshBasicMaterial({ color:new THREE.Color(`hsl(${sp.hue},100%,70%)`), transparent:true }));
         sm.userData.sp = sp; scene.add(sm); sparkMeshPool.push(sm);
       }
+      // Kill bonus
+      killCount++;
+      const kb = e.type === 'b' ? 15 : 20;
+      score += kb / 60;
+      pushBonus(e.x, e.y, `+${kb}`, e.type === 'b' ? '#ff8844' : '#ffaa55');
       removeEnemyMesh(e);
       return false;
     });
@@ -698,12 +877,14 @@ function update() {
     return true;
   });
 
-  if (P.inv > 0) { P.inv--; return; }
+  if (P.inv > 0) { P.inv -= dt; return; }
   for (const w of walls)
     if (P.x+P.r>w.x && P.x-P.r<w.x+w.w)
       if (P.y-P.r<w.gapY || P.y+P.r>w.gapY+w.gap) { die(); return; }
-  for (const e of enemies)
-    if (Math.hypot(P.x-e.x, P.y-e.y) < P.r+e.r) { die(); return; }
+  for (const e of enemies) {
+    const dx = P.x-e.x, dy = P.y-e.y, rr = P.r+e.r;
+    if (dx*dx + dy*dy < rr*rr) { die(); return; }
+  }
 }
 
 // ── Scene sync (game state → Three.js objects) ────────────────────────────────
@@ -786,9 +967,12 @@ function syncScene() {
     if (sp.life <= 0) { scene.remove(sm); sm.geometry.dispose(); sm.material.dispose(); sparkMeshPool.splice(i, 1); }
     else { sm.position.copy(W(sp.x, sp.y, 5)).add(sk); sm.material.opacity = Math.pow(sp.life, 1.3); }
   }
-  // Advance sparks
+  // Advance sparks (dt-stable)
+  const fric = Math.min(1, 0.08 * dtScale);
   for (const sp of sparks) {
-    sp.x += sp.vx; sp.y += sp.vy; sp.vx *= 0.92; sp.vy *= 0.92; sp.life -= 0.014;
+    sp.x += sp.vx * dtScale; sp.y += sp.vy * dtScale;
+    sp.vx *= (1 - fric);     sp.vy *= (1 - fric);
+    sp.life -= 0.014 * dtScale;
   }
   sparks = sparks.filter(s => s.life > 0);
 
@@ -844,36 +1028,96 @@ function drawHUD() {
   HX.shadowBlur=0; HX.fillStyle=`hsla(${hu},70%,75%,0.65)`;
   HX.font='10px monospace'; HX.fillText('SPD', 18+bw+5, 70);
 
+  // Stats line: kills / near-miss / no-pulse streak
+  HX.shadowBlur=0; HX.font='11px monospace';
+  HX.fillStyle='rgba(180,210,240,0.55)';
+  HX.fillText(`KILL ${killCount}   NEAR ${nearMissCount}`, 18, 86);
+  if (!pulseUsedThisRun && nopulseStreak > 5) {
+    HX.fillStyle='rgba(180,255,200,0.75)';
+    HX.fillText(`PURIST  ${nopulseStreak.toFixed(1)}s`, 18, 100);
+  }
+
+  // Top-right: phase indicator
+  HX.textAlign='right';
+  HX.fillStyle='rgba(180,210,240,0.45)';
+  HX.font='11px monospace';
+  HX.fillText(PHASE_CONFIG[curPhase].name, VW - 18, 22);
+
+  // Phase transition banner
+  if (phaseFlash > 0) {
+    HX.textAlign='center';
+    const a = Math.min(1, phaseFlash / 90);
+    HX.globalAlpha = a;
+    HX.shadowColor='#00e8ff'; HX.shadowBlur=22; HX.fillStyle='#00e8ff';
+    HX.font='bold 30px monospace';
+    HX.fillText(PHASE_CONFIG[curPhase].name, VW/2, 70);
+    HX.globalAlpha = 1; HX.shadowBlur=0;
+  }
+
+  // Bonus popups
+  HX.textAlign='center';
+  for (const bp of bonusPopups) {
+    HX.globalAlpha = Math.min(1, bp.life * 1.4);
+    HX.shadowColor = bp.color; HX.shadowBlur = 8;
+    HX.fillStyle = bp.color;
+    HX.font = 'bold 14px monospace';
+    HX.fillText(bp.text, bp.x, bp.y - (1 - bp.life) * 28);
+  }
+  HX.globalAlpha = 1; HX.shadowBlur = 0;
+
+  // Audio mute indicator (bottom-left, subtle)
+  if (audioMuted) {
+    HX.textAlign='left';
+    HX.fillStyle='rgba(200,200,200,0.35)';
+    HX.font='10px monospace';
+    HX.fillText('[M] MUTED', 18, VH-12);
+  }
+
   if (gstate === 'dead') {
     HX.fillStyle='rgba(0,0,14,0.62)'; HX.fillRect(0,0,VW,VH);
     HX.textAlign='center';
     HX.shadowColor='#ff2222'; HX.shadowBlur=52; HX.fillStyle='#ff5555';
-    HX.font='bold 58px monospace'; HX.fillText('GAME OVER', VW/2, VH/2-52);
+    HX.font='bold 58px monospace'; HX.fillText('GAME OVER', VW/2, VH/2-62);
     HX.shadowBlur=0; HX.fillStyle='rgba(160,185,215,0.68)';
-    HX.font='17px monospace'; HX.fillText('スコア', VW/2, VH/2-12);
+    HX.font='17px monospace'; HX.fillText('スコア', VW/2, VH/2-22);
     HX.shadowColor='#ffffff'; HX.shadowBlur=14; HX.fillStyle='#ffffff';
-    HX.font='bold 32px monospace'; HX.fillText(`${Math.floor(score)} 秒`, VW/2, VH/2+22);
+    HX.font='bold 32px monospace'; HX.fillText(`${Math.floor(score)} 秒`, VW/2, VH/2+12);
+
+    // Run summary
+    HX.shadowBlur=0; HX.fillStyle='rgba(180,210,240,0.6)';
+    HX.font='12px monospace';
+    HX.fillText(`KILLS ${killCount}   NEAR-MISS ${nearMissCount}`, VW/2, VH/2+34);
+
     if (Math.floor(score) >= hiScore && hiScore > 0) {
       const rp = 0.7 + Math.sin(tick*0.1)*0.3;
       HX.globalAlpha=rp; HX.shadowColor='#ffee44'; HX.shadowBlur=24; HX.fillStyle='#ffee55';
-      HX.font='bold 22px monospace'; HX.fillText('★  NEW RECORD  ★', VW/2, VH/2+62);
+      HX.font='bold 22px monospace'; HX.fillText('★  NEW RECORD  ★', VW/2, VH/2+64);
       HX.globalAlpha=1;
     }
-    const ep = 0.5 + Math.sin(tick*0.055)*0.5;
+    const ep = deadCooldown > 0 ? 0.25 : 0.5 + Math.sin(tick*0.055)*0.5;
     HX.globalAlpha=ep; HX.shadowColor='#aaffaa'; HX.shadowBlur=10; HX.fillStyle='#aaffaa';
-    HX.font='18px monospace'; HX.fillText('クリック または SPACE でタイトルへ', VW/2, VH/2+105);
+    HX.font='18px monospace'; HX.fillText('タップ / SPACE で RETRY', VW/2, VH/2+102);
+    HX.globalAlpha=0.55; HX.shadowBlur=0; HX.fillStyle='rgba(180,200,220,0.75)';
+    HX.font='12px monospace'; HX.fillText('ESC でタイトルへ', VW/2, VH/2+124);
     HX.globalAlpha=1; HX.shadowBlur=0; HX.textAlign='left';
   }
 }
 
 // ── Loop ──────────────────────────────────────────────────────────────────────
-(function loop() {
-  update();
+const FRAME_MS = 1000 / 60;
+let lastTime = 0;
+function loop(now) {
+  if (!lastTime) lastTime = now;
+  // Cap dtScale to prevent huge jumps when tab returns from background.
+  dtScale = Math.min(3, Math.max(0.05, (now - lastTime) / FRAME_MS));
+  lastTime = now;
+  update(dtScale);
   syncScene();
   composer.render();
   drawHUD();
   requestAnimationFrame(loop);
-})();
+}
+requestAnimationFrame(loop);
 </script>
 <script>
 if (location.protocol !== 'file:') {
