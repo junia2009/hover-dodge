@@ -131,6 +131,29 @@ body { background:#000; display:flex; align-items:center; justify-content:center
   0%, 100% { box-shadow: 0 0 22px #00e8ff66, inset 0 0 10px #00e8ff33; }
   50%      { box-shadow: 0 0 38px #00e8ffaa, inset 0 0 18px #00e8ff66; }
 }
+
+/* ── Title (back-to-menu) button on GAME OVER ────────────────────────── */
+#title-btn {
+  position: absolute;
+  left: 50%; top: 86%;
+  transform: translate(-50%, -50%);
+  padding: 9px 26px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(180, 200, 220, 0.55);
+  background: rgba(0, 0, 0, 0.45);
+  color: rgba(210, 225, 240, 0.92);
+  font: bold 13px/1 monospace;
+  letter-spacing: 3px;
+  cursor: pointer;
+  z-index: 3;
+  -webkit-user-select: none; user-select: none;
+  pointer-events: auto;
+  display: none;
+  transition: background 0.15s, transform 0.1s, border-color 0.15s;
+}
+#title-btn:hover  { background: rgba(0, 0, 0, 0.65); border-color: rgba(220, 235, 250, 0.85); }
+#title-btn:active { transform: translate(-50%, -50%) scale(0.94); }
+#title-btn .kbd   { font-size: 9px; opacity: 0.6; margin-left: 6px; letter-spacing: 1px; }
 </style>
 </head>
 <body>
@@ -141,9 +164,9 @@ body { background:#000; display:flex; align-items:center; justify-content:center
   </div>
   <p class="rot-title">横向きにしてください</p>
   <p class="rot-sub">Please rotate your device</p>
-  <p class="rot-version">Ver 1.0.1</p>
+  <p class="rot-version">Ver 1.0.2</p>
 </div>
-<div id="wrap"><canvas id="hud"></canvas><button id="start-btn" type="button">START</button><button id="pulse-btn" type="button"><span id="pulse-label">PULSE</span><span id="pulse-sub">[Z]</span></button></div>
+<div id="wrap"><canvas id="hud"></canvas><button id="start-btn" type="button">START</button><button id="title-btn" type="button">TITLE<span class="kbd">[ESC]</span></button><button id="pulse-btn" type="button"><span id="pulse-label">PULSE</span><span id="pulse-sub">[Z]</span></button></div>
 
 <script type="importmap">
 {
@@ -521,6 +544,10 @@ pulseBtn.addEventListener('touchstart', e => { e.preventDefault(); e.stopPropaga
 const startBtn = document.getElementById('start-btn');
 startBtn.addEventListener('click',      e => { e.stopPropagation(); startGame(); });
 startBtn.addEventListener('touchstart', e => { e.preventDefault(); e.stopPropagation(); startGame(); }, { passive:false });
+
+const titleBtn = document.getElementById('title-btn');
+titleBtn.addEventListener('click',      e => { e.stopPropagation(); if (gstate === 'dead' && deadCooldown <= 0) gotoMenu(); });
+titleBtn.addEventListener('touchstart', e => { e.preventDefault(); e.stopPropagation(); if (gstate === 'dead' && deadCooldown <= 0) gotoMenu(); }, { passive:false });
 
 // ── Audio (WebAudio synth) ────────────────────────────────────────────────────
 let audioCtx = null;
@@ -983,16 +1010,22 @@ function syncScene() {
 
 // ── HUD (2D canvas overlay) ───────────────────────────────────────────────────
 let lastStartBtnVisible = null;
-function syncStartBtn() {
-  const want = (gstate === 'menu');
-  if (want !== lastStartBtnVisible) {
-    startBtn.style.display = want ? 'inline-block' : 'none';
-    lastStartBtnVisible = want;
+let lastTitleBtnVisible = null;
+function syncOverlayBtns() {
+  const wantStart = (gstate === 'menu');
+  if (wantStart !== lastStartBtnVisible) {
+    startBtn.style.display = wantStart ? 'inline-block' : 'none';
+    lastStartBtnVisible = wantStart;
+  }
+  const wantTitle = (gstate === 'dead' && deadCooldown <= 0);
+  if (wantTitle !== lastTitleBtnVisible) {
+    titleBtn.style.display = wantTitle ? 'inline-block' : 'none';
+    lastTitleBtnVisible = wantTitle;
   }
 }
 function drawHUD() {
   HX.clearRect(0, 0, VW, VH);
-  syncStartBtn();
+  syncOverlayBtns();
 
   if (gstate === 'menu') {
     HX.textAlign = 'center';
@@ -1097,8 +1130,6 @@ function drawHUD() {
     const ep = deadCooldown > 0 ? 0.25 : 0.5 + Math.sin(tick*0.055)*0.5;
     HX.globalAlpha=ep; HX.shadowColor='#aaffaa'; HX.shadowBlur=10; HX.fillStyle='#aaffaa';
     HX.font='18px monospace'; HX.fillText('タップ / SPACE で RETRY', VW/2, VH/2+102);
-    HX.globalAlpha=0.55; HX.shadowBlur=0; HX.fillStyle='rgba(180,200,220,0.75)';
-    HX.font='12px monospace'; HX.fillText('ESC でタイトルへ', VW/2, VH/2+124);
     HX.globalAlpha=1; HX.shadowBlur=0; HX.textAlign='left';
   }
 }
