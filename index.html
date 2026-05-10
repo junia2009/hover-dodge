@@ -557,7 +557,7 @@ body { background:#000; display:flex; align-items:center; justify-content:center
     <div data-phase="4">PHASE 4<span class="sub">CHAOS</span></div>
   </div>
 
-  <p class="rot-version">SYS_REV  1.0.6</p>
+  <p class="rot-version">SYS_REV  1.0.7</p>
 </div>
 <div id="wrap"><canvas id="hud"></canvas><button id="start-btn" type="button">START</button><button id="retry-btn" type="button">RETRY</button><button id="title-btn" type="button">TITLE<span class="kbd">[ESC]</span></button><button id="pulse-btn" type="button"><span id="pulse-label">PULSE</span><span id="pulse-sub">[Z]</span></button></div>
 
@@ -1232,12 +1232,18 @@ function update(dt) {
     return true;
   });
 
-  // Enemies — timer-based spawn (dt-stable)
-  const eInterval = Math.max(60, cfg.spawnBase - score*0.6);
-  enemySpawnTimer -= dt;
-  if (enemySpawnTimer <= 0) {
-    addEnemy();
-    enemySpawnTimer = eInterval;
+  // Enemies — timer-based spawn (dt-stable). Phase 0 (walls-only) keeps
+  // the timer parked at a small value so the first enemy lands shortly
+  // after entering phase 1, instead of inheriting a giant phase-0 interval.
+  if (cfg.spawnBase < 9999) {
+    const eInterval = Math.max(60, cfg.spawnBase - score*0.6);
+    enemySpawnTimer -= dt;
+    if (enemySpawnTimer <= 0) {
+      addEnemy();
+      enemySpawnTimer = eInterval;
+    }
+  } else {
+    enemySpawnTimer = 60;
   }
   for (const e of enemies) {
     e.spin += (e.type === 'b' ? 0.17 : 0.05) * dt;
