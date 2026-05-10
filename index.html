@@ -442,24 +442,26 @@ body { background:#000; display:flex; align-items:center; justify-content:center
 
 /* ── Pulse skill button ──────────────────────────────────────────────── */
 #pulse-btn {
-  position: absolute; right: 16px; bottom: 16px;
-  width: 60px; height: 60px; border-radius: 50%;
+  position: absolute; right: 18px; bottom: 18px;
+  width: 78px; height: 78px; border-radius: 50%;
   border: 2px solid rgba(0, 200, 255, 0.30);
   background: rgba(0, 200, 255, 0.06);
   color: rgba(0, 200, 255, 0.35);
-  font: bold 11px/1 monospace;
+  font: bold 13px/1 monospace;
+  letter-spacing: 1px;
   cursor: pointer; z-index: 2;
   display: flex; flex-direction: column;
-  align-items: center; justify-content: center; gap: 3px;
+  align-items: center; justify-content: center; gap: 4px;
   -webkit-user-select: none; user-select: none;
-  transition: border-color 0.25s, color 0.25s, box-shadow 0.25s;
+  transition: border-color 0.25s, color 0.25s, box-shadow 0.25s, transform 0.1s;
   pointer-events: auto;
 }
 #pulse-btn.ready {
   border-color: #00e8ff; color: #00e8ff;
-  box-shadow: 0 0 18px #00e8ff55;
+  box-shadow: 0 0 22px #00e8ff66;
 }
-#pulse-sub { font-size: 8px; opacity: 0.7; }
+#pulse-btn:active { transform: scale(0.94); }
+#pulse-sub { font-size: 9px; opacity: 0.7; }
 
 /* ── Start / Retry button (shared style) ─────────────────────────────── */
 #start-btn, #retry-btn {
@@ -557,7 +559,7 @@ body { background:#000; display:flex; align-items:center; justify-content:center
     <div data-phase="4">PHASE 4<span class="sub">CHAOS</span></div>
   </div>
 
-  <p class="rot-version">SYS_REV  1.0.7</p>
+  <p class="rot-version">SYS_REV  1.0.8</p>
 </div>
 <div id="wrap"><canvas id="hud"></canvas><button id="start-btn" type="button">START</button><button id="retry-btn" type="button">RETRY</button><button id="title-btn" type="button">TITLE<span class="kbd">[ESC]</span></button><button id="pulse-btn" type="button"><span id="pulse-label">PULSE</span><span id="pulse-sub">[Z]</span></button></div>
 
