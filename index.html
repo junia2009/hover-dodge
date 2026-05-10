@@ -20,7 +20,11 @@ body { background:#000; display:flex; align-items:center; justify-content:center
   color: #00e8ff;
   overflow: hidden;
   font-family: monospace;
-  flex-direction: column; align-items: center; justify-content: center; gap: 22px;
+  flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+  --st: env(safe-area-inset-top, 0px);
+  --sb: env(safe-area-inset-bottom, 0px);
+  --sl: env(safe-area-inset-left, 0px);
+  --sr: env(safe-area-inset-right, 0px);
 }
 @media (orientation: portrait) {
   #rotate-screen { display: flex; }
@@ -62,10 +66,10 @@ body { background:#000; display:flex; align-items:center; justify-content:center
   animation: rot-bracket-flicker 4.2s ease-in-out infinite;
   z-index: 2;
 }
-.rot-bracket.tl { top: 24px; left: 22px; border-right:none; border-bottom:none; }
-.rot-bracket.tr { top: 24px; right: 22px; border-left:none;  border-bottom:none; }
-.rot-bracket.bl { bottom: 24px; left: 22px; border-right:none; border-top:none; }
-.rot-bracket.br { bottom: 24px; right: 22px; border-left:none;  border-top:none; }
+.rot-bracket.tl { top: calc(16px + var(--st)); left: calc(16px + var(--sl)); border-right:none; border-bottom:none; }
+.rot-bracket.tr { top: calc(16px + var(--st)); right: calc(16px + var(--sr)); border-left:none;  border-bottom:none; }
+.rot-bracket.bl { bottom: calc(16px + var(--sb)); left: calc(16px + var(--sl)); border-right:none; border-top:none; }
+.rot-bracket.br { bottom: calc(16px + var(--sb)); right: calc(16px + var(--sr)); border-left:none;  border-top:none; }
 @keyframes rot-bracket-flicker {
   0%, 90%, 100% { opacity: 1; }
   92% { opacity: 0.25; }
@@ -76,7 +80,7 @@ body { background:#000; display:flex; align-items:center; justify-content:center
 /* Top chrome */
 .rot-chrome-top {
   position: absolute;
-  top: 60px; left: 50%; transform: translateX(-50%);
+  top: calc(56px + var(--st)); left: 50%; transform: translateX(-50%);
   display: flex; gap: 8px; align-items: center;
   font-size: 9px; letter-spacing: 2px;
   z-index: 3;
@@ -106,15 +110,101 @@ body { background:#000; display:flex; align-items:center; justify-content:center
   50%, 100% { opacity: 0.3; }
 }
 
-/* Phone icon with pulse rings */
+/* Brand logo (small, above scope) */
+.rot-brand {
+  font: bold 22px/1 monospace;
+  color: #00e8ff;
+  letter-spacing: 8px;
+  text-shadow: 0 0 12px #00e8ff, 0 0 24px rgba(0,232,255,0.5);
+  z-index: 3;
+  white-space: nowrap;
+  display: flex; align-items: center; gap: 12px;
+}
+.rot-brand::before, .rot-brand::after {
+  content: '';
+  width: 24px; height: 1px;
+  background: #00e8ff;
+  box-shadow: 0 0 6px #00e8ff;
+}
+.rot-brand-sub {
+  font: 9px monospace; letter-spacing: 6px;
+  color: rgba(170,68,255,0.85);
+  text-shadow: 0 0 8px rgba(170,68,255,0.6);
+  z-index: 3;
+  margin-top: -8px;
+}
+
+/* Tactical scope around phone */
 .rot-icon-wrap {
   position: relative;
+  width: 240px; height: 240px;
+  display: flex; align-items: center; justify-content: center;
   z-index: 3;
 }
+.rot-scope {
+  position: absolute; left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.rot-scope.r1 {
+  width: 220px; height: 220px;
+  border: 1px dashed rgba(0,232,255,0.30);
+  border-radius: 50%;
+  animation: rot-scope-spin 22s linear infinite;
+}
+.rot-scope.r2 {
+  width: 160px; height: 160px;
+  border: 1.5px solid rgba(0,232,255,0.45);
+  border-radius: 50%;
+  box-shadow: inset 0 0 12px rgba(0,232,255,0.18), 0 0 12px rgba(0,232,255,0.18);
+}
+.rot-scope.r3 {
+  width: 110px; height: 110px;
+  border: 1px dashed rgba(170,68,255,0.45);
+  border-radius: 50%;
+  animation: rot-scope-spin 14s linear infinite reverse;
+}
+@keyframes rot-scope-spin { to { transform: translate(-50%, -50%) rotate(360deg); } }
+
+/* Crosshair lines through center */
+.rot-scope.cross-h {
+  width: 230px; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0,232,255,0.55), transparent);
+}
+.rot-scope.cross-v {
+  width: 1px; height: 230px;
+  background: linear-gradient(180deg, transparent, rgba(0,232,255,0.55), transparent);
+}
+
+/* Tick marks at cardinal points */
+.rot-scope.tick {
+  width: 8px; height: 2px;
+  background: #00e8ff;
+  box-shadow: 0 0 4px #00e8ff;
+}
+.rot-scope.tick.t-n { top: calc(50% - 110px); left: 50%; transform: translate(-50%, -50%) rotate(90deg); }
+.rot-scope.tick.t-s { top: calc(50% + 110px); left: 50%; transform: translate(-50%, -50%) rotate(90deg); }
+.rot-scope.tick.t-e { top: 50%; left: calc(50% + 110px); transform: translate(-50%, -50%); }
+.rot-scope.tick.t-w { top: 50%; left: calc(50% - 110px); transform: translate(-50%, -50%); }
+
+/* Radar sweep */
+.rot-scope.sweep {
+  width: 220px; height: 220px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, transparent 0deg, rgba(0,232,255,0.18) 30deg, rgba(0,232,255,0.45) 50deg, transparent 60deg, transparent 360deg);
+  animation: rot-radar-spin 3.2s linear infinite;
+  -webkit-mask: radial-gradient(circle, black 50%, transparent 50%);
+          mask: radial-gradient(circle, black 50%, transparent 50%);
+}
+@keyframes rot-radar-spin {
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* Pulse rings (kept, but smaller) */
 .rot-icon-wrap::before, .rot-icon-wrap::after {
   content: '';
   position: absolute; left: 50%; top: 50%;
-  width: 60px; height: 60px;
+  width: 50px; height: 50px;
   border: 1.5px solid #00e8ff;
   border-radius: 50%;
   transform: translate(-50%, -50%);
@@ -125,7 +215,7 @@ body { background:#000; display:flex; align-items:center; justify-content:center
 .rot-icon-wrap::after { animation-delay: 1.4s; border-color: #aa44ff; }
 @keyframes rot-pulse-ring {
   0%   { width: 50px; height: 50px; opacity: 0.7; }
-  100% { width: 220px; height: 220px; opacity: 0; }
+  100% { width: 200px; height: 200px; opacity: 0; }
 }
 
 .rot-phone {
@@ -248,12 +338,12 @@ body { background:#000; display:flex; align-items:center; justify-content:center
 /* Bottom status data block */
 .rot-data {
   position: absolute;
-  bottom: 70px; left: 50%; transform: translateX(-50%);
+  bottom: calc(64px + var(--sb)); left: 50%; transform: translateX(-50%);
   display: flex; flex-direction: column; align-items: stretch;
   gap: 4px;
   font-size: 10px; letter-spacing: 1.5px;
   z-index: 3;
-  min-width: 220px;
+  min-width: 240px;
 }
 .rot-data-row {
   display: flex; justify-content: space-between;
@@ -271,31 +361,101 @@ body { background:#000; display:flex; align-items:center; justify-content:center
 
 .rot-version {
   position: absolute;
-  bottom: 32px; left: 50%; transform: translateX(-50%);
+  bottom: calc(28px + var(--sb)); left: 50%; transform: translateX(-50%);
   font: 10px/1 monospace;
   color: rgba(100,140,180,0.55);
   letter-spacing: 3px;
   z-index: 3;
 }
 
-/* Top-right "noise" hex code block */
+/* Top-left noise stream */
 .rot-noise {
   position: absolute;
-  top: 24px; right: 60px;
+  top: calc(56px + var(--st)); left: calc(60px + var(--sl));
   font-size: 8px; letter-spacing: 1px;
   color: rgba(0,232,255,0.30);
-  text-align: right;
-  line-height: 1.5;
+  line-height: 1.55;
   z-index: 2;
   pointer-events: none;
   font-variant-numeric: tabular-nums;
 }
+/* Top-right noise stream (separate, mirrored) */
+.rot-noise-r {
+  position: absolute;
+  top: calc(140px + var(--st)); right: calc(28px + var(--sr));
+  font-size: 8px; letter-spacing: 1px;
+  color: rgba(170,68,255,0.32);
+  text-align: right;
+  line-height: 1.55;
+  z-index: 2;
+  pointer-events: none;
+  font-variant-numeric: tabular-nums;
+}
+.rot-noise-r span { display: block; animation: rot-noise-flick 0.55s steps(1) infinite; }
+.rot-noise-r span:nth-child(2) { animation-duration: 0.42s; }
+.rot-noise-r span:nth-child(3) { animation-duration: 0.78s; }
 .rot-noise span { display: block; animation: rot-noise-flick 0.5s steps(1) infinite; }
 .rot-noise span:nth-child(2) { animation-duration: 0.7s; }
 .rot-noise span:nth-child(3) { animation-duration: 0.4s; }
 @keyframes rot-noise-flick {
   0%, 100% { opacity: 0.45; }
   50% { opacity: 0.18; }
+}
+
+/* Audio bar visualizer */
+.rot-eq {
+  display: flex; gap: 3px; align-items: flex-end;
+  height: 32px; width: 200px;
+  z-index: 3;
+}
+.rot-eq span {
+  flex: 1;
+  background: linear-gradient(to top, #00e8ff, #aa44ff);
+  box-shadow: 0 0 6px #00e8ff;
+  animation: rot-eq-bar 1s ease-in-out infinite;
+  min-height: 4px;
+  border-radius: 1px;
+}
+.rot-eq span:nth-child(1) { animation-delay: 0.05s; animation-duration: 0.85s; }
+.rot-eq span:nth-child(2) { animation-delay: 0.18s; animation-duration: 1.10s; }
+.rot-eq span:nth-child(3) { animation-delay: 0.32s; animation-duration: 0.72s; }
+.rot-eq span:nth-child(4) { animation-delay: 0.10s; animation-duration: 0.95s; }
+.rot-eq span:nth-child(5) { animation-delay: 0.25s; animation-duration: 1.30s; }
+.rot-eq span:nth-child(6) { animation-delay: 0.40s; animation-duration: 0.80s; }
+.rot-eq span:nth-child(7) { animation-delay: 0.15s; animation-duration: 1.05s; }
+.rot-eq span:nth-child(8) { animation-delay: 0.30s; animation-duration: 0.90s; }
+.rot-eq span:nth-child(9) { animation-delay: 0.05s; animation-duration: 1.20s; }
+.rot-eq span:nth-child(10){ animation-delay: 0.22s; animation-duration: 0.78s; }
+.rot-eq span:nth-child(11){ animation-delay: 0.35s; animation-duration: 1.00s; }
+.rot-eq span:nth-child(12){ animation-delay: 0.12s; animation-duration: 0.88s; }
+@keyframes rot-eq-bar {
+  0%, 100% { height: 12%; opacity: 0.55; }
+  50%      { height: 100%; opacity: 1; }
+}
+
+/* Vertical edge text (left/right rails) */
+.rot-edge {
+  position: absolute;
+  top: calc(90px + var(--st)); bottom: calc(90px + var(--sb));
+  width: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font: 9px monospace;
+  letter-spacing: 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  z-index: 2;
+  pointer-events: none;
+  text-transform: uppercase;
+  writing-mode: vertical-rl;
+}
+.rot-edge.l {
+  left: calc(6px + var(--sl));
+  color: rgba(0,232,255,0.28);
+  transform: rotate(180deg);
+}
+.rot-edge.r {
+  right: calc(6px + var(--sr));
+  color: rgba(170,68,255,0.28);
 }
 
 /* ── Pulse skill button ──────────────────────────────────────────────── */
@@ -386,6 +546,11 @@ body { background:#000; display:flex; align-items:center; justify-content:center
     <span>0x73AF:0066</span>
     <span>0x12C0:FFEE</span>
   </div>
+  <div class="rot-noise-r">
+    <span>9F:21:08</span>
+    <span>AC:7E:BB</span>
+    <span>03:FF:11</span>
+  </div>
 
   <div class="rot-chrome-top">
     <span class="rot-tag">SYS</span>
@@ -393,13 +558,34 @@ body { background:#000; display:flex; align-items:center; justify-content:center
     <span class="rot-tag-mag">! ATTN</span>
   </div>
 
+  <div class="rot-edge l">// HOVER_DODGE.SYS // ORIENTATION_LOCK_REQUIRED // PHASE_INIT // STANDBY //</div>
+  <div class="rot-edge r">// SUBSYS.GFX:OK // SUBSYS.AUDIO:OK // SUBSYS.INPUT:HOLD // ROTATE_IN: ASAP //</div>
+
+  <p class="rot-brand">HOVER DODGE</p>
+  <p class="rot-brand-sub">// NEON ARCADE //</p>
+
   <div class="rot-icon-wrap">
+    <div class="rot-scope r1"></div>
+    <div class="rot-scope r2"></div>
+    <div class="rot-scope r3"></div>
+    <div class="rot-scope cross-h"></div>
+    <div class="rot-scope cross-v"></div>
+    <div class="rot-scope tick t-n"></div>
+    <div class="rot-scope tick t-s"></div>
+    <div class="rot-scope tick t-e"></div>
+    <div class="rot-scope tick t-w"></div>
+    <div class="rot-scope sweep"></div>
     <div class="rot-phone"></div>
     <span class="rot-arrow">↻</span>
   </div>
   <p class="rot-title" data-text="横向きにしてください">横向きにしてください</p>
   <p class="rot-sub">Please rotate your device</p>
 
+  <div class="rot-eq">
+    <span></span><span></span><span></span><span></span>
+    <span></span><span></span><span></span><span></span>
+    <span></span><span></span><span></span><span></span>
+  </div>
   <div class="rot-bar-wrap"><div class="rot-bar-fill"></div></div>
 
   <div class="rot-data">
@@ -407,9 +593,10 @@ body { background:#000; display:flex; align-items:center; justify-content:center
     <div class="rot-data-row"><span class="k">EXPECTED</span><span class="v">LANDSCAPE</span></div>
     <div class="rot-data-row"><span class="k">CURRENT</span><span class="v warn">PORTRAIT</span></div>
     <div class="rot-data-row"><span class="k">STATUS</span><span class="v">AWAITING_ROTATE</span></div>
+    <div class="rot-data-row"><span class="k">UPTIME</span><span class="v" id="rot-uptime">00:00:00.00</span></div>
   </div>
 
-  <p class="rot-version">SYS_REV  1.0.4</p>
+  <p class="rot-version">SYS_REV  1.0.5</p>
 </div>
 <div id="wrap"><canvas id="hud"></canvas><button id="start-btn" type="button">START</button><button id="retry-btn" type="button">RETRY</button><button id="title-btn" type="button">TITLE<span class="kbd">[ESC]</span></button><button id="pulse-btn" type="button"><span id="pulse-label">PULSE</span><span id="pulse-sub">[Z]</span></button></div>
 
@@ -1400,6 +1587,25 @@ function loop(now) {
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
+</script>
+<script>
+// Live UPTIME counter on the rotate-screen overlay
+(function () {
+  const el = document.getElementById('rot-uptime');
+  if (!el) return;
+  const t0 = performance.now();
+  const tick = () => {
+    const ms = performance.now() - t0;
+    const s = Math.floor(ms / 1000);
+    const h  = String(Math.floor(s / 3600)).padStart(2, '0');
+    const m  = String(Math.floor((s % 3600) / 60)).padStart(2, '0');
+    const ss = String(s % 60).padStart(2, '0');
+    const cs = String(Math.floor((ms % 1000) / 10)).padStart(2, '0');
+    el.textContent = `${h}:${m}:${ss}.${cs}`;
+  };
+  setInterval(tick, 60);
+  tick();
+})();
 </script>
 <script>
 if (location.protocol !== 'file:') {
