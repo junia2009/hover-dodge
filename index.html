@@ -568,7 +568,7 @@ body { background:#000; display:flex; align-items:center; justify-content:center
     <div data-phase="4">PHASE 4<span class="sub">CHAOS</span></div>
   </div>
 
-  <p class="rot-version">SYS_REV  1.0.11</p>
+  <p class="rot-version">SYS_REV  1.0.12</p>
 </div>
 <div id="wrap"><canvas id="hud"></canvas><button id="start-btn" type="button">START</button><button id="retry-btn" type="button">RETRY</button><button id="title-btn" type="button">TITLE<span class="kbd">[ESC]</span></button><button id="pulse-btn" type="button"><span id="pulse-label">PULSE</span><span id="pulse-sub">[Z]</span></button></div>
 
@@ -933,6 +933,7 @@ addEventListener('keydown', e => {
   if (e.code === 'KeyM') {
     audioMuted = !audioMuted;
     localStorage.setItem('hd_mute', audioMuted ? 1 : 0);
+    BGM.setMute(audioMuted);
   }
 });
 addEventListener('keyup', e => { if (e.code === 'Space') spaceDown = false; });
@@ -1005,6 +1006,229 @@ const sfxBonus  = () => tone(1320, 0.05, 'sine', 0.10);
 function vibrate(pattern) {
   if (navigator.vibrate) { try { navigator.vibrate(pattern); } catch (e) {} }
 }
+
+// ── BGM (procedural, layered synth) ───────────────────────────────────────────
+// 4 voices (pad / bass / drum / lead) all share one clock; phase progression
+// fades each voice in/out via per-voice GainNodes so transitions are seamless.
+const BGM = {
+  master: null, padG: null, bassG: null, drumG: null, leadG: null,
+  playing: false, startedAt: 0, nextBeat: 0,
+  bpm: 102, patternBars: 4, masterTarget: 0.42, schedTimer: null,
+
+  init() {
+    const a = getAudio(); if (!a || this.master) return;
+    this.master = a.createGain();
+    this.master.gain.value = 0;
+    // Soft-knee compressor keeps peaks in check when all 4 voices stack
+    const comp = a.createDynamicsCompressor();
+    comp.threshold.value = -16;
+    comp.ratio.value     = 4;
+    comp.attack.value    = 0.005;
+    comp.release.value   = 0.12;
+    this.master.connect(comp).connect(a.destination);
+    this.padG  = a.createGain(); this.padG.connect(this.master);
+    this.bassG = a.createGain(); this.bassG.connect(this.master);
+    this.drumG = a.createGain(); this.drumG.connect(this.master);
+    this.leadG = a.createGain(); this.leadG.connect(this.master);
+    this.padG.gain.value = 0;
+    this.bassG.gain.value = 0;
+    this.drumG.gain.value = 0;
+    this.leadG.gain.value = 0;
+  },
+
+  start() {
+    this.init();
+    if (!this.master || this.playing) return;
+    const a = getAudio();
+    this.playing = true;
+    this.startedAt = a.currentTime + 0.05;
+    this.nextBeat = 0;
+    const target = audioMuted ? 0 : this.masterTarget;
+    this.master.gain.cancelScheduledValues(a.currentTime);
+    this.master.gain.setValueAtTime(0, a.currentTime);
+    this.master.gain.linearRampToValueAtTime(target, a.currentTime + 0.6);
+    this.scheduler();
+  },
+
+  stop(fadeMs = 600) {
+    if (!this.master) return;
+    const a = getAudio();
+    const t = a.currentTime;
+    this.master.gain.cancelScheduledValues(t);
+    this.master.gain.setValueAtTime(this.master.gain.value, t);
+    this.master.gain.linearRampToValueAtTime(0, t + fadeMs / 1000);
+    this.playing = false;
+    if (this.schedTimer) { clearTimeout(this.schedTimer); this.schedTimer = null; }
+  },
+
+  setPhase(phase) {
+    if (!this.master) return;
+    const a = getAudio();
+    const t = a.currentTime;
+    const fade = 1.6;
+    const cfg = [
+      { pad: 0.22, bass: 0.00, drum: 0.06, lead: 0.00 }, // PHASE 1: ambient pad + faint hihat
+      { pad: 0.18, bass: 0.20, drum: 0.12, lead: 0.00 }, // PHASE 2: + bass + kick
+      { pad: 0.14, bass: 0.22, drum: 0.18, lead: 0.14 }, // PHASE 3: + lead
+      { pad: 0.10, bass: 0.26, drum: 0.24, lead: 0.20 }, // PHASE 4: full intensity
+    ][Math.max(0, Math.min(3, phase))];
+    for (const [g, v] of [[this.padG, cfg.pad], [this.bassG, cfg.bass],
+                           [this.drumG, cfg.drum], [this.leadG, cfg.lead]]) {
+      g.gain.cancelScheduledValues(t);
+      g.gain.setValueAtTime(g.gain.value, t);
+      g.gain.linearRampToValueAtTime(v, t + fade);
+    }
+  },
+
+  setMute(mute) {
+    if (!this.master) return;
+    const a = getAudio();
+    const t = a.currentTime;
+    this.master.gain.cancelScheduledValues(t);
+    this.master.gain.setValueAtTime(this.master.gain.value, t);
+    this.master.gain.linearRampToValueAtTime(
+      mute ? 0 : (this.playing ? this.masterTarget : 0),
+      t + 0.2
+    );
+  },
+
+  scheduler() {
+    if (!this.playing) return;
+    const a = getAudio();
+    const beatLen = 60 / this.bpm;
+    const now = a.currentTime;
+    // If tab was inactive and we fell behind, skip ahead instead of dumping
+    // hundreds of past-due notes into the audio graph.
+    const expectedBeat = (now - this.startedAt) / beatLen;
+    if (this.nextBeat < expectedBeat - 8) this.nextBeat = Math.floor(expectedBeat);
+    while (this.startedAt + this.nextBeat * beatLen < now + 0.25) {
+      const t = this.startedAt + this.nextBeat * beatLen;
+      if (t >= now - 0.05) this.scheduleBeat(this.nextBeat, t, beatLen);
+      this.nextBeat++;
+    }
+    this.schedTimer = setTimeout(() => this.scheduler(), 60);
+  },
+
+  scheduleBeat(beat, time, beatLen) {
+    const total = this.patternBars * 4;
+    const step = beat % total;        // 0..15
+    const half = beat % (total * 2);  // 0..31 for variation across two loops
+
+    // Chord progression Am - F - C - G (one chord per bar, A minor key)
+    const padFreqs = [110, 87.31, 130.81, 98];
+    if (step % 4 === 0) {
+      this.playPad(padFreqs[(step / 4) | 0], time, beatLen * 4);
+    }
+
+    // Bass: root note on every beat with octave bounce on offbeats
+    const bassRoot = padFreqs[(step / 4) | 0];
+    const bassFreq = (step % 2 === 0) ? bassRoot : bassRoot * 1.5; // root / fifth
+    this.playBass(bassFreq, time, beatLen * 0.85);
+
+    // Drums
+    this.playHihat(time,                0.5);
+    this.playHihat(time + beatLen * 0.5, 0.4);
+    if (step % 2 === 0) this.playKick(time);
+    if (step % 2 === 1) this.playSnare(time);
+
+    // Lead riff (16-step). Frequencies in upper octave; 0 = rest.
+    const leadPattern = [
+      440,   0, 523.25, 0, 587.33, 0, 523.25, 0,
+      659.25, 587.33, 523.25, 440, 0, 392, 440, 0,
+    ];
+    const leadFreq = leadPattern[step];
+    if (leadFreq) this.playLead(leadFreq, time, beatLen * 0.55);
+
+    // Variation: every other loop, drop in an upper octave on the lead
+    if (leadFreq && half >= total) {
+      this.playLead(leadFreq * 2, time, beatLen * 0.3);
+    }
+  },
+
+  playPad(freq, time, dur) {
+    const a = getAudio();
+    const o1 = a.createOscillator(); o1.type = 'sine';     o1.frequency.value = freq;
+    const o2 = a.createOscillator(); o2.type = 'triangle'; o2.frequency.value = freq * 1.005;
+    const filt = a.createBiquadFilter();
+    filt.type = 'lowpass'; filt.frequency.value = 1400;
+    const g = a.createGain();
+    g.gain.setValueAtTime(0.0001, time);
+    g.gain.linearRampToValueAtTime(1, time + 0.7);
+    g.gain.linearRampToValueAtTime(0.0001, time + dur);
+    o1.connect(filt); o2.connect(filt); filt.connect(g).connect(this.padG);
+    o1.start(time); o2.start(time);
+    o1.stop(time + dur + 0.1); o2.stop(time + dur + 0.1);
+  },
+
+  playBass(freq, time, dur) {
+    const a = getAudio();
+    const o = a.createOscillator(); o.type = 'sawtooth'; o.frequency.value = freq;
+    const filt = a.createBiquadFilter(); filt.type = 'lowpass';
+    filt.frequency.setValueAtTime(420, time);
+    filt.frequency.exponentialRampToValueAtTime(180, time + dur);
+    const g = a.createGain();
+    g.gain.setValueAtTime(0.0001, time);
+    g.gain.linearRampToValueAtTime(1, time + 0.005);
+    g.gain.exponentialRampToValueAtTime(0.001, time + dur);
+    o.connect(filt).connect(g).connect(this.bassG);
+    o.start(time); o.stop(time + dur);
+  },
+
+  playHihat(time, vol = 0.5) {
+    const a = getAudio();
+    const dur = 0.04;
+    const buf = a.createBuffer(1, Math.floor(a.sampleRate * dur), a.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+    const src = a.createBufferSource(); src.buffer = buf;
+    const filt = a.createBiquadFilter(); filt.type = 'highpass'; filt.frequency.value = 7000;
+    const g = a.createGain();
+    g.gain.setValueAtTime(vol, time);
+    g.gain.exponentialRampToValueAtTime(0.001, time + dur);
+    src.connect(filt).connect(g).connect(this.drumG);
+    src.start(time);
+  },
+
+  playKick(time) {
+    const a = getAudio();
+    const dur = 0.16;
+    const o = a.createOscillator(); o.type = 'sine';
+    o.frequency.setValueAtTime(140, time);
+    o.frequency.exponentialRampToValueAtTime(40, time + dur);
+    const g = a.createGain();
+    g.gain.setValueAtTime(1, time);
+    g.gain.exponentialRampToValueAtTime(0.001, time + dur);
+    o.connect(g).connect(this.drumG);
+    o.start(time); o.stop(time + dur);
+  },
+
+  playSnare(time) {
+    const a = getAudio();
+    const dur = 0.10;
+    const buf = a.createBuffer(1, Math.floor(a.sampleRate * dur), a.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+    const src = a.createBufferSource(); src.buffer = buf;
+    const filt = a.createBiquadFilter(); filt.type = 'bandpass'; filt.frequency.value = 1500;
+    const g = a.createGain();
+    g.gain.setValueAtTime(0.6, time);
+    g.gain.exponentialRampToValueAtTime(0.001, time + dur);
+    src.connect(filt).connect(g).connect(this.drumG);
+    src.start(time);
+  },
+
+  playLead(freq, time, dur) {
+    const a = getAudio();
+    const o = a.createOscillator(); o.type = 'square'; o.frequency.value = freq;
+    const filt = a.createBiquadFilter(); filt.type = 'lowpass'; filt.frequency.value = 2400;
+    const g = a.createGain();
+    g.gain.setValueAtTime(0.0001, time);
+    g.gain.linearRampToValueAtTime(0.5, time + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.001, time + dur);
+    o.connect(filt).connect(g).connect(this.leadG);
+    o.start(time); o.stop(time + dur);
+  },
+};
 
 // ── Phases / difficulty ───────────────────────────────────────────────────────
 const PHASE_CONFIG = [
@@ -1098,12 +1322,15 @@ function startGame() {
   clearWorld();
   for (let i = 0; i < 4; i++) addWall(VW + i*265);
   getAudio();   // user-gesture audio unlock
+  BGM.start();
+  BGM.setPhase(0);
 }
 
 function gotoMenu() {
   clearWorld();
   bonusPopups = [];
   gstate = 'menu';
+  BGM.stop(500);
 }
 
 function die() {
@@ -1111,6 +1338,7 @@ function die() {
   deadCooldown = 30;
   sfxHit();
   vibrate([60, 40, 90]);
+  BGM.stop(800);
   const s = Math.floor(score);
   if (s > hiScore) { hiScore = s; localStorage.setItem('hd_hi', s); }
   shakeX = 12; shakeY = 9;
@@ -1192,6 +1420,7 @@ function update(dt) {
   curPhase = getPhase(score);
   if (curPhase !== lastPhase) {
     if (lastPhase >= 0) { phaseFlash = 90; sfxBonus(); }
+    BGM.setPhase(curPhase);
     lastPhase = curPhase;
   }
   const cfg = PHASE_CONFIG[curPhase];
