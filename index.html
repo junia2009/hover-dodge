@@ -525,6 +525,147 @@ body { background:#000; display:flex; align-items:center; justify-content:center
 #title-btn:hover  { background: rgba(0, 0, 0, 0.65); border-color: rgba(220, 235, 250, 0.85); }
 #title-btn:active { transform: translate(-50%, -50%) scale(0.94); }
 #title-btn .kbd   { font-size: 9px; opacity: 0.6; margin-left: 6px; letter-spacing: 1px; }
+
+/* ── Shop button on rotate-screen ─────────────────────────────────── */
+.rot-shop-btn {
+  margin-top: 8px;
+  padding: 10px 22px;
+  border-radius: 999px;
+  border: 1.6px solid #ffd966;
+  background: rgba(255, 217, 102, 0.10);
+  color: #ffe680;
+  font: bold 13px/1 monospace;
+  letter-spacing: 4px;
+  cursor: pointer;
+  z-index: 3;
+  box-shadow: 0 0 14px rgba(255, 217, 102, 0.45);
+  text-shadow: 0 0 6px rgba(255, 217, 102, 0.7);
+  -webkit-user-select: none; user-select: none;
+  display: inline-flex; align-items: center; gap: 10px;
+  transition: background 0.15s, transform 0.1s;
+}
+.rot-shop-btn:hover  { background: rgba(255, 217, 102, 0.20); }
+.rot-shop-btn:active { transform: scale(0.94); }
+.rot-shop-btn .xp {
+  font-size: 10px; letter-spacing: 1.5px;
+  color: rgba(255, 230, 128, 0.85);
+  padding-left: 10px;
+  border-left: 1px solid rgba(255, 217, 102, 0.5);
+}
+
+/* ── Shop modal ───────────────────────────────────────────────────── */
+#shop-modal {
+  display: none;
+  position: fixed; top: 0; left: 0; right: 0;
+  height: 100vh; height: 100svh;
+  z-index: 10000;
+  background: rgba(2, 4, 14, 0.94);
+  font-family: monospace;
+  color: #00e8ff;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: calc(56px + env(safe-area-inset-top, 0px)) 18px calc(48px + env(safe-area-inset-bottom, 0px));
+}
+#shop-modal.open { display: block; }
+.shop-panel {
+  max-width: 460px; margin: 0 auto;
+}
+.shop-head {
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px dashed rgba(0, 232, 255, 0.4);
+  padding-bottom: 10px;
+  margin-bottom: 14px;
+}
+.shop-title {
+  font: bold 22px/1 monospace;
+  letter-spacing: 6px;
+  color: #00e8ff;
+  text-shadow: 0 0 12px #00e8ff;
+}
+.shop-close {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(0, 232, 255, 0.6);
+  background: rgba(0, 232, 255, 0.08);
+  color: #00e8ff;
+  font: 18px/1 monospace;
+  cursor: pointer;
+}
+.shop-info {
+  display: flex; justify-content: space-between;
+  font-size: 11px; letter-spacing: 2px;
+  color: rgba(180, 220, 240, 0.8);
+  margin-bottom: 14px;
+}
+.shop-info .xp-val {
+  color: #ffe680; font-weight: bold;
+  text-shadow: 0 0 6px rgba(255, 217, 102, 0.55);
+}
+.shop-info .slot-val { color: #00e8ff; font-weight: bold; }
+.shop-card {
+  position: relative;
+  border: 1px solid rgba(0, 232, 255, 0.35);
+  background: linear-gradient(180deg, rgba(0,232,255,0.05), rgba(0,232,255,0.02));
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  border-radius: 6px;
+  box-shadow: 0 0 6px rgba(0, 232, 255, 0.10);
+}
+.shop-card.owned     { border-color: rgba(0, 232, 255, 0.6); }
+.shop-card.equipped  { border-color: #ffe680; box-shadow: 0 0 14px rgba(255, 217, 102, 0.45); }
+.shop-card-head {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 6px;
+}
+.shop-kind {
+  font: 9px monospace; letter-spacing: 2px;
+  color: rgba(170, 68, 255, 0.85);
+  border: 1px solid rgba(170, 68, 255, 0.6);
+  padding: 2px 6px; border-radius: 3px;
+}
+.shop-kind.ATTACK  { color: #ff66e0; border-color: #ff66e0; }
+.shop-kind.DEFENSE { color: #aaffaa; border-color: #aaffaa; }
+.shop-kind.PASSIVE { color: #66c8ff; border-color: #66c8ff; }
+.shop-name {
+  font: bold 14px/1 monospace;
+  letter-spacing: 2px;
+  color: #ffffff;
+  text-shadow: 0 0 6px rgba(0, 232, 255, 0.6);
+}
+.shop-desc {
+  font: 11px/1.5 monospace;
+  letter-spacing: 1px;
+  color: rgba(180, 210, 240, 0.78);
+  margin-bottom: 10px;
+}
+.shop-action {
+  width: 100%;
+  padding: 9px 14px;
+  border-radius: 4px;
+  border: 1.5px solid #00e8ff;
+  background: rgba(0, 232, 255, 0.10);
+  color: #00e8ff;
+  font: bold 12px/1 monospace;
+  letter-spacing: 3px;
+  cursor: pointer;
+  -webkit-user-select: none; user-select: none;
+}
+.shop-action:hover    { background: rgba(0, 232, 255, 0.20); }
+.shop-action:disabled { opacity: 0.45; cursor: not-allowed; border-color: rgba(0, 232, 255, 0.3); color: rgba(0, 232, 255, 0.5); }
+.shop-action.equipped {
+  border-color: #ffe680; color: #ffe680;
+  background: rgba(255, 217, 102, 0.12);
+}
+.shop-action.locked   {
+  border-color: rgba(255, 100, 100, 0.5);
+  color: rgba(255, 140, 140, 0.7);
+  background: rgba(255, 100, 100, 0.06);
+}
+.shop-empty {
+  text-align: center; padding: 40px 16px;
+  color: rgba(180, 210, 240, 0.55);
+  font: 11px/1.6 monospace;
+}
 </style>
 </head>
 <body>
@@ -568,7 +709,26 @@ body { background:#000; display:flex; align-items:center; justify-content:center
     <div data-phase="4">PHASE 4<span class="sub">CHAOS</span></div>
   </div>
 
-  <p class="rot-version">SYS_REV  1.0.12</p>
+  <button class="rot-shop-btn" id="rot-shop-btn" type="button">
+    SHOP
+    <span class="xp"><span id="rot-xp">0</span> XP</span>
+  </button>
+
+  <p class="rot-version">SYS_REV  1.0.13</p>
+</div>
+
+<div id="shop-modal">
+  <div class="shop-panel">
+    <div class="shop-head">
+      <span class="shop-title">SHOP</span>
+      <button class="shop-close" id="shop-close" type="button">×</button>
+    </div>
+    <div class="shop-info">
+      <span>XP&nbsp; <span class="xp-val" id="shop-xp">0</span></span>
+      <span>EQUIPPED&nbsp; <span class="slot-val" id="shop-slots">0/2</span></span>
+    </div>
+    <div id="shop-list"></div>
+  </div>
 </div>
 <div id="wrap"><canvas id="hud"></canvas><button id="start-btn" type="button">START</button><button id="retry-btn" type="button">RETRY</button><button id="title-btn" type="button">TITLE<span class="kbd">[ESC]</span></button><button id="pulse-btn" type="button"><span id="pulse-label">PULSE</span><span id="pulse-sub">[Z]</span></button></div>
 
@@ -879,6 +1039,14 @@ function flap() {
   if (gstate === 'dead') return;             // require RETRY button on game over
   P.vy = FLAP_VY;
   sfxFlap();
+  fireForwardShot();
+}
+
+function fireForwardShot() {
+  if (!hasSkill('forward_shot') || bulletCooldown > 0) return;
+  bulletCooldown = BULLET_CD;
+  bullets.push({ x: P.x + 18, y: P.y, vx: 11 });
+  tone(720, 0.05, 'square', 0.10, 1100);
 }
 
 function firePulse() {
@@ -957,6 +1125,94 @@ const titleBtn = document.getElementById('title-btn');
 const handleTitle = () => { if (gstate === 'dead' && deadCooldown <= 0) gotoMenu(); };
 titleBtn.addEventListener('click',      e => { e.stopPropagation(); handleTitle(); });
 titleBtn.addEventListener('touchstart', e => { e.preventDefault(); e.stopPropagation(); handleTitle(); }, { passive:false });
+
+// ── Shop UI ──────────────────────────────────────────────────────────────────
+const shopModal   = document.getElementById('shop-modal');
+const shopList    = document.getElementById('shop-list');
+const shopXpEl    = document.getElementById('shop-xp');
+const shopSlotsEl = document.getElementById('shop-slots');
+const shopCloseBtn= document.getElementById('shop-close');
+const rotShopBtn  = document.getElementById('rot-shop-btn');
+const rotXpEl     = document.getElementById('rot-xp');
+
+function renderShopUI() {
+  loadProgression();
+  if (shopXpEl)    shopXpEl.textContent = totalXP;
+  if (shopSlotsEl) shopSlotsEl.textContent = `${equippedSkills.length}/${MAX_EQUIP_SLOTS}`;
+  if (rotXpEl)     rotXpEl.textContent = totalXP;
+  if (!shopList) return;
+  shopList.innerHTML = '';
+  for (const sk of SKILL_DEFS) {
+    const owned    = ownedSkills.includes(sk.id);
+    const equipped = equippedSkills.includes(sk.id);
+    const canAfford = totalXP >= sk.price;
+    const slotsFull = equippedSkills.length >= MAX_EQUIP_SLOTS;
+
+    const card = document.createElement('div');
+    card.className = 'shop-card' + (owned ? ' owned' : '') + (equipped ? ' equipped' : '');
+
+    let actLabel, actClass = '', disabled = false;
+    if (owned) {
+      if (equipped) { actLabel = 'EQUIPPED · TAP TO UNEQUIP'; actClass = 'equipped'; }
+      else if (slotsFull) { actLabel = `EQUIP SLOTS FULL (${MAX_EQUIP_SLOTS})`; disabled = true; }
+      else { actLabel = 'EQUIP'; }
+    } else if (canAfford) {
+      actLabel = `BUY · ${sk.price} XP`;
+    } else {
+      actLabel = `LOCKED · ${sk.price} XP`;
+      actClass = 'locked';
+      disabled = true;
+    }
+
+    card.innerHTML = `
+      <div class="shop-card-head">
+        <span class="shop-name">${sk.name}</span>
+        <span class="shop-kind ${sk.kind}">${sk.kind}</span>
+      </div>
+      <div class="shop-desc">${sk.desc}</div>
+      <button class="shop-action ${actClass}" type="button"${disabled ? ' disabled' : ''}>${actLabel}</button>
+    `;
+    const btn = card.querySelector('.shop-action');
+    btn.addEventListener('click', () => {
+      if (!owned) {
+        if (buySkill(sk.id)) { sfxBonus(); vibrate(20); }
+      } else {
+        toggleEquip(sk.id);
+        sfxScore();
+      }
+      renderShopUI();
+    });
+    shopList.appendChild(card);
+  }
+}
+
+function openShop()  { renderShopUI(); shopModal.classList.add('open'); }
+function closeShop() { shopModal.classList.remove('open'); }
+
+if (rotShopBtn) {
+  rotShopBtn.addEventListener('click', e => { e.stopPropagation(); openShop(); });
+  rotShopBtn.addEventListener('touchstart', e => { e.preventDefault(); e.stopPropagation(); openShop(); }, { passive:false });
+}
+if (shopCloseBtn) {
+  shopCloseBtn.addEventListener('click', e => { e.stopPropagation(); closeShop(); });
+  shopCloseBtn.addEventListener('touchstart', e => { e.preventDefault(); e.stopPropagation(); closeShop(); }, { passive:false });
+}
+// ESC closes shop when open
+addEventListener('keydown', e => {
+  if (e.code === 'Escape' && shopModal && shopModal.classList.contains('open')) {
+    e.preventDefault(); closeShop();
+  }
+});
+// Refresh XP display on portrait orientation change; close shop on landscape.
+const _shopMQ = matchMedia('(orientation: portrait)');
+const _refreshRotXp = () => {
+  loadProgression();
+  if (rotXpEl) rotXpEl.textContent = totalXP;
+  if (!_shopMQ.matches && shopModal) shopModal.classList.remove('open');
+};
+if (_shopMQ.addEventListener) _shopMQ.addEventListener('change', _refreshRotXp);
+else if (_shopMQ.addListener) _shopMQ.addListener(_refreshRotXp);
+_refreshRotXp();
 
 // ── Audio (WebAudio synth) ────────────────────────────────────────────────────
 let audioCtx = null;
@@ -1248,6 +1504,65 @@ function getPhase(s) {
 // dtScale: 1.0 == one 60Hz frame. Capped to avoid huge jumps after tab-resume.
 let dtScale = 1;
 
+// ── Progression: XP + Skills ──────────────────────────────────────────────────
+// Add a new entry to SKILL_DEFS to expose a new skill in the shop. Effects are
+// gated by hasSkill(id) checks scattered through the gameplay code below.
+const SKILL_DEFS = [
+  {
+    id: 'forward_shot', name: 'FORWARD SHOT', kind: 'ATTACK',
+    desc: 'タップ/SPACEで前方に弾を発射 (CD 0.4s)',
+    price: 150,
+  },
+  {
+    id: 'shield', name: 'SHIELD', kind: 'DEFENSE',
+    desc: '1ラン中に最初の1回の被弾を吸収',
+    price: 280,
+  },
+  {
+    id: 'slow_gravity', name: 'SLOW GRAVITY', kind: 'PASSIVE',
+    desc: '重力25%軽減で滞空しやすく',
+    price: 420,
+  },
+];
+const MAX_EQUIP_SLOTS = 2;
+
+let totalXP = 0, runXP = 0;
+let ownedSkills = [];
+let equippedSkills = [];
+
+function loadProgression() {
+  totalXP = +localStorage.getItem('hd_xp') || 0;
+  try { ownedSkills = JSON.parse(localStorage.getItem('hd_owned') || '[]') || []; }
+  catch (e) { ownedSkills = []; }
+  try { equippedSkills = JSON.parse(localStorage.getItem('hd_equip') || '[]') || []; }
+  catch (e) { equippedSkills = []; }
+}
+function saveProgression() {
+  localStorage.setItem('hd_xp', String(totalXP));
+  localStorage.setItem('hd_owned', JSON.stringify(ownedSkills));
+  localStorage.setItem('hd_equip', JSON.stringify(equippedSkills));
+}
+function hasSkill(id) { return equippedSkills.includes(id); }
+function buySkill(id) {
+  const sk = SKILL_DEFS.find(s => s.id === id);
+  if (!sk || ownedSkills.includes(id) || totalXP < sk.price) return false;
+  totalXP -= sk.price;
+  ownedSkills.push(id);
+  saveProgression();
+  return true;
+}
+function toggleEquip(id) {
+  if (!ownedSkills.includes(id)) return;
+  const i = equippedSkills.indexOf(id);
+  if (i >= 0) {
+    equippedSkills.splice(i, 1);
+  } else if (equippedSkills.length < MAX_EQUIP_SLOTS) {
+    equippedSkills.push(id);
+  }
+  saveProgression();
+}
+loadProgression();
+
 // ── Game state ────────────────────────────────────────────────────────────────
 let gstate = 'menu';
 let score = 0, hiScore = +localStorage.getItem('hd_hi') || 0;
@@ -1264,7 +1579,11 @@ let lastMilestone = 0;       // last 10-second beep
 let pulseUsedThisRun = false;
 
 const P = { x: 150, y: VH/2, vx: 0, vy: 0, bankAngle: 0, r: 6, inv: 0 };
-let walls = [], enemies = [], sparks = [];
+let walls = [], enemies = [], sparks = [], bullets = [];
+let bulletCooldown = 0;
+let shieldCharges = 0;
+const BULLET_CD = 24;          // frames (0.4s @ 60fps)
+const bulletMeshMap = new Map();
 
 // ── Spawners ──────────────────────────────────────────────────────────────────
 function addWall(startX) {
@@ -1297,12 +1616,24 @@ function pushBonus(x, y, text, color) {
 }
 
 // ── Game flow ─────────────────────────────────────────────────────────────────
+function removeBulletMesh(b) {
+  const m = bulletMeshMap.get(b);
+  if (m) {
+    scene.remove(m);
+    m.geometry.dispose();
+    m.material.dispose();
+    bulletMeshMap.delete(b);
+  }
+}
+
 function clearWorld() {
   for (const w of walls) removeWallMesh(w);
   for (const e of enemies) removeEnemyMesh(e);
+  for (const b of bullets) removeBulletMesh(b);
   for (const sm of sparkMeshPool) scene.remove(sm);
   sparkMeshPool.length = 0;
-  walls = []; enemies = []; sparks = [];
+  walls = []; enemies = []; sparks = []; bullets = [];
+  bulletCooldown = 0;
   for (const pr of pulseRings) {
     scene.remove(pr.mesh);  pr.mesh.geometry.dispose();  pr.mesh.material.dispose();
     scene.remove(pr.mesh2); pr.mesh2.geometry.dispose(); pr.mesh2.material.dispose();
@@ -1312,12 +1643,15 @@ function clearWorld() {
 }
 
 function startGame() {
+  loadProgression();           // refresh equipped skills from shop
   gstate = 'play'; score = frame = 0; spd = 3;
   P.x = 150; P.y = VH/2; P.vx = P.vy = 0; P.bankAngle = 0; P.inv = 90;
   enemySpawnTimer = 120;   // grace period before first enemy
   curPhase = 0; lastPhase = -1; phaseFlash = 0;
   killCount = 0; nearMissCount = 0;
   nopulseStreak = 0; lastMilestone = 0; pulseUsedThisRun = false;
+  runXP = 0;
+  shieldCharges = hasSkill('shield') ? 1 : 0;
   bonusPopups = [];
   clearWorld();
   for (let i = 0; i < 4; i++) addWall(VW + i*265);
@@ -1334,6 +1668,28 @@ function gotoMenu() {
 }
 
 function die() {
+  // SHIELD skill: first hit is absorbed (consumes the charge).
+  if (shieldCharges > 0) {
+    shieldCharges--;
+    P.inv = 90;          // 1.5s invulnerability after shield break
+    sfxBonus();          // light up sound instead of death
+    vibrate(40);
+    shakeX = 6; shakeY = 4;
+    // Visual shield-break ring (uses the existing pulse-ring mesh path)
+    const makeRing = (color, z) => {
+      const m = new THREE.Mesh(
+        new THREE.TorusGeometry(1, 0.020, 6, 64),
+        new THREE.MeshBasicMaterial({ color, transparent: true, depthWrite: false })
+      );
+      m.position.copy(W(P.x, P.y, z));
+      scene.add(m);
+      return m;
+    };
+    pulseRings.push({ r: 0, prevR: 0, x: P.x, y: P.y,
+      mesh: makeRing(0xaaffaa, 8), mesh2: makeRing(0x44ff88, 6) });
+    pushBonus(P.x, P.y - 22, 'SHIELD!', '#aaffaa');
+    return;
+  }
   gstate = 'dead';
   deadCooldown = 30;
   sfxHit();
@@ -1341,6 +1697,11 @@ function die() {
   BGM.stop(800);
   const s = Math.floor(score);
   if (s > hiScore) { hiScore = s; localStorage.setItem('hd_hi', s); }
+  // Bank earned XP from this run
+  if (runXP > 0) {
+    totalXP += Math.floor(runXP);
+    saveProgression();
+  }
   shakeX = 12; shakeY = 9;
   for (let i = 0; i < 60; i++) {
     const a = Math.random()*Math.PI*2, v = Math.random()*8+1;
@@ -1420,6 +1781,10 @@ function update(dt) {
   curPhase = getPhase(score);
   if (curPhase !== lastPhase) {
     if (lastPhase >= 0) { phaseFlash = 90; sfxBonus(); }
+    if (curPhase === 3 && lastPhase < 3) {
+      runXP += 60;
+      pushBonus(P.x, P.y - 28, '+60 XP', '#ffee66');
+    }
     BGM.setPhase(curPhase);
     lastPhase = curPhase;
   }
@@ -1435,10 +1800,52 @@ function update(dt) {
   // No-pulse streak counter
   nopulseStreak += dt / 60;
 
+  // XP: passive trickle from survival time
+  runXP += dt * (2 / 60);
+  // Phase-4 reached bonus (one-time per run)
+  if (curPhase === 3 && lastPhase < 3) {
+    // lastPhase is reassigned right after the phase-change block above, so this
+    // condition won't re-fire; the +60 lands once when the player crosses 100s.
+  }
+
   // Player — gravity + flap impulse (Flappy-Bird style)
-  P.vy += GRAVITY * dt;
+  const gravMult = hasSkill('slow_gravity') ? 0.75 : 1;
+  P.vy += GRAVITY * gravMult * dt;
   if (P.vy > 14) P.vy = 14;
   P.y = Math.max(P.r, Math.min(VH - P.r, P.y + P.vy * dt));
+
+  // Bullets (FORWARD SHOT skill)
+  if (bulletCooldown > 0) bulletCooldown -= dt;
+  for (const b of bullets) b.x += b.vx * dt;
+  bullets = bullets.filter(b => {
+    if (b.x > VW + 20) { removeBulletMesh(b); return false; }
+    for (let i = enemies.length - 1; i >= 0; i--) {
+      const e = enemies[i];
+      const dx = b.x - e.x, dy = b.y - e.y;
+      const rr = 4 + e.r;
+      if (dx*dx + dy*dy < rr*rr) {
+        killCount++;
+        runXP += 5;
+        const kb = e.type === 'b' ? 10 : 15;
+        score += kb / 60;
+        pushBonus(e.x, e.y, `+${kb}`, '#88ffcc');
+        for (let k = 0; k < 8; k++) {
+          const a = Math.random()*Math.PI*2, v = 2+Math.random()*4;
+          const sp = { x:e.x, y:e.y, vx:Math.cos(a)*v, vy:Math.sin(a)*v,
+            life:1, sz:0.7+Math.random()*2, hue:e.type==='b' ? 20 : 35 };
+          sparks.push(sp);
+          const sm = new THREE.Mesh(new THREE.SphereGeometry(sp.sz*0.8,4,4),
+            new THREE.MeshBasicMaterial({ color:new THREE.Color(`hsl(${sp.hue},100%,70%)`), transparent:true }));
+          sm.userData.sp = sp; scene.add(sm); sparkMeshPool.push(sm);
+        }
+        removeEnemyMesh(e);
+        enemies.splice(i, 1);
+        removeBulletMesh(b);
+        return false;
+      }
+    }
+    return true;
+  });
 
   const bankTarget = Math.max(-0.40, Math.min(0.40, P.vy * 0.052));
   P.bankAngle += (bankTarget - P.bankAngle) * Math.min(0.5, 0.10 * dt);
@@ -1458,9 +1865,11 @@ function update(dt) {
       const margin = halfGap - distFromCenter; // distance from nearest edge
       if (margin < halfGap * 0.30) {
         // Tight pass! +bonus
-        const bonus = margin < halfGap * 0.15 ? 25 : 10;
+        const tight = margin < halfGap * 0.15;
+        const bonus = tight ? 25 : 10;
         score += bonus / 60;  // convert "score points" to seconds (~minor add)
         nearMissCount++;
+        runXP += tight ? 8 : 3;
         pushBonus(P.x, P.y - 22, `+${bonus} NEAR!`, '#ffee44');
         sfxBonus();
         vibrate(8);
@@ -1531,6 +1940,7 @@ function update(dt) {
       }
       // Kill bonus
       killCount++;
+      runXP += 5;
       const kb = e.type === 'b' ? 15 : 20;
       score += kb / 60;
       pushBonus(e.x, e.y, `+${kb}`, e.type === 'b' ? '#ff8844' : '#ffaa55');
@@ -1623,11 +2033,29 @@ function syncScene() {
   for (const pr of pulseRings) {
     const alpha = 1 - pr.r / PULSE_MAX_R;
     pr.mesh.scale.set(pr.r, pr.r, 1);
-    pr.mesh.position.copy(W(P.x, P.y, 8));
+    pr.mesh.position.copy(W(pr.x ?? P.x, pr.y ?? P.y, 8));
     pr.mesh.material.opacity = alpha;
     pr.mesh2.scale.set(pr.r * 0.80, pr.r * 0.80, 1);
-    pr.mesh2.position.copy(W(P.x, P.y, 6));
+    pr.mesh2.position.copy(W(pr.x ?? P.x, pr.y ?? P.y, 6));
     pr.mesh2.material.opacity = alpha * 0.6;
+  }
+
+  // Bullets (FORWARD SHOT)
+  for (const b of bullets) {
+    let m = bulletMeshMap.get(b);
+    if (!m) {
+      m = new THREE.Mesh(
+        new THREE.SphereGeometry(3.2, 8, 8),
+        new THREE.MeshBasicMaterial({ color: 0xaaffff })
+      );
+      scene.add(m);
+      bulletMeshMap.set(b, m);
+    }
+    m.position.copy(W(b.x, b.y, 4)).add(sk);
+  }
+  // Shield aura (subtle ring while shieldCharges > 0)
+  if (gstate === 'play' && shieldCharges > 0) {
+    // ship halo handled by shipLight; nothing else needed here
   }
 
   // Sparks
@@ -1713,16 +2141,26 @@ function drawHUD() {
   HX.shadowBlur=0; HX.font='11px monospace';
   HX.fillStyle='rgba(180,210,240,0.55)';
   HX.fillText(`KILL ${killCount}   NEAR ${nearMissCount}`, 18, 86);
+  // XP earned this run
+  HX.fillStyle='rgba(200,255,200,0.62)';
+  HX.fillText(`+${Math.floor(runXP)} XP`, 18, 100);
   if (!pulseUsedThisRun && nopulseStreak > 5) {
     HX.fillStyle='rgba(180,255,200,0.75)';
-    HX.fillText(`PURIST  ${nopulseStreak.toFixed(1)}s`, 18, 100);
+    HX.fillText(`PURIST  ${nopulseStreak.toFixed(1)}s`, 18, 114);
   }
 
-  // Top-right: phase indicator
+  // Top-right: phase indicator (+ shield charges if any)
   HX.textAlign='right';
   HX.fillStyle='rgba(180,210,240,0.45)';
   HX.font='11px monospace';
   HX.fillText(PHASE_CONFIG[curPhase].name, VW - 18, 22);
+  if (shieldCharges > 0) {
+    HX.shadowColor='#aaffaa'; HX.shadowBlur=8;
+    HX.fillStyle='#aaffaa';
+    HX.font='bold 11px monospace';
+    HX.fillText(`◇ SHIELD x${shieldCharges}`, VW - 18, 40);
+    HX.shadowBlur=0;
+  }
 
   // Phase transition banner
   if (phaseFlash > 0) {
@@ -1769,10 +2207,16 @@ function drawHUD() {
     HX.font='12px monospace';
     HX.fillText(`KILLS ${killCount}   NEAR-MISS ${nearMissCount}`, VW/2, VH/2+34);
 
+    // XP earned this run
+    HX.shadowColor='#88ffaa'; HX.shadowBlur=10; HX.fillStyle='#aaffcc';
+    HX.font='bold 16px monospace';
+    HX.fillText(`+${Math.floor(runXP)} XP`, VW/2, VH/2+56);
+    HX.shadowBlur=0;
+
     if (Math.floor(score) >= hiScore && hiScore > 0) {
       const rp = 0.7 + Math.sin(tick*0.1)*0.3;
       HX.globalAlpha=rp; HX.shadowColor='#ffee44'; HX.shadowBlur=24; HX.fillStyle='#ffee55';
-      HX.font='bold 22px monospace'; HX.fillText('★  NEW RECORD  ★', VW/2, VH/2+64);
+      HX.font='bold 22px monospace'; HX.fillText('★  NEW RECORD  ★', VW/2, VH/2+82);
       HX.globalAlpha=1;
     }
     HX.globalAlpha=1; HX.shadowBlur=0; HX.textAlign='left';
