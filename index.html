@@ -859,7 +859,7 @@ body { background:#000; display:flex; align-items:center; justify-content:center
     </button>
   </div>
 
-  <p class="rot-version">SYS_REV  1.0.19</p>
+  <p class="rot-version">SYS_REV  1.0.20</p>
 </div>
 
 <div id="shop-modal">
@@ -2195,35 +2195,43 @@ function update(dt) {
   if (P.vy > 14) P.vy = 14;
   P.y = Math.max(P.r, Math.min(VH - P.r, P.y + P.vy * dt));
 
-  // Bullets (FORWARD SHOT skill)
+  // Bullets (FORWARD SHOT skill).
+  // Swept collision: the bullet moves up to 11*dt px/frame which can exceed
+  // the enemy hit-radius (rr=9), so a simple point-in-circle test after
+  // moving misses cases where the bullet's *path segment* crosses the
+  // enemy but neither sample point lands inside the circle. We snapshot
+  // prevX before moving and test the entire horizontal segment.
   if (bulletCooldown > 0) bulletCooldown -= dt;
-  for (const b of bullets) b.x += b.vx * dt;
+  for (const b of bullets) { b.prevX = b.x; b.x += b.vx * dt; }
   bullets = bullets.filter(b => {
     if (b.x > VW + 20) { removeBulletMesh(b); return false; }
     for (let i = enemies.length - 1; i >= 0; i--) {
       const e = enemies[i];
-      const dx = b.x - e.x, dy = b.y - e.y;
+      const dy = b.y - e.y;
       const rr = 4 + e.r;
-      if (dx*dx + dy*dy < rr*rr) {
-        killCount++;
-        addRunXP(5);
-        const kb = e.type === 'b' ? 10 : 15;
-        score += kb / 60;
-        pushBonus(e.x, e.y, `+${kb}`, '#88ffcc');
-        for (let k = 0; k < 8; k++) {
-          const a = Math.random()*Math.PI*2, v = 2+Math.random()*4;
-          const sp = { x:e.x, y:e.y, vx:Math.cos(a)*v, vy:Math.sin(a)*v,
-            life:1, sz:0.7+Math.random()*2, hue:e.type==='b' ? 20 : 35 };
-          sparks.push(sp);
-          const sm = new THREE.Mesh(new THREE.SphereGeometry(sp.sz*0.8,4,4),
-            new THREE.MeshBasicMaterial({ color:new THREE.Color(`hsl(${sp.hue},100%,70%)`), transparent:true }));
-          sm.userData.sp = sp; scene.add(sm); sparkMeshPool.push(sm);
-        }
-        removeEnemyMesh(e);
-        enemies.splice(i, 1);
-        removeBulletMesh(b);
-        return false;
+      if (Math.abs(dy) >= rr) continue;                  // segment can't reach this y
+      const xExt = Math.sqrt(rr*rr - dy*dy);             // half-chord at b.y on circle
+      const enemyXMin = e.x - xExt, enemyXMax = e.x + xExt;
+      const bulletXMin = Math.min(b.prevX, b.x), bulletXMax = Math.max(b.prevX, b.x);
+      if (bulletXMax <= enemyXMin || bulletXMin >= enemyXMax) continue;  // segment misses
+      killCount++;
+      addRunXP(5);
+      const kb = e.type === 'b' ? 10 : 15;
+      score += kb / 60;
+      pushBonus(e.x, e.y, `+${kb}`, '#88ffcc');
+      for (let k = 0; k < 8; k++) {
+        const a = Math.random()*Math.PI*2, v = 2+Math.random()*4;
+        const sp = { x:e.x, y:e.y, vx:Math.cos(a)*v, vy:Math.sin(a)*v,
+          life:1, sz:0.7+Math.random()*2, hue:e.type==='b' ? 20 : 35 };
+        sparks.push(sp);
+        const sm = new THREE.Mesh(new THREE.SphereGeometry(sp.sz*0.8,4,4),
+          new THREE.MeshBasicMaterial({ color:new THREE.Color(`hsl(${sp.hue},100%,70%)`), transparent:true }));
+        sm.userData.sp = sp; scene.add(sm); sparkMeshPool.push(sm);
       }
+      removeEnemyMesh(e);
+      enemies.splice(i, 1);
+      removeBulletMesh(b);
+      return false;
     }
     return true;
   });
