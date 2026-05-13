@@ -573,6 +573,38 @@ body { background:#000; display:flex; align-items:center; justify-content:center
   margin-left: 4px;
 }
 
+/* HOW TO PLAY button — sits ABOVE the SHOP/SKIN row to be the most
+   discoverable action for first-time players. */
+.rot-howto-btn {
+  margin-top: 4px;
+  padding: 10px 28px;
+  border-radius: 999px;
+  border: 1.6px solid #66c8ff;
+  background: rgba(102, 200, 255, 0.10);
+  color: #aae0ff;
+  font: bold 12px/1 monospace;
+  letter-spacing: 4px;
+  cursor: pointer;
+  z-index: 3;
+  box-shadow: 0 0 14px rgba(102, 200, 255, 0.4);
+  text-shadow: 0 0 6px rgba(102, 200, 255, 0.6);
+  -webkit-user-select: none; user-select: none;
+  display: inline-flex; align-items: center; gap: 8px;
+  transition: background 0.15s, transform 0.1s;
+}
+.rot-howto-btn:hover  { background: rgba(102, 200, 255, 0.20); }
+.rot-howto-btn:active { transform: scale(0.94); }
+.rot-howto-btn::before {
+  content: '?';
+  display: inline-block;
+  width: 18px; height: 18px;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+  text-align: center;
+  font: bold 12px/16px monospace;
+  letter-spacing: 0;
+}
+
 /* ── Shop modal ───────────────────────────────────────────────────── */
 #shop-modal {
   display: none;
@@ -805,6 +837,103 @@ body { background:#000; display:flex; align-items:center; justify-content:center
 .skin-card.selected .skin-name {
   color: #fff;
 }
+
+/* ── HOW TO PLAY modal ────────────────────────────────────────────── */
+#howto-modal {
+  display: none;
+  position: fixed; top: 0; left: 0; right: 0;
+  height: 100vh; height: 100svh;
+  z-index: 10000;
+  background: rgba(2, 8, 18, 0.94);
+  font-family: monospace;
+  color: #aae0ff;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: calc(56px + env(safe-area-inset-top, 0px)) 18px calc(48px + env(safe-area-inset-bottom, 0px));
+}
+#howto-modal.open { display: block; }
+.howto-panel { max-width: 480px; margin: 0 auto; }
+.howto-head {
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px dashed rgba(102, 200, 255, 0.45);
+  padding-bottom: 10px;
+  margin-bottom: 18px;
+}
+.howto-title {
+  font: bold 20px/1 monospace;
+  letter-spacing: 5px;
+  color: #66c8ff;
+  text-shadow: 0 0 12px #66c8ff;
+}
+.howto-close {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(102, 200, 255, 0.6);
+  background: rgba(102, 200, 255, 0.08);
+  color: #66c8ff;
+  font: 18px/1 monospace;
+  cursor: pointer;
+}
+.howto-sec {
+  margin-bottom: 18px;
+  padding-left: 12px;
+  border-left: 2px solid rgba(102, 200, 255, 0.35);
+}
+.howto-sec h3 {
+  font: bold 12px/1 monospace;
+  letter-spacing: 3px;
+  color: #66c8ff;
+  margin-bottom: 8px;
+  text-shadow: 0 0 6px rgba(102, 200, 255, 0.5);
+}
+.howto-sec p {
+  font: 12px/1.7 monospace;
+  letter-spacing: 1px;
+  color: rgba(200, 220, 240, 0.85);
+  margin-bottom: 6px;
+}
+.howto-sec dl {
+  display: grid;
+  grid-template-columns: minmax(110px, max-content) 1fr;
+  gap: 4px 14px;
+  font: 11px/1.5 monospace;
+  letter-spacing: 1px;
+}
+.howto-sec dt {
+  color: #fff;
+  font-weight: bold;
+  text-shadow: 0 0 6px rgba(102, 200, 255, 0.5);
+}
+.howto-sec dd {
+  color: rgba(200, 220, 240, 0.78);
+}
+.howto-sec ul {
+  list-style: none;
+  font: 11px/1.7 monospace;
+  letter-spacing: 1px;
+  color: rgba(200, 220, 240, 0.85);
+}
+.howto-sec ul li {
+  padding-left: 14px;
+  position: relative;
+}
+.howto-sec ul li::before {
+  content: '▸';
+  position: absolute;
+  left: 0;
+  color: rgba(102, 200, 255, 0.7);
+}
+.howto-sec ul li b { color: #fff; }
+.howto-sec .ph-num {
+  display: inline-block;
+  min-width: 64px;
+  color: #66c8ff;
+  font-weight: bold;
+}
+.howto-sec .bonus-val {
+  color: #ffee66;
+  text-shadow: 0 0 4px rgba(255, 238, 102, 0.4);
+}
 </style>
 </head>
 <body>
@@ -848,6 +977,8 @@ body { background:#000; display:flex; align-items:center; justify-content:center
     <div data-phase="4">PHASE 4<span class="sub">CHAOS</span></div>
   </div>
 
+  <button class="rot-howto-btn" id="rot-howto-btn" type="button">HOW TO PLAY</button>
+
   <div class="rot-menu-row">
     <button class="rot-shop-btn" id="rot-shop-btn" type="button">
       SHOP
@@ -859,7 +990,7 @@ body { background:#000; display:flex; align-items:center; justify-content:center
     </button>
   </div>
 
-  <p class="rot-version">SYS_REV  1.0.20</p>
+  <p class="rot-version">SYS_REV  1.0.21</p>
 </div>
 
 <div id="shop-modal">
@@ -884,6 +1015,80 @@ body { background:#000; display:flex; align-items:center; justify-content:center
     </div>
     <div class="skin-sub">タップでカラーを変更（即時反映）</div>
     <div class="skin-grid" id="skin-grid"></div>
+  </div>
+</div>
+
+<div id="howto-modal">
+  <div class="howto-panel">
+    <div class="howto-head">
+      <span class="howto-title">HOW TO PLAY</span>
+      <button class="howto-close" id="howto-close" type="button">×</button>
+    </div>
+
+    <section class="howto-sec">
+      <h3>▸ 基本操作</h3>
+      <dl>
+        <dt>タップ / SPACE</dt><dd>自機を上昇させる（重力で落下）</dd>
+        <dt>Z / PULSE</dt><dd>範囲攻撃。CDあり (5秒)</dd>
+        <dt>M</dt><dd>音 (BGM/SE) ON / OFF</dd>
+        <dt>ESC</dt><dd>GAME OVER 画面からタイトルへ</dd>
+      </dl>
+    </section>
+
+    <section class="howto-sec">
+      <h3>▸ 目的</h3>
+      <p>壁と敵をよけて長く生存する。スコア=生存秒数+ボーナス。<br>
+         死んだら RETRY で即再挑戦。自己ベストはローカルに保存。</p>
+    </section>
+
+    <section class="howto-sec">
+      <h3>▸ スコア・ボーナス</h3>
+      <dl>
+        <dt><span class="bonus-val">+10</span></dt><dd>壁スレスレ通過（隙間の外側30%以内）</dd>
+        <dt><span class="bonus-val">+25</span></dt><dd>極スレスレ NEAR! （外側15%以内）</dd>
+        <dt><span class="bonus-val">+15</span></dt><dd>PULSE で弾型 (BULLET) 撃破</dd>
+        <dt><span class="bonus-val">+20</span></dt><dd>PULSE で追跡型 (SEEKER) 撃破</dd>
+      </dl>
+    </section>
+
+    <section class="howto-sec">
+      <h3>▸ フェーズ進行</h3>
+      <p>生存時間に応じて4段階に難易度UP。BGMもフェーズに合わせて重厚に。</p>
+      <ul>
+        <li><span class="ph-num">PHASE 1</span> <b>WALLS</b> (0–20s) — 壁のみ</li>
+        <li><span class="ph-num">PHASE 2</span> <b>BULLETS</b> (20–50s) — 弾型登場</li>
+        <li><span class="ph-num">PHASE 3</span> <b>SEEKERS</b> (50–100s) — 追跡型登場</li>
+        <li><span class="ph-num">PHASE 4</span> <b>CHAOS</b> (100s+) — 最高速度</li>
+      </ul>
+    </section>
+
+    <section class="howto-sec">
+      <h3>▸ XP & スキル (SHOP)</h3>
+      <p>プレイ中に XP 獲得 → 縦画面の <b>SHOP</b> から強化スキルを購入。<br>
+         所持スキルから装備枠 (最大2つ) を選択して次のランから発動。</p>
+      <dl>
+        <dt>+2 / 秒</dt><dd>生存（時間経過）</dd>
+        <dt>+5</dt><dd>敵撃破（PULSE / 前方弾）</dd>
+        <dt>+3 / +8</dt><dd>Near-miss / NEAR! </dd>
+        <dt>+60</dt><dd>PHASE 4 初到達</dd>
+      </dl>
+    </section>
+
+    <section class="howto-sec">
+      <h3>▸ SKIN</h3>
+      <p>縦画面の <b>SKIN</b> ボタンから機体カラーを6色変更可能。<br>
+         CYAN / MAGENTA / EMERALD / FIRE / VOID / GOLD。</p>
+    </section>
+
+    <section class="howto-sec">
+      <h3>▸ コツ</h3>
+      <ul>
+        <li>壁の隙間ギリギリを狙うと NEAR ボーナスでスコアと XP が伸びる</li>
+        <li>PULSE は敵が集中した時に温存して使うと効果大</li>
+        <li>PHASE 3 以降は SEEKER が後ろから追跡。急上下で振り切れる</li>
+        <li>SHIELD / PHOENIX を装備すれば最初の被弾を生き残れる</li>
+      </ul>
+    </section>
   </div>
 </div>
 
@@ -1473,8 +1678,9 @@ const _shopMQ = matchMedia('(orientation: portrait)');
 const _refreshRotXp = () => {
   loadProgression();
   if (rotXpEl) rotXpEl.textContent = totalXP;
-  if (!_shopMQ.matches && shopModal) shopModal.classList.remove('open');
-  if (!_shopMQ.matches && skinModal) skinModal.classList.remove('open');
+  if (!_shopMQ.matches && shopModal)  shopModal.classList.remove('open');
+  if (!_shopMQ.matches && skinModal)  skinModal.classList.remove('open');
+  if (!_shopMQ.matches && howtoModal) howtoModal.classList.remove('open');
 };
 if (_shopMQ.addEventListener) _shopMQ.addEventListener('change', _refreshRotXp);
 else if (_shopMQ.addListener) _shopMQ.addListener(_refreshRotXp);
@@ -1529,6 +1735,26 @@ if (skinCloseBtn) {
 addEventListener('keydown', e => {
   if (e.code === 'Escape' && skinModal && skinModal.classList.contains('open')) {
     e.preventDefault(); closeSkin();
+  }
+});
+
+// ── How-to-play modal ────────────────────────────────────────────────────────
+const howtoModal    = document.getElementById('howto-modal');
+const howtoCloseBtn = document.getElementById('howto-close');
+const rotHowtoBtn   = document.getElementById('rot-howto-btn');
+function openHowto()  { howtoModal && howtoModal.classList.add('open'); }
+function closeHowto() { howtoModal && howtoModal.classList.remove('open'); }
+if (rotHowtoBtn) {
+  rotHowtoBtn.addEventListener('click',      e => { e.stopPropagation(); openHowto(); });
+  rotHowtoBtn.addEventListener('touchstart', e => { e.preventDefault(); e.stopPropagation(); openHowto(); }, { passive:false });
+}
+if (howtoCloseBtn) {
+  howtoCloseBtn.addEventListener('click',      e => { e.stopPropagation(); closeHowto(); });
+  howtoCloseBtn.addEventListener('touchstart', e => { e.preventDefault(); e.stopPropagation(); closeHowto(); }, { passive:false });
+}
+addEventListener('keydown', e => {
+  if (e.code === 'Escape' && howtoModal && howtoModal.classList.contains('open')) {
+    e.preventDefault(); closeHowto();
   }
 });
 
