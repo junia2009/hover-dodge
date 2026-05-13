@@ -526,31 +526,51 @@ body { background:#000; display:flex; align-items:center; justify-content:center
 #title-btn:active { transform: translate(-50%, -50%) scale(0.94); }
 #title-btn .kbd   { font-size: 9px; opacity: 0.6; margin-left: 6px; letter-spacing: 1px; }
 
-/* ── Shop button on rotate-screen ─────────────────────────────────── */
-.rot-shop-btn {
+/* ── Portrait menu buttons (SHOP / SKIN) ──────────────────────────── */
+.rot-menu-row {
+  display: flex; gap: 10px;
   margin-top: 8px;
+  z-index: 3;
+}
+.rot-shop-btn, .rot-skin-btn {
   padding: 10px 22px;
   border-radius: 999px;
-  border: 1.6px solid #ffd966;
-  background: rgba(255, 217, 102, 0.10);
-  color: #ffe680;
   font: bold 13px/1 monospace;
   letter-spacing: 4px;
   cursor: pointer;
-  z-index: 3;
-  box-shadow: 0 0 14px rgba(255, 217, 102, 0.45);
-  text-shadow: 0 0 6px rgba(255, 217, 102, 0.7);
   -webkit-user-select: none; user-select: none;
   display: inline-flex; align-items: center; gap: 10px;
   transition: background 0.15s, transform 0.1s;
 }
-.rot-shop-btn:hover  { background: rgba(255, 217, 102, 0.20); }
-.rot-shop-btn:active { transform: scale(0.94); }
+.rot-shop-btn:active, .rot-skin-btn:active { transform: scale(0.94); }
+.rot-shop-btn {
+  border: 1.6px solid #ffd966;
+  background: rgba(255, 217, 102, 0.10);
+  color: #ffe680;
+  box-shadow: 0 0 14px rgba(255, 217, 102, 0.45);
+  text-shadow: 0 0 6px rgba(255, 217, 102, 0.7);
+}
+.rot-shop-btn:hover { background: rgba(255, 217, 102, 0.20); }
 .rot-shop-btn .xp {
   font-size: 10px; letter-spacing: 1.5px;
   color: rgba(255, 230, 128, 0.85);
   padding-left: 10px;
   border-left: 1px solid rgba(255, 217, 102, 0.5);
+}
+.rot-skin-btn {
+  border: 1.6px solid #ff66e0;
+  background: rgba(255, 102, 224, 0.10);
+  color: #ffaaee;
+  box-shadow: 0 0 14px rgba(255, 102, 224, 0.45);
+  text-shadow: 0 0 6px rgba(255, 102, 224, 0.7);
+}
+.rot-skin-btn:hover { background: rgba(255, 102, 224, 0.20); }
+.rot-skin-btn .swatch {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 6px currentColor;
+  margin-left: 4px;
 }
 
 /* ── Shop modal ───────────────────────────────────────────────────── */
@@ -687,6 +707,104 @@ body { background:#000; display:flex; align-items:center; justify-content:center
 .shop-cat.DEFENSE::before, .shop-cat.DEFENSE::after { background: linear-gradient(90deg, transparent, rgba(170, 255, 170, 0.45), transparent); }
 .shop-cat.PASSIVE { color: #66c8ff; }
 .shop-cat.PASSIVE::before, .shop-cat.PASSIVE::after { background: linear-gradient(90deg, transparent, rgba(102, 200, 255, 0.45), transparent); }
+
+/* ── Skin modal ───────────────────────────────────────────────────── */
+#skin-modal {
+  display: none;
+  position: fixed; top: 0; left: 0; right: 0;
+  height: 100vh; height: 100svh;
+  z-index: 10000;
+  background: rgba(8, 2, 14, 0.94);
+  font-family: monospace;
+  color: #ffaaee;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: calc(56px + env(safe-area-inset-top, 0px)) 18px calc(48px + env(safe-area-inset-bottom, 0px));
+}
+#skin-modal.open { display: block; }
+.skin-panel { max-width: 460px; margin: 0 auto; }
+.skin-head {
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px dashed rgba(255, 102, 224, 0.4);
+  padding-bottom: 10px;
+  margin-bottom: 18px;
+}
+.skin-title {
+  font: bold 22px/1 monospace;
+  letter-spacing: 6px;
+  color: #ff66e0;
+  text-shadow: 0 0 12px #ff66e0;
+}
+.skin-close {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 102, 224, 0.6);
+  background: rgba(255, 102, 224, 0.08);
+  color: #ff66e0;
+  font: 18px/1 monospace;
+  cursor: pointer;
+}
+.skin-sub {
+  font-size: 10px; letter-spacing: 2px;
+  color: rgba(220, 200, 240, 0.7);
+  text-align: center;
+  margin-bottom: 18px;
+}
+.skin-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+.skin-card {
+  display: flex; flex-direction: column;
+  align-items: center; gap: 8px;
+  padding: 14px 10px 10px;
+  border: 1.5px solid rgba(180, 180, 200, 0.3);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  cursor: pointer;
+  -webkit-user-select: none; user-select: none;
+  transition: border-color 0.15s, transform 0.1s, box-shadow 0.2s;
+}
+.skin-card:active { transform: scale(0.96); }
+.skin-card.selected {
+  border-color: #fff;
+  box-shadow: 0 0 14px var(--accent, #ff66e0), inset 0 0 8px rgba(255,255,255,0.1);
+}
+.skin-swatch {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: var(--accent, #00e8ff);
+  box-shadow: 0 0 18px var(--accent, #00e8ff), inset 0 -8px 16px rgba(0, 0, 0, 0.4);
+  position: relative;
+}
+.skin-swatch::after {
+  content: '';
+  position: absolute;
+  top: 8px; left: 14px;
+  width: 14px; height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.55);
+  filter: blur(1px);
+}
+.skin-card.selected .skin-swatch::before {
+  content: '✓';
+  position: absolute;
+  inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff;
+  font: bold 24px/1 monospace;
+  text-shadow: 0 0 8px rgba(0, 0, 0, 0.6);
+}
+.skin-name {
+  font: bold 11px/1 monospace;
+  letter-spacing: 2px;
+  color: var(--accent, #ffffff);
+  text-shadow: 0 0 6px var(--accent, transparent);
+}
+.skin-card.selected .skin-name {
+  color: #fff;
+}
 </style>
 </head>
 <body>
@@ -730,12 +848,18 @@ body { background:#000; display:flex; align-items:center; justify-content:center
     <div data-phase="4">PHASE 4<span class="sub">CHAOS</span></div>
   </div>
 
-  <button class="rot-shop-btn" id="rot-shop-btn" type="button">
-    SHOP
-    <span class="xp"><span id="rot-xp">0</span> XP</span>
-  </button>
+  <div class="rot-menu-row">
+    <button class="rot-shop-btn" id="rot-shop-btn" type="button">
+      SHOP
+      <span class="xp"><span id="rot-xp">0</span> XP</span>
+    </button>
+    <button class="rot-skin-btn" id="rot-skin-btn" type="button">
+      SKIN
+      <span class="swatch" id="rot-skin-swatch"></span>
+    </button>
+  </div>
 
-  <p class="rot-version">SYS_REV  1.0.17</p>
+  <p class="rot-version">SYS_REV  1.0.18</p>
 </div>
 
 <div id="shop-modal">
@@ -751,6 +875,18 @@ body { background:#000; display:flex; align-items:center; justify-content:center
     <div id="shop-list"></div>
   </div>
 </div>
+
+<div id="skin-modal">
+  <div class="skin-panel">
+    <div class="skin-head">
+      <span class="skin-title">SKIN</span>
+      <button class="skin-close" id="skin-close" type="button">×</button>
+    </div>
+    <div class="skin-sub">タップでカラーを変更（即時反映）</div>
+    <div class="skin-grid" id="skin-grid"></div>
+  </div>
+</div>
+
 <div id="wrap"><canvas id="hud"></canvas><button id="start-btn" type="button">START</button><button id="retry-btn" type="button">RETRY</button><button id="title-btn" type="button">TITLE<span class="kbd">[ESC]</span></button><button id="pulse-btn" type="button"><span id="pulse-label">PULSE</span><span id="pulse-sub">[Z]</span></button></div>
 
 <script type="importmap">
@@ -838,6 +974,10 @@ const WALL_UNIT_GEOM = new THREE.BoxGeometry(WALL_W, 1, 8);
 const WALL_EDGE_GEOM = new THREE.BoxGeometry(WALL_W - 2, 1.4, 8);
 
 // ── Ship builder ──────────────────────────────────────────────────────────────
+// Mesh references captured during buildShipGroup so applySkin() can repaint
+// the ship without having to re-traverse the scene graph by name.
+const shipParts = { hull: null, wings: [], cockpit: null, engine: null, flame: null };
+
 function buildShipGroup() {
   const g = new THREE.Group();
 
@@ -857,6 +997,7 @@ function buildShipGroup() {
   );
   hullMesh.position.z = -2.5; // center hull depth around z=0
   g.add(hullMesh);
+  shipParts.hull = hullMesh;
 
   // Wings (y negated from canvas coords for Three.js y-up)
   for (const pts of [
@@ -873,6 +1014,7 @@ function buildShipGroup() {
     );
     wm.position.z = -1.25;
     g.add(wm);
+    shipParts.wings.push(wm);
   }
 
   // Cockpit dome
@@ -882,6 +1024,7 @@ function buildShipGroup() {
   );
   ck.position.set(5, 0, 5); ck.scale.set(1.45, 0.85, 0.72);
   g.add(ck);
+  shipParts.cockpit = ck;
 
   // Engine nozzle glow sphere (emissive → bloomed)
   const eng = new THREE.Mesh(
@@ -890,6 +1033,7 @@ function buildShipGroup() {
   );
   eng.position.set(-16, 0, 2.5); eng.name = 'engine';
   g.add(eng);
+  shipParts.engine = eng;
 
   // Flame cone — rotation.z=π/2 so tip points to -X (trailing behind ship)
   const flameMesh = new THREE.Mesh(
@@ -899,6 +1043,7 @@ function buildShipGroup() {
   flameMesh.rotation.z = Math.PI / 2;
   flameMesh.position.set(-16, 0, 2.5); flameMesh.name = 'flame';
   g.add(flameMesh);
+  shipParts.flame = flameMesh;
 
   g.scale.setScalar(0.85);
   return g;
@@ -906,6 +1051,90 @@ function buildShipGroup() {
 
 const shipGroup = buildShipGroup();
 scene.add(shipGroup);
+
+// ── Ship skin presets ─────────────────────────────────────────────────────────
+// Each skin specifies the colours for every paintable mesh + the point light.
+// Add a new entry here and it shows up automatically in the SKIN modal.
+const SHIP_SKINS = [
+  {
+    id: 'cyan', name: 'CYAN', accent: '#00e8ff',
+    hull:    { color: 0x00d8ff, emissive: 0x006688, specular: 0xaaeeff },
+    wing:    { color: 0x33b8e0, emissive: 0x003a55 },
+    cockpit: { color: 0xc0eaff, emissive: 0x002233, specular: 0xffffff },
+    engine:  0x44aaff,
+    flame:   0x55ccff,
+    light:   0x33ddff,
+  },
+  {
+    id: 'magenta', name: 'MAGENTA', accent: '#ff2bd6',
+    hull:    { color: 0xff44d6, emissive: 0x88005a, specular: 0xffaaee },
+    wing:    { color: 0xdd33aa, emissive: 0x550022 },
+    cockpit: { color: 0xffd0ff, emissive: 0x330022, specular: 0xffeeff },
+    engine:  0xff66bb,
+    flame:   0xff99cc,
+    light:   0xff66dd,
+  },
+  {
+    id: 'emerald', name: 'EMERALD', accent: '#44ff99',
+    hull:    { color: 0x44dd88, emissive: 0x006633, specular: 0xaaffcc },
+    wing:    { color: 0x33aa66, emissive: 0x003322 },
+    cockpit: { color: 0xc0ffd8, emissive: 0x002211, specular: 0xeeffee },
+    engine:  0x66ff99,
+    flame:   0x88ffaa,
+    light:   0x55ff99,
+  },
+  {
+    id: 'fire', name: 'FIRE', accent: '#ff7733',
+    hull:    { color: 0xff7733, emissive: 0x882200, specular: 0xffccaa },
+    wing:    { color: 0xdd5522, emissive: 0x441100 },
+    cockpit: { color: 0xffd8c0, emissive: 0x331100, specular: 0xffeedd },
+    engine:  0xffaa44,
+    flame:   0xffcc66,
+    light:   0xff8844,
+  },
+  {
+    id: 'void', name: 'VOID', accent: '#aa44ff',
+    hull:    { color: 0x9944ff, emissive: 0x441188, specular: 0xddaaff },
+    wing:    { color: 0x7733cc, emissive: 0x220066 },
+    cockpit: { color: 0xddc0ff, emissive: 0x220033, specular: 0xeeddff },
+    engine:  0xbb66ff,
+    flame:   0xcc88ff,
+    light:   0xaa66ff,
+  },
+  {
+    id: 'gold', name: 'GOLD', accent: '#ffdd44',
+    hull:    { color: 0xffcc33, emissive: 0x886600, specular: 0xffeeaa },
+    wing:    { color: 0xddaa22, emissive: 0x443300 },
+    cockpit: { color: 0xfff0c0, emissive: 0x332200, specular: 0xfffadd },
+    engine:  0xffdd66,
+    flame:   0xffee88,
+    light:   0xffcc44,
+  },
+];
+
+function applySkin(id) {
+  const s = SHIP_SKINS.find(x => x.id === id) || SHIP_SKINS[0];
+  if (shipParts.hull) {
+    shipParts.hull.material.color.setHex(s.hull.color);
+    shipParts.hull.material.emissive.setHex(s.hull.emissive);
+    shipParts.hull.material.specular.setHex(s.hull.specular);
+  }
+  for (const w of shipParts.wings) {
+    w.material.color.setHex(s.wing.color);
+    w.material.emissive.setHex(s.wing.emissive);
+  }
+  if (shipParts.cockpit) {
+    shipParts.cockpit.material.color.setHex(s.cockpit.color);
+    shipParts.cockpit.material.emissive.setHex(s.cockpit.emissive);
+    shipParts.cockpit.material.specular.setHex(s.cockpit.specular);
+  }
+  if (shipParts.engine) shipParts.engine.material.color.setHex(s.engine);
+  if (shipParts.flame)  shipParts.flame.material.color.setHex(s.flame);
+  if (typeof shipLight !== 'undefined' && shipLight) shipLight.color.setHex(s.light);
+}
+
+let currentSkinId = localStorage.getItem('hd_skin') || 'cyan';
+applySkin(currentSkinId);
 
 // ── Stars ─────────────────────────────────────────────────────────────────────
 const STAR_N = 150;
@@ -1245,9 +1474,63 @@ const _refreshRotXp = () => {
   loadProgression();
   if (rotXpEl) rotXpEl.textContent = totalXP;
   if (!_shopMQ.matches && shopModal) shopModal.classList.remove('open');
+  if (!_shopMQ.matches && skinModal) skinModal.classList.remove('open');
 };
 if (_shopMQ.addEventListener) _shopMQ.addEventListener('change', _refreshRotXp);
 else if (_shopMQ.addListener) _shopMQ.addListener(_refreshRotXp);
+
+// ── Skin UI ──────────────────────────────────────────────────────────────────
+const skinModal    = document.getElementById('skin-modal');
+const skinGrid     = document.getElementById('skin-grid');
+const skinCloseBtn = document.getElementById('skin-close');
+const rotSkinBtn   = document.getElementById('rot-skin-btn');
+const rotSkinSwatch= document.getElementById('rot-skin-swatch');
+
+function refreshSkinSwatchPreview() {
+  if (!rotSkinSwatch) return;
+  const s = SHIP_SKINS.find(x => x.id === currentSkinId) || SHIP_SKINS[0];
+  rotSkinSwatch.style.background = s.accent;
+  rotSkinSwatch.style.boxShadow  = `0 0 6px ${s.accent}`;
+}
+function renderSkinUI() {
+  if (!skinGrid) return;
+  skinGrid.innerHTML = '';
+  for (const s of SHIP_SKINS) {
+    const card = document.createElement('div');
+    card.className = 'skin-card' + (s.id === currentSkinId ? ' selected' : '');
+    card.style.setProperty('--accent', s.accent);
+    card.innerHTML = `
+      <div class="skin-swatch"></div>
+      <span class="skin-name">${s.name}</span>
+    `;
+    card.addEventListener('click', () => {
+      currentSkinId = s.id;
+      localStorage.setItem('hd_skin', s.id);
+      applySkin(s.id);
+      sfxScore();
+      vibrate(10);
+      refreshSkinSwatchPreview();
+      renderSkinUI();
+    });
+    skinGrid.appendChild(card);
+  }
+}
+function openSkin()  { renderSkinUI(); skinModal.classList.add('open'); }
+function closeSkin() { skinModal.classList.remove('open'); }
+
+if (rotSkinBtn) {
+  rotSkinBtn.addEventListener('click',      e => { e.stopPropagation(); openSkin(); });
+  rotSkinBtn.addEventListener('touchstart', e => { e.preventDefault(); e.stopPropagation(); openSkin(); }, { passive:false });
+}
+if (skinCloseBtn) {
+  skinCloseBtn.addEventListener('click',      e => { e.stopPropagation(); closeSkin(); });
+  skinCloseBtn.addEventListener('touchstart', e => { e.preventDefault(); e.stopPropagation(); closeSkin(); }, { passive:false });
+}
+addEventListener('keydown', e => {
+  if (e.code === 'Escape' && skinModal && skinModal.classList.contains('open')) {
+    e.preventDefault(); closeSkin();
+  }
+});
 
 // ── Audio (WebAudio synth) ────────────────────────────────────────────────────
 let audioCtx = null;
@@ -2348,8 +2631,9 @@ function loop(now) {
   requestAnimationFrame(loop);
 }
 // Now that all module-level `let` bindings (totalXP, equippedSkills, ...) have
-// been initialized, it's safe to populate the rotate-screen XP display.
+// been initialized, it's safe to populate the rotate-screen XP / SKIN swatch.
 _refreshRotXp();
+refreshSkinSwatchPreview();
 requestAnimationFrame(loop);
 </script>
 <script>
