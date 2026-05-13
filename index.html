@@ -714,7 +714,7 @@ body { background:#000; display:flex; align-items:center; justify-content:center
     <span class="xp"><span id="rot-xp">0</span> XP</span>
   </button>
 
-  <p class="rot-version">SYS_REV  1.0.15</p>
+  <p class="rot-version">SYS_REV  1.0.16</p>
 </div>
 
 <div id="shop-modal">
@@ -1024,8 +1024,11 @@ function removeEnemyMesh(e) {
 const sparkMeshPool = [];
 
 // ── Pulse skill ───────────────────────────────────────────────────────────────
-const PULSE_COOLDOWN = 300;  // frames (~5 sec)
-const PULSE_MAX_R    = 130;  // canvas units
+const PULSE_COOLDOWN_BASE = 300;   // frames (~5 sec)
+const PULSE_MAX_R_BASE    = 130;   // canvas units
+// Dynamic values overridden in startGame() based on equipped skills
+let   PULSE_COOLDOWN      = PULSE_COOLDOWN_BASE;
+let   PULSE_MAX_R         = PULSE_MAX_R_BASE;
 let   pulseCooldown  = 0;
 let   pulseRings     = [];
 
@@ -1517,14 +1520,39 @@ const SKILL_DEFS = [
     price: 150,
   },
   {
+    id: 'rapid_pulse', name: 'RAPID PULSE', kind: 'ATTACK',
+    desc: 'PULSEのクールダウン30%短縮 (5s→3.5s)',
+    price: 250,
+  },
+  {
     id: 'shield', name: 'SHIELD', kind: 'DEFENSE',
     desc: '1ラン中に最初の1回の被弾を吸収',
     price: 280,
   },
   {
+    id: 'magnet', name: 'MAGNET', kind: 'PASSIVE',
+    desc: 'NEAR-MISS判定範囲を50%拡大、ボーナス回数UP',
+    price: 300,
+  },
+  {
+    id: 'mega_pulse', name: 'MEGA PULSE', kind: 'ATTACK',
+    desc: 'PULSEの攻撃範囲を30%拡大 (130→170)',
+    price: 350,
+  },
+  {
     id: 'smaller_hitbox', name: 'SMALLER HITBOX', kind: 'PASSIVE',
     desc: '当たり判定33%縮小（面積で約55%減）',
     price: 420,
+  },
+  {
+    id: 'xp_boost', name: 'XP BOOST', kind: 'PASSIVE',
+    desc: '獲得XP全体を25%増加',
+    price: 500,
+  },
+  {
+    id: 'phoenix', name: 'PHOENIX', kind: 'DEFENSE',
+    desc: '死亡時に1度だけ復活、3秒間無敵',
+    price: 600,
   },
 ];
 const MAX_EQUIP_SLOTS = 2;
@@ -1557,6 +1585,7 @@ function saveProgression() {
   localStorage.setItem('hd_equip', JSON.stringify(equippedSkills));
 }
 function hasSkill(id) { return equippedSkills.includes(id); }
+function addRunXP(n) { runXP += n * (hasSkill('xp_boost') ? 1.25 : 1); }
 function buySkill(id) {
   const sk = SKILL_DEFS.find(s => s.id === id);
   if (!sk || ownedSkills.includes(id) || totalXP < sk.price) return false;
@@ -1596,6 +1625,7 @@ const P = { x: 150, y: VH/2, vx: 0, vy: 0, bankAngle: 0, r: 6, inv: 0 };
 let walls = [], enemies = [], sparks = [], bullets = [];
 let bulletCooldown = 0;
 let shieldCharges = 0;
+let phoenixUsed = false;          // PHOENIX skill: revive flag (per run)
 const BULLET_CD = 24;          // frames (0.4s @ 60fps)
 const bulletMeshMap = new Map();
 
@@ -1667,6 +1697,10 @@ function startGame() {
   nopulseStreak = 0; lastMilestone = 0; pulseUsedThisRun = false;
   runXP = 0;
   shieldCharges = hasSkill('shield') ? 1 : 0;
+  phoenixUsed = false;
+  // Apply PULSE skill modifiers
+  PULSE_COOLDOWN = hasSkill('rapid_pulse') ? Math.round(PULSE_COOLDOWN_BASE * 0.7) : PULSE_COOLDOWN_BASE;
+  PULSE_MAX_R    = hasSkill('mega_pulse')  ? Math.round(PULSE_MAX_R_BASE * 1.3)    : PULSE_MAX_R_BASE;
   bonusPopups = [];
   clearWorld();
   for (let i = 0; i < 4; i++) addWall(VW + i*265);
@@ -1683,14 +1717,8 @@ function gotoMenu() {
 }
 
 function die() {
-  // SHIELD skill: first hit is absorbed (consumes the charge).
-  if (shieldCharges > 0) {
-    shieldCharges--;
-    P.inv = 90;          // 1.5s invulnerability after shield break
-    sfxBonus();          // light up sound instead of death
-    vibrate(40);
-    shakeX = 6; shakeY = 4;
-    // Visual shield-break ring (uses the existing pulse-ring mesh path)
+  // Reusable helper: spawn a coloured pulse-style ring around the player.
+  const spawnSaveRing = (c1, c2) => {
     const makeRing = (color, z) => {
       const m = new THREE.Mesh(
         new THREE.TorusGeometry(1, 0.020, 6, 64),
@@ -1701,8 +1729,29 @@ function die() {
       return m;
     };
     pulseRings.push({ r: 0, prevR: 0, x: P.x, y: P.y,
-      mesh: makeRing(0xaaffaa, 8), mesh2: makeRing(0x44ff88, 6) });
+      mesh: makeRing(c1, 8), mesh2: makeRing(c2, 6) });
+  };
+
+  // SHIELD skill: first hit is absorbed (consumes the charge).
+  if (shieldCharges > 0) {
+    shieldCharges--;
+    P.inv = 90;          // 1.5s invulnerability after shield break
+    sfxBonus();
+    vibrate(40);
+    shakeX = 6; shakeY = 4;
+    spawnSaveRing(0xaaffaa, 0x44ff88);
     pushBonus(P.x, P.y - 22, 'SHIELD!', '#aaffaa');
+    return;
+  }
+  // PHOENIX skill: one-time per-run revive with 3s invulnerability.
+  if (hasSkill('phoenix') && !phoenixUsed) {
+    phoenixUsed = true;
+    P.inv = 180;         // 3s invulnerability after revive
+    sfxBonus();
+    vibrate([60, 30, 60]);
+    shakeX = 10; shakeY = 7;
+    spawnSaveRing(0xffaa55, 0xff4422);   // fiery orange-red ring
+    pushBonus(P.x, P.y - 22, 'PHOENIX!', '#ffaa55');
     return;
   }
   gstate = 'dead';
@@ -1797,7 +1846,7 @@ function update(dt) {
   if (curPhase !== lastPhase) {
     if (lastPhase >= 0) { phaseFlash = 90; sfxBonus(); }
     if (curPhase === 3 && lastPhase < 3) {
-      runXP += 60;
+      addRunXP(60);
       pushBonus(P.x, P.y - 28, '+60 XP', '#ffee66');
     }
     BGM.setPhase(curPhase);
@@ -1816,7 +1865,7 @@ function update(dt) {
   nopulseStreak += dt / 60;
 
   // XP: passive trickle from survival time
-  runXP += dt * (2 / 60);
+  addRunXP(dt * (2 / 60));
   // Phase-4 reached bonus (one-time per run)
   if (curPhase === 3 && lastPhase < 3) {
     // lastPhase is reassigned right after the phase-change block above, so this
@@ -1839,7 +1888,7 @@ function update(dt) {
       const rr = 4 + e.r;
       if (dx*dx + dy*dy < rr*rr) {
         killCount++;
-        runXP += 5;
+        addRunXP(5);
         const kb = e.type === 'b' ? 10 : 15;
         score += kb / 60;
         pushBonus(e.x, e.y, `+${kb}`, '#88ffcc');
@@ -1877,13 +1926,16 @@ function update(dt) {
       const distFromCenter = Math.abs(P.y - cy);
       const halfGap = w.gap / 2;
       const margin = halfGap - distFromCenter; // distance from nearest edge
-      if (margin < halfGap * 0.30) {
+      const magnet     = hasSkill('magnet');
+      const nearThresh  = magnet ? 0.45  : 0.30;
+      const tightThresh = magnet ? 0.225 : 0.15;
+      if (margin < halfGap * nearThresh) {
         // Tight pass! +bonus
-        const tight = margin < halfGap * 0.15;
+        const tight = margin < halfGap * tightThresh;
         const bonus = tight ? 25 : 10;
         score += bonus / 60;  // convert "score points" to seconds (~minor add)
         nearMissCount++;
-        runXP += tight ? 8 : 3;
+        addRunXP(tight ? 8 : 3);
         pushBonus(P.x, P.y - 22, `+${bonus} NEAR!`, '#ffee44');
         sfxBonus();
         vibrate(8);
@@ -1954,7 +2006,7 @@ function update(dt) {
       }
       // Kill bonus
       killCount++;
-      runXP += 5;
+      addRunXP(5);
       const kb = e.type === 'b' ? 15 : 20;
       score += kb / 60;
       pushBonus(e.x, e.y, `+${kb}`, e.type === 'b' ? '#ff8844' : '#ffaa55');
@@ -2168,11 +2220,20 @@ function drawHUD() {
   HX.fillStyle='rgba(180,210,240,0.45)';
   HX.font='11px monospace';
   HX.fillText(PHASE_CONFIG[curPhase].name, VW - 18, 22);
+  let chipY = 40;
   if (shieldCharges > 0) {
     HX.shadowColor='#aaffaa'; HX.shadowBlur=8;
     HX.fillStyle='#aaffaa';
     HX.font='bold 11px monospace';
-    HX.fillText(`◇ SHIELD x${shieldCharges}`, VW - 18, 40);
+    HX.fillText(`◇ SHIELD x${shieldCharges}`, VW - 18, chipY);
+    HX.shadowBlur=0;
+    chipY += 16;
+  }
+  if (hasSkill('phoenix') && !phoenixUsed) {
+    HX.shadowColor='#ffaa55'; HX.shadowBlur=8;
+    HX.fillStyle='#ffaa55';
+    HX.font='bold 11px monospace';
+    HX.fillText('▲ PHOENIX READY', VW - 18, chipY);
     HX.shadowBlur=0;
   }
 
