@@ -714,7 +714,7 @@ body { background:#000; display:flex; align-items:center; justify-content:center
     <span class="xp"><span id="rot-xp">0</span> XP</span>
   </button>
 
-  <p class="rot-version">SYS_REV  1.0.14</p>
+  <p class="rot-version">SYS_REV  1.0.15</p>
 </div>
 
 <div id="shop-modal">
@@ -1522,8 +1522,8 @@ const SKILL_DEFS = [
     price: 280,
   },
   {
-    id: 'slow_gravity', name: 'SLOW GRAVITY', kind: 'PASSIVE',
-    desc: '重力25%軽減で滞空しやすく',
+    id: 'smaller_hitbox', name: 'SMALLER HITBOX', kind: 'PASSIVE',
+    desc: '当たり判定33%縮小（面積で約55%減）',
     price: 420,
   },
 ];
@@ -1539,6 +1539,17 @@ function loadProgression() {
   catch (e) { ownedSkills = []; }
   try { equippedSkills = JSON.parse(localStorage.getItem('hd_equip') || '[]') || []; }
   catch (e) { equippedSkills = []; }
+  // One-shot migration: slow_gravity was removed in v1.0.15 (it actually hurt
+  // the player by floating them past wall gaps). Convert any owned/equipped
+  // entry to its replacement, smaller_hitbox, which has the same price.
+  let migrated = false;
+  for (let i = 0; i < ownedSkills.length; i++) {
+    if (ownedSkills[i] === 'slow_gravity') { ownedSkills[i] = 'smaller_hitbox'; migrated = true; }
+  }
+  for (let i = 0; i < equippedSkills.length; i++) {
+    if (equippedSkills[i] === 'slow_gravity') { equippedSkills[i] = 'smaller_hitbox'; migrated = true; }
+  }
+  if (migrated) saveProgression();
 }
 function saveProgression() {
   localStorage.setItem('hd_xp', String(totalXP));
@@ -1649,6 +1660,7 @@ function startGame() {
   loadProgression();           // refresh equipped skills from shop
   gstate = 'play'; score = frame = 0; spd = 3;
   P.x = 150; P.y = VH/2; P.vx = P.vy = 0; P.bankAngle = 0; P.inv = 90;
+  P.r = hasSkill('smaller_hitbox') ? 4 : 6;
   enemySpawnTimer = 120;   // grace period before first enemy
   curPhase = 0; lastPhase = -1; phaseFlash = 0;
   killCount = 0; nearMissCount = 0;
@@ -1812,8 +1824,7 @@ function update(dt) {
   }
 
   // Player — gravity + flap impulse (Flappy-Bird style)
-  const gravMult = hasSkill('slow_gravity') ? 0.75 : 1;
-  P.vy += GRAVITY * gravMult * dt;
+  P.vy += GRAVITY * dt;
   if (P.vy > 14) P.vy = 14;
   P.y = Math.max(P.r, Math.min(VH - P.r, P.y + P.vy * dt));
 
