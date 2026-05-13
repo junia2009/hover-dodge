@@ -714,7 +714,7 @@ body { background:#000; display:flex; align-items:center; justify-content:center
     <span class="xp"><span id="rot-xp">0</span> XP</span>
   </button>
 
-  <p class="rot-version">SYS_REV  1.0.13</p>
+  <p class="rot-version">SYS_REV  1.0.14</p>
 </div>
 
 <div id="shop-modal">
@@ -1204,6 +1204,10 @@ addEventListener('keydown', e => {
   }
 });
 // Refresh XP display on portrait orientation change; close shop on landscape.
+// NOTE: `totalXP` / `equippedSkills` / ... are `let`-declared further down in
+// the script. Function *definitions* using them are fine here (closures), but
+// the initial _refreshRotXp() call must wait until those bindings are
+// initialized — that call lives at the very bottom of the module.
 const _shopMQ = matchMedia('(orientation: portrait)');
 const _refreshRotXp = () => {
   loadProgression();
@@ -1212,7 +1216,6 @@ const _refreshRotXp = () => {
 };
 if (_shopMQ.addEventListener) _shopMQ.addEventListener('change', _refreshRotXp);
 else if (_shopMQ.addListener) _shopMQ.addListener(_refreshRotXp);
-_refreshRotXp();
 
 // ── Audio (WebAudio synth) ────────────────────────────────────────────────────
 let audioCtx = null;
@@ -2237,6 +2240,9 @@ function loop(now) {
   drawHUD();
   requestAnimationFrame(loop);
 }
+// Now that all module-level `let` bindings (totalXP, equippedSkills, ...) have
+// been initialized, it's safe to populate the rotate-screen XP display.
+_refreshRotXp();
 requestAnimationFrame(loop);
 </script>
 <script>
