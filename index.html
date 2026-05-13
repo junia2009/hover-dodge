@@ -86,10 +86,10 @@ body { background:#000; display:flex; align-items:center; justify-content:center
   96% { opacity: 0.5; }
 }
 
-/* Top chrome */
+/* Top chrome — sits as the first flex item above the brand title so the
+   centred column lays it out naturally instead of having an absolutely-
+   positioned element collide with the brand on tall portrait screens. */
 .rot-chrome-top {
-  position: absolute;
-  top: calc(56px + var(--st)); left: 50%; transform: translateX(-50%);
   display: flex; gap: 8px; align-items: center;
   font-size: 9px; letter-spacing: 2px;
   z-index: 3;
@@ -859,7 +859,7 @@ body { background:#000; display:flex; align-items:center; justify-content:center
     </button>
   </div>
 
-  <p class="rot-version">SYS_REV  1.0.18</p>
+  <p class="rot-version">SYS_REV  1.0.19</p>
 </div>
 
 <div id="shop-modal">
