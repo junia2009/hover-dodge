@@ -666,6 +666,27 @@ body { background:#000; display:flex; align-items:center; justify-content:center
   color: rgba(180, 210, 240, 0.55);
   font: 11px/1.6 monospace;
 }
+.shop-cat {
+  display: flex; align-items: center; gap: 10px;
+  margin: 14px 0 8px;
+  font: bold 10px monospace;
+  letter-spacing: 4px;
+  color: rgba(180, 210, 240, 0.65);
+  text-transform: uppercase;
+}
+.shop-cat:first-child { margin-top: 4px; }
+.shop-cat::before, .shop-cat::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0, 232, 255, 0.35), transparent);
+}
+.shop-cat.ATTACK  { color: #ff66e0; }
+.shop-cat.ATTACK::before, .shop-cat.ATTACK::after  { background: linear-gradient(90deg, transparent, rgba(255, 102, 224, 0.45), transparent); }
+.shop-cat.DEFENSE { color: #aaffaa; }
+.shop-cat.DEFENSE::before, .shop-cat.DEFENSE::after { background: linear-gradient(90deg, transparent, rgba(170, 255, 170, 0.45), transparent); }
+.shop-cat.PASSIVE { color: #66c8ff; }
+.shop-cat.PASSIVE::before, .shop-cat.PASSIVE::after { background: linear-gradient(90deg, transparent, rgba(102, 200, 255, 0.45), transparent); }
 </style>
 </head>
 <body>
@@ -714,7 +735,7 @@ body { background:#000; display:flex; align-items:center; justify-content:center
     <span class="xp"><span id="rot-xp">0</span> XP</span>
   </button>
 
-  <p class="rot-version">SYS_REV  1.0.16</p>
+  <p class="rot-version">SYS_REV  1.0.17</p>
 </div>
 
 <div id="shop-modal">
@@ -1145,7 +1166,15 @@ function renderShopUI() {
   if (rotXpEl)     rotXpEl.textContent = totalXP;
   if (!shopList) return;
   shopList.innerHTML = '';
+  let lastKind = null;
   for (const sk of SKILL_DEFS) {
+    if (sk.kind !== lastKind) {
+      const hdr = document.createElement('div');
+      hdr.className = 'shop-cat ' + sk.kind;
+      hdr.textContent = sk.kind;
+      shopList.appendChild(hdr);
+      lastKind = sk.kind;
+    }
     const owned    = ownedSkills.includes(sk.id);
     const equipped = equippedSkills.includes(sk.id);
     const canAfford = totalXP >= sk.price;
@@ -1513,7 +1542,11 @@ let dtScale = 1;
 // ── Progression: XP + Skills ──────────────────────────────────────────────────
 // Add a new entry to SKILL_DEFS to expose a new skill in the shop. Effects are
 // gated by hasSkill(id) checks scattered through the gameplay code below.
+// Grouped by kind (ATTACK / DEFENSE / PASSIVE), then sorted by price ascending
+// inside each group — renderShopUI() relies on this order to draw category
+// dividers without re-sorting.
 const SKILL_DEFS = [
+  // ── ATTACK ────────────────────────────────────────────────
   {
     id: 'forward_shot', name: 'FORWARD SHOT', kind: 'ATTACK',
     desc: 'タップ/SPACEで前方に弾を発射 (CD 0.4s)',
@@ -1525,19 +1558,26 @@ const SKILL_DEFS = [
     price: 250,
   },
   {
+    id: 'mega_pulse', name: 'MEGA PULSE', kind: 'ATTACK',
+    desc: 'PULSEの攻撃範囲を30%拡大 (130→170)',
+    price: 350,
+  },
+  // ── DEFENSE ───────────────────────────────────────────────
+  {
     id: 'shield', name: 'SHIELD', kind: 'DEFENSE',
     desc: '1ラン中に最初の1回の被弾を吸収',
     price: 280,
   },
   {
+    id: 'phoenix', name: 'PHOENIX', kind: 'DEFENSE',
+    desc: '死亡時に1度だけ復活、3秒間無敵',
+    price: 600,
+  },
+  // ── PASSIVE ───────────────────────────────────────────────
+  {
     id: 'magnet', name: 'MAGNET', kind: 'PASSIVE',
     desc: 'NEAR-MISS判定範囲を50%拡大、ボーナス回数UP',
     price: 300,
-  },
-  {
-    id: 'mega_pulse', name: 'MEGA PULSE', kind: 'ATTACK',
-    desc: 'PULSEの攻撃範囲を30%拡大 (130→170)',
-    price: 350,
   },
   {
     id: 'smaller_hitbox', name: 'SMALLER HITBOX', kind: 'PASSIVE',
@@ -1548,11 +1588,6 @@ const SKILL_DEFS = [
     id: 'xp_boost', name: 'XP BOOST', kind: 'PASSIVE',
     desc: '獲得XP全体を25%増加',
     price: 500,
-  },
-  {
-    id: 'phoenix', name: 'PHOENIX', kind: 'DEFENSE',
-    desc: '死亡時に1度だけ復活、3秒間無敵',
-    price: 600,
   },
 ];
 const MAX_EQUIP_SLOTS = 2;
