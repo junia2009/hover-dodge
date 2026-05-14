@@ -990,7 +990,7 @@ body { background:#000; display:flex; align-items:center; justify-content:center
     </button>
   </div>
 
-  <p class="rot-version">SYS_REV  1.0.21</p>
+  <p class="rot-version">SYS_REV  1.0.22</p>
 </div>
 
 <div id="shop-modal">
@@ -2034,8 +2034,8 @@ const BGM = {
 const PHASE_CONFIG = [
   { gapMin:170, gapBase:230, spawnBase:99999, seekerProb:0.00, spdCap:4.0, name:'PHASE 1' }, // 0-20s walls only
   { gapMin:140, gapBase:200, spawnBase:170,   seekerProb:0.00, spdCap:5.5, name:'PHASE 2' }, // 20-50s + bullets
-  { gapMin:120, gapBase:180, spawnBase:130,   seekerProb:0.30, spdCap:7.0, name:'PHASE 3' }, // 50-100s + seekers
-  { gapMin:100, gapBase:160, spawnBase: 95,   seekerProb:0.45, spdCap:10,  name:'PHASE 4' }, // 100s+ all
+  { gapMin:125, gapBase:185, spawnBase:150,   seekerProb:0.20, spdCap:7.0, name:'PHASE 3' }, // 50-100s + seekers (introduction)
+  { gapMin:100, gapBase:160, spawnBase:105,   seekerProb:0.38, spdCap:10,  name:'PHASE 4' }, // 100s+ all
 ];
 function getPhase(s) {
   if (s < 20)  return 0;
@@ -2521,11 +2521,12 @@ function update(dt) {
       let df = tf - e.facing;
       while (df >  Math.PI) df -= Math.PI*2;
       while (df < -Math.PI) df += Math.PI*2;
-      // Capped turn rate — sharp player movement can shake the seeker off
-      const turnRate = 0.045;
+      // Capped turn rate — sharp player movement can shake the seeker off.
+      // Lowered from 0.045 in v1.0.22 to give the player more room to dodge.
+      const turnRate = 0.038;
       e.facing += Math.max(-turnRate, Math.min(turnRate, df * 0.5)) * dt;
-      // Velocity clamped below player flap potential
-      const seekerSpd = Math.min(spd * 0.85 + 0.4, 4.5);
+      // Velocity clamped below player flap potential (cap 4.5 -> 4.0 in v1.0.22)
+      const seekerSpd = Math.min(spd * 0.80 + 0.3, 4.0);
       e.vx = Math.cos(e.facing) * seekerSpd;
       e.vy = Math.sin(e.facing) * seekerSpd;
       e.pulse += 0.08 * dt;
