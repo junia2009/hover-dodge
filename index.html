@@ -330,9 +330,14 @@ body { background:#000; display:flex; align-items:center; justify-content:center
   to { left: 100%; }
 }
 
+/* Version label — rides the flex flow as the last item rather than being
+   absolutely pinned to the bottom of the viewport. When more buttons get
+   added to the menu (HOW TO PLAY / SHOP / SKIN) the bottom of the centred
+   flex column reaches close to the screen edge, and an absolutely-
+   positioned version label collides with those buttons. Sitting in the
+   flex flow keeps it cleanly below the menu with the standard gap. */
 .rot-version {
-  position: absolute;
-  bottom: calc(28px + var(--sb)); left: 50%; transform: translateX(-50%);
+  margin-top: 4px;
   font: 10px/1 monospace;
   color: rgba(100,140,180,0.55);
   letter-spacing: 3px;
@@ -990,7 +995,7 @@ body { background:#000; display:flex; align-items:center; justify-content:center
     </button>
   </div>
 
-  <p class="rot-version">SYS_REV  1.0.22</p>
+  <p class="rot-version">SYS_REV  1.0.23</p>
 </div>
 
 <div id="shop-modal">
