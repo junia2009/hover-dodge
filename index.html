@@ -675,6 +675,56 @@ body { background:#000; display:flex; align-items:center; justify-content:center
   opacity: 0.62;
   background: linear-gradient(180deg, rgba(255, 80, 80, 0.04), rgba(0,0,0,0));
 }
+/* ── Tree visualisation ─────────────────────────────────────────── */
+/* Root nodes get a yellow ROOT chip; branch nodes get indented +
+   a short horizontal connector line on the left, colour-matched to
+   the kind chip. This makes the dependency chain readable at a
+   glance without ASCII art. */
+.shop-root-tag {
+  display: inline-block;
+  font: bold 9px monospace; letter-spacing: 1.5px;
+  color: #ffe680;
+  border: 1px solid rgba(255, 230, 128, 0.55);
+  padding: 2px 6px;
+  border-radius: 3px;
+  text-shadow: 0 0 6px rgba(255, 230, 128, 0.5);
+  margin-right: 6px;
+  vertical-align: middle;
+}
+.shop-card.is-branch {
+  margin-left: 24px;
+  position: relative;
+}
+.shop-card.is-branch::before {
+  /* horizontal connector line into the card */
+  content: '';
+  position: absolute;
+  left: -16px;
+  top: 28px;
+  width: 14px;
+  height: 1.5px;
+  background: rgba(0, 232, 255, 0.45);
+}
+.shop-card.is-branch::after {
+  /* small node dot at the card's left edge */
+  content: '';
+  position: absolute;
+  left: -4px;
+  top: 24px;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: rgba(0, 232, 255, 0.55);
+  box-shadow: 0 0 6px rgba(0, 232, 255, 0.6);
+}
+/* Colour-match the connector to the kind */
+.shop-card.is-branch.ATTACK::before  { background: rgba(255, 102, 224, 0.55); }
+.shop-card.is-branch.ATTACK::after   { background: #ff66e0; box-shadow: 0 0 6px #ff66e0; }
+.shop-card.is-branch.DEFENSE::before { background: rgba(170, 255, 170, 0.55); }
+.shop-card.is-branch.DEFENSE::after  { background: #aaffaa; box-shadow: 0 0 6px #aaffaa; }
+.shop-card.is-branch.PASSIVE::before { background: rgba(102, 200, 255, 0.55); }
+.shop-card.is-branch.PASSIVE::after  { background: #66c8ff; box-shadow: 0 0 6px #66c8ff; }
+.shop-card.is-branch.gated::before { background: rgba(255, 110, 110, 0.5); }
+.shop-card.is-branch.gated::after  { background: rgba(255, 110, 110, 0.7); box-shadow: 0 0 6px rgba(255, 110, 110, 0.5); }
 .shop-prereq {
   font: 9px monospace;
   letter-spacing: 1.5px;
@@ -1010,7 +1060,7 @@ body { background:#000; display:flex; align-items:center; justify-content:center
     </button>
   </div>
 
-  <p class="rot-version">SYS_REV  1.0.24</p>
+  <p class="rot-version">SYS_REV  1.0.25</p>
 </div>
 
 <div id="shop-modal">
@@ -1637,12 +1687,14 @@ function renderShopUI() {
     const slotsFull = equippedSkills.length >= MAX_EQUIP_SLOTS;
     const unlockable = isUnlockable(sk);
     const gated = !owned && !unlockable;
+    const isBranch = !!(sk.requires && sk.requires.length);
 
     const card = document.createElement('div');
     card.className = 'shop-card'
       + (owned ? ' owned' : '')
       + (equipped ? ' equipped' : '')
-      + (gated ? ' gated' : '');
+      + (gated ? ' gated' : '')
+      + (isBranch ? ` is-branch ${sk.kind}` : ' is-root');
 
     let actLabel, actClass = '', disabled = false;
     if (owned) {
@@ -1673,10 +1725,11 @@ function renderShopUI() {
       prereqHtml = `<div class="shop-prereq">↑ from ${reqNames.join(' + ')}</div>`;
     }
 
+    const rootBadge = isBranch ? '' : '<span class="shop-root-tag">⚡ ROOT</span>';
     card.innerHTML = `
       ${prereqHtml}
       <div class="shop-card-head">
-        <span class="shop-name">${sk.name}</span>
+        <span class="shop-name">${rootBadge}${sk.name}</span>
         <span class="shop-kind ${sk.kind}">${sk.kind}</span>
       </div>
       <div class="shop-desc">${sk.desc}</div>
