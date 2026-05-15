@@ -1060,7 +1060,7 @@ body { background:#000; display:flex; align-items:center; justify-content:center
     </button>
   </div>
 
-  <p class="rot-version">SYS_REV  1.0.25</p>
+  <p class="rot-version">SYS_REV  1.0.26</p>
 </div>
 
 <div id="shop-modal">
@@ -1570,12 +1570,21 @@ function flap() {
   P.vy = FLAP_VY;
   sfxFlap();
   fireForwardShot();
+  // GHOST DASH skill: brief invuln on every flap (~0.15s @ 60fps)
+  if (hasSkill('ghost_dash')) P.inv = Math.max(P.inv, 9);
 }
 
 function fireForwardShot() {
   if (!hasSkill('forward_shot') || bulletCooldown > 0) return;
   bulletCooldown = BULLET_CD;
-  bullets.push({ x: P.x + 18, y: P.y, vx: 11 });
+  if (hasSkill('triple_shot')) {
+    // Spread: centre bullet + two angled bullets (vy gives spread over time)
+    bullets.push({ x: P.x + 18, y: P.y - 8, vx: 11, vy: -1.6, prevX: P.x + 18 });
+    bullets.push({ x: P.x + 18, y: P.y,     vx: 11, vy:  0,   prevX: P.x + 18 });
+    bullets.push({ x: P.x + 18, y: P.y + 8, vx: 11, vy:  1.6, prevX: P.x + 18 });
+  } else {
+    bullets.push({ x: P.x + 18, y: P.y, vx: 11, vy: 0, prevX: P.x + 18 });
+  }
   tone(720, 0.05, 'square', 0.10, 1100);
 }
 
@@ -2174,11 +2183,29 @@ const SKILL_DEFS = [
     price: 350,
     requires: ['forward_shot'],
   },
+  {
+    id: 'triple_shot', name: 'TRIPLE SHOT', kind: 'ATTACK',
+    desc: 'タップで前方3発スプレッド射撃',
+    price: 400,
+    requires: ['forward_shot'],
+  },
+  {
+    id: 'auto_pulse', name: 'AUTO-PULSE', kind: 'ATTACK',
+    desc: 'PULSEがクールダウン解除で自動発射',
+    price: 500,
+    requires: ['rapid_pulse'],
+  },
   // ── DEFENSE ───────────────────────────────────────────────
   {
     id: 'shield', name: 'SHIELD', kind: 'DEFENSE',
     desc: '1ラン中に最初の1回の被弾を吸収',
     price: 150,
+  },
+  {
+    id: 'double_shield', name: 'DOUBLE SHIELD', kind: 'DEFENSE',
+    desc: '開始時にシールドを2枚装備 (1→2)',
+    price: 350,
+    requires: ['shield'],
   },
   {
     id: 'phoenix', name: 'PHOENIX', kind: 'DEFENSE',
@@ -2199,10 +2226,22 @@ const SKILL_DEFS = [
     requires: ['magnet'],
   },
   {
+    id: 'combo_multiplier', name: 'COMBO MULTIPLIER', kind: 'PASSIVE',
+    desc: 'NEAR連続でXP倍率UP (最大3x、5秒以内継続)',
+    price: 400,
+    requires: ['magnet'],
+  },
+  {
     id: 'smaller_hitbox', name: 'SMALLER HITBOX', kind: 'PASSIVE',
     desc: '当たり判定33%縮小（面積で約55%減）',
     price: 400,
     requires: ['magnet'],
+  },
+  {
+    id: 'ghost_dash', name: 'GHOST DASH', kind: 'PASSIVE',
+    desc: 'フラップ直後0.15秒間無敵',
+    price: 500,
+    requires: ['smaller_hitbox'],
   },
 ];
 const MAX_EQUIP_SLOTS = 2;
@@ -2291,6 +2330,8 @@ let walls = [], enemies = [], sparks = [], bullets = [];
 let bulletCooldown = 0;
 let shieldCharges = 0;
 let phoenixUsed = false;          // PHOENIX skill: revive flag (per run)
+let comboCount = 0;               // COMBO MULTIPLIER: consecutive near-miss streak
+let comboTimer = 0;               // frames before the combo decays back to 0
 const BULLET_CD = 24;          // frames (0.4s @ 60fps)
 const bulletMeshMap = new Map();
 
@@ -2361,7 +2402,8 @@ function startGame() {
   killCount = 0; nearMissCount = 0;
   nopulseStreak = 0; lastMilestone = 0; pulseUsedThisRun = false;
   runXP = 0;
-  shieldCharges = hasSkill('shield') ? 1 : 0;
+  shieldCharges = hasSkill('shield') ? (hasSkill('double_shield') ? 2 : 1) : 0;
+  comboCount = 0; comboTimer = 0;
   phoenixUsed = false;
   // Apply PULSE skill modifiers
   PULSE_COOLDOWN = hasSkill('rapid_pulse') ? Math.round(PULSE_COOLDOWN_BASE * 0.7) : PULSE_COOLDOWN_BASE;
@@ -2421,6 +2463,7 @@ function die() {
   }
   gstate = 'dead';
   deadCooldown = 30;
+  comboCount = 0; comboTimer = 0;
   sfxHit();
   vibrate([60, 40, 90]);
   BGM.stop(800);
@@ -2461,6 +2504,11 @@ function update(dt) {
   if (Math.abs(shakeY) < 0.05) shakeY = 0;
 
   if (deadCooldown > 0) deadCooldown -= dt;
+  // COMBO MULTIPLIER decay: window of inactivity resets the streak.
+  if (comboTimer > 0) {
+    comboTimer -= dt;
+    if (comboTimer <= 0) comboCount = 0;
+  }
 
   // Stars scroll
   const ws = gstate === 'play' ? spd : 2;
@@ -2491,7 +2539,10 @@ function update(dt) {
   if (pulseCooldown <= 0) {
     pulseCooldown = 0;
     pulseBtn.classList.add('ready');
-    pulseLabel.textContent = 'PULSE'; pulseSub.textContent = '[Z]';
+    pulseLabel.textContent = hasSkill('auto_pulse') ? 'AUTO' : 'PULSE';
+    pulseSub.textContent = hasSkill('auto_pulse') ? '[ON]' : '[Z]';
+    // AUTO-PULSE skill: trigger automatically the moment CD becomes ready
+    if (hasSkill('auto_pulse') && gstate === 'play') firePulse();
   } else {
     pulseBtn.classList.remove('ready');
     pulseLabel.textContent = Math.ceil(pulseCooldown/60) + 's'; pulseSub.textContent = '';
@@ -2549,7 +2600,11 @@ function update(dt) {
   // enemy but neither sample point lands inside the circle. We snapshot
   // prevX before moving and test the entire horizontal segment.
   if (bulletCooldown > 0) bulletCooldown -= dt;
-  for (const b of bullets) { b.prevX = b.x; b.x += b.vx * dt; }
+  for (const b of bullets) {
+    b.prevX = b.x;
+    b.x += b.vx * dt;
+    if (b.vy) b.y += b.vy * dt;   // TRIPLE SHOT spread uses vy
+  }
   bullets = bullets.filter(b => {
     if (b.x > VW + 20) { removeBulletMesh(b); return false; }
     for (let i = enemies.length - 1; i >= 0; i--) {
@@ -2608,7 +2663,15 @@ function update(dt) {
         const bonus = tight ? 25 : 10;
         score += bonus / 60;  // convert "score points" to seconds (~minor add)
         nearMissCount++;
-        addRunXP(tight ? 8 : 3);
+        // COMBO MULTIPLIER skill: streak boosts near-miss XP up to 3x.
+        let comboMul = 1;
+        if (hasSkill('combo_multiplier')) {
+          comboCount++;
+          comboTimer = 300;                    // 5s decay window
+          comboMul = Math.min(3, 1 + (comboCount - 1) * 0.5);
+          if (comboCount >= 2) pushBonus(P.x, P.y - 38, `COMBO x${comboCount}`, '#ffaa66');
+        }
+        addRunXP((tight ? 8 : 3) * comboMul);
         pushBonus(P.x, P.y - 22, `+${bonus} NEAR!`, '#ffee44');
         sfxBonus();
         vibrate(8);
@@ -2908,6 +2971,15 @@ function drawHUD() {
     HX.fillStyle='#ffaa55';
     HX.font='bold 11px monospace';
     HX.fillText('▲ PHOENIX READY', VW - 18, chipY);
+    HX.shadowBlur=0;
+    chipY += 16;
+  }
+  if (comboCount >= 2) {
+    HX.shadowColor='#ffaa66'; HX.shadowBlur=8;
+    HX.fillStyle='#ffaa66';
+    HX.font='bold 11px monospace';
+    const mul = Math.min(3, 1 + (comboCount - 1) * 0.5).toFixed(1);
+    HX.fillText(`◆ COMBO x${mul}`, VW - 18, chipY);
     HX.shadowBlur=0;
   }
 

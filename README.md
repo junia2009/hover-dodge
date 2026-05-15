@@ -4,7 +4,7 @@
 
 Three.js + WebGL で描画する一画面・タップで遊べるアーケードシューターです。ブラウザだけで動き、PWA としてホーム画面に追加すればオフラインでもプレイできます。フェーズに応じて重厚化する手続き合成 BGM 付き。
 
-[![Play](https://img.shields.io/badge/play-online-00e8ff?style=flat-square)](#) ![Version](https://img.shields.io/badge/version-1.0.24-aa44ff?style=flat-square)
+[![Play](https://img.shields.io/badge/play-online-00e8ff?style=flat-square)](#) ![Version](https://img.shields.io/badge/version-1.0.26-aa44ff?style=flat-square)
 
 ---
 
@@ -70,31 +70,43 @@ Three.js + WebGL で描画する一画面・タップで遊べるアーケード
 ```
 ─── ATTACK ────────────────────────────────────
   FORWARD SHOT (100 XP, root)
-       ├──→ RAPID PULSE (250 XP)
-       └──→ MEGA PULSE  (350 XP)
+       ├──→ RAPID PULSE (250 XP) ──→ AUTO-PULSE (500 XP)
+       ├──→ MEGA PULSE  (350 XP)
+       └──→ TRIPLE SHOT (400 XP)
 
 ─── DEFENSE ───────────────────────────────────
   SHIELD (150 XP, root)
-       └──→ PHOENIX (500 XP)
+       ├──→ DOUBLE SHIELD (350 XP)
+       └──→ PHOENIX       (500 XP)
 
 ─── PASSIVE ───────────────────────────────────
   MAGNET (150 XP, root)
-       ├──→ XP BOOST       (350 XP)
-       └──→ SMALLER HITBOX (400 XP)
+       ├──→ XP BOOST          (350 XP)
+       ├──→ COMBO MULTIPLIER  (400 XP)
+       └──→ SMALLER HITBOX (400 XP) ──→ GHOST DASH (500 XP)
 ```
 
 | スキル | 種別 | 価格 | 前提 | 効果 |
 | --- | --- | :---: | --- | --- |
-| **FORWARD SHOT** | 🟣 ATTACK  | 100 XP | — | タップで前方弾発射（CD 0.4 s） |
-| **RAPID PULSE**  | 🟣 ATTACK  | 250 XP | FORWARD SHOT | PULSE クールダウン -30 % |
-| **MEGA PULSE**   | 🟣 ATTACK  | 350 XP | FORWARD SHOT | PULSE 範囲 +30 % |
-| **SHIELD**       | 🟢 DEFENSE | 150 XP | — | 最初の 1 ヒットを吸収 + 周囲撃破 |
-| **PHOENIX**      | 🟢 DEFENSE | 500 XP | SHIELD | 1 度だけ死亡から復活、3 秒無敵 |
-| **MAGNET**       | 🔵 PASSIVE | 150 XP | — | NEAR-MISS 判定 +50 % |
-| **XP BOOST**     | 🔵 PASSIVE | 350 XP | MAGNET | 獲得 XP +25 % |
-| **SMALLER HITBOX** | 🔵 PASSIVE | 400 XP | MAGNET | 当たり判定 -33 %（面積 -55 %） |
+| **FORWARD SHOT**     | 🟣 ATTACK  | 100 XP | — | タップで前方弾発射（CD 0.4 s） |
+| **RAPID PULSE**      | 🟣 ATTACK  | 250 XP | FORWARD SHOT | PULSE クールダウン -30 % |
+| **MEGA PULSE**       | 🟣 ATTACK  | 350 XP | FORWARD SHOT | PULSE 範囲 +30 % |
+| **TRIPLE SHOT**      | 🟣 ATTACK  | 400 XP | FORWARD SHOT | タップで 3 発スプレッド射撃 |
+| **AUTO-PULSE**       | 🟣 ATTACK  | 500 XP | RAPID PULSE  | PULSE CD 解除で自動発射 |
+| **SHIELD**           | 🟢 DEFENSE | 150 XP | — | 最初の 1 ヒットを吸収 + 周囲撃破 |
+| **DOUBLE SHIELD**    | 🟢 DEFENSE | 350 XP | SHIELD       | 開始時シールド ×2 |
+| **PHOENIX**          | 🟢 DEFENSE | 500 XP | SHIELD       | 1 度だけ死亡から復活、3 秒無敵 |
+| **MAGNET**           | 🔵 PASSIVE | 150 XP | — | NEAR-MISS 判定 +50 % |
+| **XP BOOST**         | 🔵 PASSIVE | 350 XP | MAGNET       | 獲得 XP +25 % |
+| **COMBO MULTIPLIER** | 🔵 PASSIVE | 400 XP | MAGNET       | NEAR 連続で XP 倍率 UP（最大 3x） |
+| **SMALLER HITBOX**   | 🔵 PASSIVE | 400 XP | MAGNET       | 当たり判定 -33 %（面積 -55 %） |
+| **GHOST DASH**       | 🔵 PASSIVE | 500 XP | SMALLER HITBOX | フラップ直後 0.15 秒間無敵 |
 
-フルアンロックまで合計 **2,250 XP**。**装備枠は 2 つ**。組み合わせで戦略が変わります（例: `RAPID PULSE + MEGA PULSE` = 攻撃特化、`SHIELD + PHOENIX` = 実質 3 ライフ、`MAGNET + XP BOOST` = XP 稼ぎ）。
+フルアンロックまで合計 **4,400 XP**（13 スキル）。**装備枠は 2 つ**。組み合わせで戦略が大きく変わります：
+- `TRIPLE SHOT + AUTO-PULSE` — 攻撃特化、敵殲滅
+- `DOUBLE SHIELD + PHOENIX` — 実質 4 ライフ
+- `COMBO MULTIPLIER + XP BOOST` — XP 稼ぎ最大化
+- `GHOST DASH + SMALLER HITBOX` — 無敵フラップで擦り抜け（※同時装備不可、GHOST DASH の前提）
 
 新スキルを追加するには `SKILL_DEFS` に `requires: ['parent_id']` 付きで 1 エントリ追加するだけです。
 
@@ -215,6 +227,8 @@ SW キャッシュキーを上げることで、既存 PWA ユーザーに新版
 
 | Version | 内容 |
 | :---: | --- |
+| **1.0.26** | スキル 5 種追加（TRIPLE SHOT / AUTO-PULSE / DOUBLE SHIELD / COMBO MULTIPLIER / GHOST DASH）、合計 13 種に |
+| **1.0.25** | スキルツリーをビジュアル強化（ROOT バッジ + ブランチ接続線） |
 | **1.0.24** | スキルをツリー化。ルートを買うと上位スキルが解放（自動マイグレーション付き） |
 | **1.0.23** | SYS_REV ラベルが SHOP/SKIN と被る不具合修正 |
 | **1.0.22** | PHASE 3 / SEEKER AI バランス調整（Phase 4 到達可能に） |
