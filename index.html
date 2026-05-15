@@ -39,6 +39,17 @@ body { background:#000; display:flex; align-items:center; justify-content:center
   #rotate-screen { display: flex; }
 }
 
+/* Forced animation restart helper. JS adds .rot-anim-reset for ~2 frames
+   on each entry to portrait so iOS Safari restarts every animation from
+   frame 0 instead of leaving them frozen after the display:none round-trip. */
+#rotate-screen.rot-anim-reset::before,
+#rotate-screen.rot-anim-reset::after,
+#rotate-screen.rot-anim-reset *,
+#rotate-screen.rot-anim-reset *::before,
+#rotate-screen.rot-anim-reset *::after {
+  animation: none !important;
+}
+
 /* Animated neon grid background */
 #rotate-screen::before {
   content: '';
@@ -1060,7 +1071,7 @@ body { background:#000; display:flex; align-items:center; justify-content:center
     </button>
   </div>
 
-  <p class="rot-version">SYS_REV  1.0.27</p>
+  <p class="rot-version">SYS_REV  1.0.28</p>
 </div>
 
 <div id="shop-modal">
@@ -1792,6 +1803,22 @@ const _refreshRotXp = () => {
   if (!_shopMQ.matches && shopModal)  shopModal.classList.remove('open');
   if (!_shopMQ.matches && skinModal)  skinModal.classList.remove('open');
   if (!_shopMQ.matches && howtoModal) howtoModal.classList.remove('open');
+  // iOS Safari (and a few others) can leave CSS animations frozen after a
+  // display:none -> display:flex round-trip — the second time the player
+  // rotates back to portrait, the brackets/glitch/grid all stop animating.
+  // Force every animation under #rotate-screen to restart from frame 0 by
+  // briefly applying "animation: none" via the .rot-anim-reset class.
+  if (_shopMQ.matches) {
+    const scr = document.getElementById('rotate-screen');
+    if (scr) {
+      scr.classList.add('rot-anim-reset');
+      // Two RAFs guarantees the "no animation" state lands before we
+      // remove the class and let animations restart.
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        scr.classList.remove('rot-anim-reset');
+      }));
+    }
+  }
 };
 if (_shopMQ.addEventListener) _shopMQ.addEventListener('change', _refreshRotXp);
 else if (_shopMQ.addListener) _shopMQ.addListener(_refreshRotXp);
