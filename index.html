@@ -1060,7 +1060,7 @@ body { background:#000; display:flex; align-items:center; justify-content:center
     </button>
   </div>
 
-  <p class="rot-version">SYS_REV  1.0.26</p>
+  <p class="rot-version">SYS_REV  1.0.27</p>
 </div>
 
 <div id="shop-modal">
@@ -1575,9 +1575,14 @@ function flap() {
 }
 
 function fireForwardShot() {
-  if (!hasSkill('forward_shot') || bulletCooldown > 0) return;
+  // TRIPLE SHOT is an upgrade path on top of FORWARD SHOT in the tree, but
+  // at equip time it stands alone — equipping just TRIPLE SHOT must also
+  // enable the per-flap shooter. Gate on either skill.
+  const tripled = hasSkill('triple_shot');
+  if (!hasSkill('forward_shot') && !tripled) return;
+  if (bulletCooldown > 0) return;
   bulletCooldown = BULLET_CD;
-  if (hasSkill('triple_shot')) {
+  if (tripled) {
     // Spread: centre bullet + two angled bullets (vy gives spread over time)
     bullets.push({ x: P.x + 18, y: P.y - 8, vx: 11, vy: -1.6, prevX: P.x + 18 });
     bullets.push({ x: P.x + 18, y: P.y,     vx: 11, vy:  0,   prevX: P.x + 18 });
@@ -2402,7 +2407,10 @@ function startGame() {
   killCount = 0; nearMissCount = 0;
   nopulseStreak = 0; lastMilestone = 0; pulseUsedThisRun = false;
   runXP = 0;
-  shieldCharges = hasSkill('shield') ? (hasSkill('double_shield') ? 2 : 1) : 0;
+  // SHIELD provides 1 charge, DOUBLE SHIELD provides 2. Either equipped on
+  // its own should grant its respective count — the prerequisite chain only
+  // matters for *unlocking* DOUBLE SHIELD, not for equipping it standalone.
+  shieldCharges = hasSkill('double_shield') ? 2 : (hasSkill('shield') ? 1 : 0);
   comboCount = 0; comboTimer = 0;
   phoenixUsed = false;
   // Apply PULSE skill modifiers
