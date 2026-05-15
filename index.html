@@ -670,6 +670,21 @@ body { background:#000; display:flex; align-items:center; justify-content:center
 }
 .shop-card.owned     { border-color: rgba(0, 232, 255, 0.6); }
 .shop-card.equipped  { border-color: #ffe680; box-shadow: 0 0 14px rgba(255, 217, 102, 0.45); }
+.shop-card.gated     {
+  border-color: rgba(255, 110, 110, 0.35);
+  opacity: 0.62;
+  background: linear-gradient(180deg, rgba(255, 80, 80, 0.04), rgba(0,0,0,0));
+}
+.shop-prereq {
+  font: 9px monospace;
+  letter-spacing: 1.5px;
+  color: rgba(255, 200, 200, 0.55);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+.shop-card.owned .shop-prereq {
+  color: rgba(0, 232, 255, 0.55);
+}
 .shop-card-head {
   display: flex; justify-content: space-between; align-items: center;
   margin-bottom: 6px;
@@ -995,7 +1010,7 @@ body { background:#000; display:flex; align-items:center; justify-content:center
     </button>
   </div>
 
-  <p class="rot-version">SYS_REV  1.0.23</p>
+  <p class="rot-version">SYS_REV  1.0.24</p>
 </div>
 
 <div id="shop-modal">
@@ -1068,9 +1083,11 @@ body { background:#000; display:flex; align-items:center; justify-content:center
     </section>
 
     <section class="howto-sec">
-      <h3>▸ XP & スキル (SHOP)</h3>
-      <p>プレイ中に XP 獲得 → 縦画面の <b>SHOP</b> から強化スキルを購入。<br>
-         所持スキルから装備枠 (最大2つ) を選択して次のランから発動。</p>
+      <h3>▸ XP & スキルツリー (SHOP)</h3>
+      <p>プレイ中に XP 獲得 → 縦画面の <b>SHOP</b> でスキルを解放。<br>
+         ルートスキル (FORWARD SHOT / SHIELD / MAGNET) を購入すると<br>
+         上位スキルが解放され、より強力な効果を装備可能に。<br>
+         装備枠は最大 2 つ。</p>
       <dl>
         <dt>+2 / 秒</dt><dd>生存（時間経過）</dd>
         <dt>+5</dt><dd>敵撃破（PULSE / 前方弾）</dd>
@@ -1618,15 +1635,27 @@ function renderShopUI() {
     const equipped = equippedSkills.includes(sk.id);
     const canAfford = totalXP >= sk.price;
     const slotsFull = equippedSkills.length >= MAX_EQUIP_SLOTS;
+    const unlockable = isUnlockable(sk);
+    const gated = !owned && !unlockable;
 
     const card = document.createElement('div');
-    card.className = 'shop-card' + (owned ? ' owned' : '') + (equipped ? ' equipped' : '');
+    card.className = 'shop-card'
+      + (owned ? ' owned' : '')
+      + (equipped ? ' equipped' : '')
+      + (gated ? ' gated' : '');
 
     let actLabel, actClass = '', disabled = false;
     if (owned) {
       if (equipped) { actLabel = 'EQUIPPED · TAP TO UNEQUIP'; actClass = 'equipped'; }
       else if (slotsFull) { actLabel = `EQUIP SLOTS FULL (${MAX_EQUIP_SLOTS})`; disabled = true; }
       else { actLabel = 'EQUIP'; }
+    } else if (!unlockable) {
+      const reqNames = sk.requires
+        .map(req => SKILL_DEFS.find(s => s.id === req))
+        .filter(Boolean).map(s => s.name);
+      actLabel = `🔒 REQUIRES: ${reqNames.join(' + ')}`;
+      actClass = 'locked';
+      disabled = true;
     } else if (canAfford) {
       actLabel = `BUY · ${sk.price} XP`;
     } else {
@@ -1635,7 +1664,17 @@ function renderShopUI() {
       disabled = true;
     }
 
+    // Prerequisite chain indicator (e.g. "↑ from FORWARD SHOT")
+    let prereqHtml = '';
+    if (sk.requires && sk.requires.length) {
+      const reqNames = sk.requires
+        .map(req => SKILL_DEFS.find(s => s.id === req))
+        .filter(Boolean).map(s => s.name);
+      prereqHtml = `<div class="shop-prereq">↑ from ${reqNames.join(' + ')}</div>`;
+    }
+
     card.innerHTML = `
+      ${prereqHtml}
       <div class="shop-card-head">
         <span class="shop-name">${sk.name}</span>
         <span class="shop-kind ${sk.kind}">${sk.kind}</span>
@@ -2059,49 +2098,58 @@ let dtScale = 1;
 // Grouped by kind (ATTACK / DEFENSE / PASSIVE), then sorted by price ascending
 // inside each group — renderShopUI() relies on this order to draw category
 // dividers without re-sorting.
+// Skill tree: each skill optionally declares `requires: [id, ...]`. A skill
+// can only be purchased once every prerequisite is owned. Within each kind
+// the array is ordered root-first so the rendered list reads top-to-bottom
+// as a dependency chain.
 const SKILL_DEFS = [
   // ── ATTACK ────────────────────────────────────────────────
   {
     id: 'forward_shot', name: 'FORWARD SHOT', kind: 'ATTACK',
     desc: 'タップ/SPACEで前方に弾を発射 (CD 0.4s)',
-    price: 150,
+    price: 100,
   },
   {
     id: 'rapid_pulse', name: 'RAPID PULSE', kind: 'ATTACK',
     desc: 'PULSEのクールダウン30%短縮 (5s→3.5s)',
     price: 250,
+    requires: ['forward_shot'],
   },
   {
     id: 'mega_pulse', name: 'MEGA PULSE', kind: 'ATTACK',
     desc: 'PULSEの攻撃範囲を30%拡大 (130→170)',
     price: 350,
+    requires: ['forward_shot'],
   },
   // ── DEFENSE ───────────────────────────────────────────────
   {
     id: 'shield', name: 'SHIELD', kind: 'DEFENSE',
     desc: '1ラン中に最初の1回の被弾を吸収',
-    price: 280,
+    price: 150,
   },
   {
     id: 'phoenix', name: 'PHOENIX', kind: 'DEFENSE',
     desc: '死亡時に1度だけ復活、3秒間無敵',
-    price: 600,
+    price: 500,
+    requires: ['shield'],
   },
   // ── PASSIVE ───────────────────────────────────────────────
   {
     id: 'magnet', name: 'MAGNET', kind: 'PASSIVE',
     desc: 'NEAR-MISS判定範囲を50%拡大、ボーナス回数UP',
-    price: 300,
-  },
-  {
-    id: 'smaller_hitbox', name: 'SMALLER HITBOX', kind: 'PASSIVE',
-    desc: '当たり判定33%縮小（面積で約55%減）',
-    price: 420,
+    price: 150,
   },
   {
     id: 'xp_boost', name: 'XP BOOST', kind: 'PASSIVE',
     desc: '獲得XP全体を25%増加',
-    price: 500,
+    price: 350,
+    requires: ['magnet'],
+  },
+  {
+    id: 'smaller_hitbox', name: 'SMALLER HITBOX', kind: 'PASSIVE',
+    desc: '当たり判定33%縮小（面積で約55%減）',
+    price: 400,
+    requires: ['magnet'],
   },
 ];
 const MAX_EQUIP_SLOTS = 2;
@@ -2126,6 +2174,17 @@ function loadProgression() {
   for (let i = 0; i < equippedSkills.length; i++) {
     if (equippedSkills[i] === 'slow_gravity') { equippedSkills[i] = 'smaller_hitbox'; migrated = true; }
   }
+  // Tree migration (v1.0.24): retroactively grant the root skill to anyone
+  // who already owns a skill that now has a prerequisite. Without this an
+  // existing player could be in an "impossible" state (owns XP_BOOST but
+  // not MAGNET) which would never have been reachable post-migration.
+  // Idempotent — re-running yields the same result.
+  for (const sk of SKILL_DEFS) {
+    if (!sk.requires || !ownedSkills.includes(sk.id)) continue;
+    for (const reqId of sk.requires) {
+      if (!ownedSkills.includes(reqId)) { ownedSkills.push(reqId); migrated = true; }
+    }
+  }
   if (migrated) saveProgression();
 }
 function saveProgression() {
@@ -2135,9 +2194,13 @@ function saveProgression() {
 }
 function hasSkill(id) { return equippedSkills.includes(id); }
 function addRunXP(n) { runXP += n * (hasSkill('xp_boost') ? 1.25 : 1); }
+function isUnlockable(sk) {
+  return !sk.requires || sk.requires.every(req => ownedSkills.includes(req));
+}
 function buySkill(id) {
   const sk = SKILL_DEFS.find(s => s.id === id);
   if (!sk || ownedSkills.includes(id) || totalXP < sk.price) return false;
+  if (!isUnlockable(sk)) return false;
   totalXP -= sk.price;
   ownedSkills.push(id);
   saveProgression();

@@ -4,7 +4,7 @@
 
 Three.js + WebGL で描画する一画面・タップで遊べるアーケードシューターです。ブラウザだけで動き、PWA としてホーム画面に追加すればオフラインでもプレイできます。フェーズに応じて重厚化する手続き合成 BGM 付き。
 
-[![Play](https://img.shields.io/badge/play-online-00e8ff?style=flat-square)](#) ![Version](https://img.shields.io/badge/version-1.0.18-aa44ff?style=flat-square)
+[![Play](https://img.shields.io/badge/play-online-00e8ff?style=flat-square)](#) ![Version](https://img.shields.io/badge/version-1.0.24-aa44ff?style=flat-square)
 
 ---
 
@@ -63,20 +63,40 @@ Three.js + WebGL で描画する一画面・タップで遊べるアーケード
 
 典型的なランで 100 〜 400 XP 獲得。死亡時に `localStorage` に保存されます。
 
-### スキル一覧
+### スキルツリー
 
-| スキル | 種別 | 価格 | 効果 |
-| --- | --- | :---: | --- |
-| **FORWARD SHOT** | 🟣 ATTACK  | 150 XP | タップで前方弾発射（CD 0.4 s）。敵に当たれば即撃破 |
-| **RAPID PULSE**  | 🟣 ATTACK  | 250 XP | PULSE のクールダウンを 30 % 短縮（5 s → 3.5 s） |
-| **SHIELD**       | 🟢 DEFENSE | 280 XP | ラン中の最初の 1 ヒットを吸収。周囲の敵も巻き込み撃破 |
-| **MAGNET**       | 🔵 PASSIVE | 300 XP | NEAR-MISS 判定範囲を 50 % 拡大、ボーナス頻度 UP |
-| **MEGA PULSE**   | 🟣 ATTACK  | 350 XP | PULSE の攻撃範囲を 30 % 拡大（130 → 170） |
-| **SMALLER HITBOX** | 🔵 PASSIVE | 420 XP | 当たり判定 33 % 縮小（面積で約 55 % 減） |
-| **XP BOOST**     | 🔵 PASSIVE | 500 XP | 獲得 XP 全体を 25 % 増加 |
-| **PHOENIX**      | 🟢 DEFENSE | 600 XP | 死亡時に 1 度だけ復活、3 秒間無敵 |
+スキルは **3 つのチェーン（ATTACK / DEFENSE / PASSIVE）** に分かれており、ルートスキルを購入することで上位スキルが解放される構造です。
 
-**装備枠は 2 つ**。所持スキルのうち任意の 2 つを装備できます。組み合わせで戦略が変わります（例: `RAPID PULSE + MEGA PULSE` = 攻撃特化、`SHIELD + PHOENIX` = 実質 3 ライフ、`MAGNET + XP BOOST` = XP 稼ぎ）。
+```
+─── ATTACK ────────────────────────────────────
+  FORWARD SHOT (100 XP, root)
+       ├──→ RAPID PULSE (250 XP)
+       └──→ MEGA PULSE  (350 XP)
+
+─── DEFENSE ───────────────────────────────────
+  SHIELD (150 XP, root)
+       └──→ PHOENIX (500 XP)
+
+─── PASSIVE ───────────────────────────────────
+  MAGNET (150 XP, root)
+       ├──→ XP BOOST       (350 XP)
+       └──→ SMALLER HITBOX (400 XP)
+```
+
+| スキル | 種別 | 価格 | 前提 | 効果 |
+| --- | --- | :---: | --- | --- |
+| **FORWARD SHOT** | 🟣 ATTACK  | 100 XP | — | タップで前方弾発射（CD 0.4 s） |
+| **RAPID PULSE**  | 🟣 ATTACK  | 250 XP | FORWARD SHOT | PULSE クールダウン -30 % |
+| **MEGA PULSE**   | 🟣 ATTACK  | 350 XP | FORWARD SHOT | PULSE 範囲 +30 % |
+| **SHIELD**       | 🟢 DEFENSE | 150 XP | — | 最初の 1 ヒットを吸収 + 周囲撃破 |
+| **PHOENIX**      | 🟢 DEFENSE | 500 XP | SHIELD | 1 度だけ死亡から復活、3 秒無敵 |
+| **MAGNET**       | 🔵 PASSIVE | 150 XP | — | NEAR-MISS 判定 +50 % |
+| **XP BOOST**     | 🔵 PASSIVE | 350 XP | MAGNET | 獲得 XP +25 % |
+| **SMALLER HITBOX** | 🔵 PASSIVE | 400 XP | MAGNET | 当たり判定 -33 %（面積 -55 %） |
+
+フルアンロックまで合計 **2,250 XP**。**装備枠は 2 つ**。組み合わせで戦略が変わります（例: `RAPID PULSE + MEGA PULSE` = 攻撃特化、`SHIELD + PHOENIX` = 実質 3 ライフ、`MAGNET + XP BOOST` = XP 稼ぎ）。
+
+新スキルを追加するには `SKILL_DEFS` に `requires: ['parent_id']` 付きで 1 エントリ追加するだけです。
 
 ## 🎨 SKIN（自機カスタマイズ）
 
@@ -195,6 +215,12 @@ SW キャッシュキーを上げることで、既存 PWA ユーザーに新版
 
 | Version | 内容 |
 | :---: | --- |
+| **1.0.24** | スキルをツリー化。ルートを買うと上位スキルが解放（自動マイグレーション付き） |
+| **1.0.23** | SYS_REV ラベルが SHOP/SKIN と被る不具合修正 |
+| **1.0.22** | PHASE 3 / SEEKER AI バランス調整（Phase 4 到達可能に） |
+| **1.0.21** | HOW TO PLAY モーダル追加（初見プレイヤー向けの説明） |
+| **1.0.20** | FORWARD SHOT 弾の tunneling 修正（swept collision） |
+| **1.0.19** | ! ROTATE_REQUIRED チップが HOVER DODGE と被る不具合修正 |
 | **1.0.18** | 自機カスタマイズ機能（SKIN）追加、6 種類のプリセットカラー |
 | **1.0.17** | ショップをカテゴリ別（ATTACK / DEFENSE / PASSIVE）にソート、ヘッダー追加 |
 | **1.0.16** | スキル 5 種追加（MEGA PULSE / RAPID PULSE / PHOENIX / MAGNET / XP BOOST）、合計 8 種に |
