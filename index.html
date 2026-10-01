@@ -1446,7 +1446,7 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
     </button>
   </div>
 
-  <p class="rot-version">SYS_REV  1.2.0</p>
+  <p class="rot-version">SYS_REV  1.3.0</p>
 </div>
 
 <div id="shop-modal" class="modal">
@@ -1534,7 +1534,7 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
 
     <section class="howto-sec">
       <h3>フェーズ進行</h3>
-      <p>生存時間に応じて4段階に難易度UP。BGMもフェーズに合わせて重厚に。</p>
+      <p>生存時間に応じて4段階に難易度UP。BGMもフェーズごとに曲調・テンポが変わり、危険な場面やNEAR連発に反応して展開します。</p>
       <ul>
         <li><span class="ph-num">PHASE 1</span> <b>WALLS</b> (0–20s) — 壁のみ</li>
         <li><span class="ph-num">PHASE 2</span> <b>BULLETS</b> (20–50s) — 弾型登場</li>
@@ -1623,7 +1623,7 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
       <div class="t-foot">
         <span class="best">BEST<b id="t-best">—</b></span>
         <span>SOUND<b id="t-sound">ON</b> [M]</span>
-        <span>VER<b>1.2.0</b></span>
+        <span>VER<b>1.3.0</b></span>
       </div>
     </div>
 
@@ -2289,7 +2289,7 @@ function flap() {
   if (gstate === 'menu') return;             // require start button on title
   if (gstate === 'dead') return;             // require RETRY button on game over
   P.vy = FLAP_VY;
-  sfxFlap();
+  sfx.flap(P.y);
   fireForwardShot();
   // GHOST DASH skill: brief invuln on every flap (~0.15s @ 60fps)
   if (hasSkill('ghost_dash')) P.inv = Math.max(P.inv, 9);
@@ -2311,13 +2311,13 @@ function fireForwardShot() {
   } else {
     bullets.push({ x: P.x + 18, y: P.y, vx: 11, vy: 0, prevX: P.x + 18 });
   }
-  tone(720, 0.05, 'square', 0.10, 1100);
+  sfx.shot();
 }
 
 function firePulse() {
   if (gstate !== 'play' || pulseCooldown > 0) return;
   pulseCooldown = PULSE_COOLDOWN;
-  sfxPulse();
+  sfx.pulse();
   vibrate(20);
   pulseUsedThisRun = true;
   nopulseStreak = 0;
@@ -2355,7 +2355,7 @@ const anyModalOpen = () =>
 function toggleMute() {
   audioMuted = !audioMuted;
   localStorage.setItem('hd_mute', audioMuted ? 1 : 0);
-  BGM.setMute(audioMuted);
+  Music.setMute(audioMuted);
   refreshTitleInfo();
 }
 
@@ -2392,12 +2392,12 @@ const pulseSub   = document.getElementById('pulse-sub');
 onTap(pulseBtn, firePulse);
 
 const startBtn = document.getElementById('start-btn');
-onTap(startBtn, () => { if (gstate === 'menu') startGame(); });
-onTap(document.getElementById('retry-btn'), () => { if (gstate === 'dead' && deadCooldown <= 0) startGame(); });
-onTap(document.getElementById('title-btn'), () => { if (gstate === 'dead' && deadCooldown <= 0) gotoMenu(); });
-onTap(document.getElementById('pause-btn'),  pauseGame);
-onTap(document.getElementById('resume-btn'), resumeGame);
-onTap(document.getElementById('quit-btn'),   () => { if (gstate === 'paused') gotoMenu(); });
+onTap(startBtn, () => { if (gstate === 'menu') { ui.confirm(); startGame(); } });
+onTap(document.getElementById('retry-btn'), () => { if (gstate === 'dead' && deadCooldown <= 0) { ui.confirm(); startGame(); } });
+onTap(document.getElementById('title-btn'), () => { if (gstate === 'dead' && deadCooldown <= 0) { ui.back(); gotoMenu(); } });
+onTap(document.getElementById('pause-btn'),  () => { if (gstate === 'play') { ui.select(); pauseGame(); } });
+onTap(document.getElementById('resume-btn'), () => { if (gstate === 'paused') { ui.confirm(); resumeGame(); } });
+onTap(document.getElementById('quit-btn'),   () => { if (gstate === 'paused') { ui.back(); gotoMenu(); } });
 onTap(document.getElementById('t-howto-btn'), () => openHowto());
 onTap(document.getElementById('t-shop-btn'),  () => openShop());
 onTap(document.getElementById('t-skin-btn'),  () => openSkin());
@@ -2503,7 +2503,7 @@ function renderShopUI() {
       if (shopTab === kind) return;
       shopTab = kind;
       shopSel = defaultSelection(kind);
-      sfxScore();
+      ui.select();
       renderShopUI();
     });
     shopTabsEl.appendChild(b);
@@ -2537,7 +2537,7 @@ function renderShopUI() {
       if (shopSel === id) return;
       shopSel = id;
       shopJust = null;
-      sfxScore();
+      ui.select();
       renderShopUI();
     });
     shopTreeEl.appendChild(b);
@@ -2556,7 +2556,7 @@ function renderShopUI() {
       b.innerHTML = `${icon(id, '')}<span>${sk.name}</span>`;
       b.addEventListener('click', () => {
         shopTab = sk.kind; shopSel = id; shopJust = null;
-        sfxScore();
+        ui.select();
         renderShopUI();
       });
     } else {
@@ -2622,12 +2622,12 @@ function renderShopDetail() {
   if (btn) btn.addEventListener('click', () => {
     if (btn.dataset.do === 'buy') {
       if (!buySkill(sk.id)) return;
-      sfxPhase(); vibrate(25);
+      ui.buy(); vibrate(25);
       shopJust = sk.id;
       restartAnim(shopXpEl, 'bump');
     } else {
       toggleEquip(sk.id);
-      sfxBonus(); vibrate(10);
+      ui.equip(); vibrate(10);
       shopJust = sk.id;
     }
     renderShopUI();
@@ -2644,8 +2644,8 @@ function defaultSelection(kind) {
   return (idle || list[0]).id;
 }
 
-function openShop()  { loadProgression(); shopSel = defaultSelection(shopTab); renderShopUI(); shopModal.classList.add('open'); }
-function closeShop() { shopModal.classList.remove('open'); refreshTitleInfo(); }
+function openShop()  { ui.open(); loadProgression(); shopSel = defaultSelection(shopTab); renderShopUI(); shopModal.classList.add('open'); }
+function closeShop() { ui.back(); shopModal.classList.remove('open'); refreshTitleInfo(); }
 
 if (rotShopBtn) {
   rotShopBtn.addEventListener('click', e => { e.stopPropagation(); openShop(); });
@@ -2736,7 +2736,7 @@ function renderSkinUI() {
       localStorage.setItem('hd_skin', s.id);
       applySkin(s.id);
       fxFlash(parseInt(s.accent.slice(1), 16), 0.18);
-      sfxScore();
+      ui.skin();
       vibrate(10);
       refreshSkinSwatchPreview();
       renderSkinUI();
@@ -2745,12 +2745,14 @@ function renderSkinUI() {
   }
 }
 function openSkin() {
+  ui.open();
   renderSkinUI();
   skinPreview = true;
   document.body.classList.add('skin-open');
   skinModal.classList.add('open');
 }
 function closeSkin() {
+  ui.back();
   skinModal.classList.remove('open');
   skinPreview = false;
   trailPrimed = false;
@@ -2776,8 +2778,8 @@ addEventListener('keydown', e => {
 const howtoModal    = document.getElementById('howto-modal');
 const howtoCloseBtn = document.getElementById('howto-close');
 const rotHowtoBtn   = document.getElementById('rot-howto-btn');
-function openHowto()  { howtoModal && howtoModal.classList.add('open'); }
-function closeHowto() { howtoModal && howtoModal.classList.remove('open'); }
+function openHowto()  { ui.open(); howtoModal && howtoModal.classList.add('open'); }
+function closeHowto() { ui.back(); howtoModal && howtoModal.classList.remove('open'); }
 if (rotHowtoBtn) {
   rotHowtoBtn.addEventListener('click',      e => { e.stopPropagation(); openHowto(); });
   rotHowtoBtn.addEventListener('touchstart', e => { e.preventDefault(); e.stopPropagation(); openHowto(); }, { passive:false });
@@ -2792,287 +2794,605 @@ addEventListener('keydown', e => {
   }
 });
 
-// ── Audio (WebAudio synth) ────────────────────────────────────────────────────
+// ── Audio engine ──────────────────────────────────────────────────────────────
+// Everything is synthesised with WebAudio — no sample files.
+//
+//   music layers (pad/bass/lead/arp/tension) → kickDuck → pulseDuck ┐
+//   drums + stingers ─────────────────────────────────────────────┴→ musicBus → musicFilter ┐
+//   reverb / delay returns ──────────────────────────────────────────────────→ musicFilter ┤
+//   sfx ───────────────────────────────────────────────────────────────────→ sfxBus ───────┴→ master → comp → out
+//
+// musicFilter is the "interactive" low-pass: pause muffles it, slow-motion
+// drags it down with the time scale, death sweeps it shut.
 let audioCtx = null;
 let audioMuted = +localStorage.getItem('hd_mute') === 1;
-let audioPaused = false;     // true while the game is paused (ctx suspended)
-let sfxBus = null;           // SFX → compressor → out, so stacked hits don't clip
+const AU = {};
+const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
+
 function getAudio() {
   if (!audioCtx) {
     try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
     catch (e) { audioCtx = null; }
-    if (audioCtx) {
-      const comp = audioCtx.createDynamicsCompressor();
-      comp.threshold.value = -12; comp.ratio.value = 3;
-      sfxBus = audioCtx.createGain();
-      sfxBus.connect(comp).connect(audioCtx.destination);
-    }
+    if (audioCtx) buildAudioGraph(audioCtx);
   }
-  if (audioCtx && audioCtx.state === 'suspended' && !audioPaused) audioCtx.resume();
+  if (audioCtx && audioCtx.state === 'suspended' && !document.hidden) audioCtx.resume();
   return audioCtx;
 }
-function tone(freq, dur, type='triangle', vol=0.18, freq2=null) {
-  if (audioMuted) return;
-  const a = getAudio(); if (!a) return;
-  const o = a.createOscillator(), g = a.createGain();
+
+function buildAudioGraph(a) {
+  AU.master = a.createGain();
+  AU.master.gain.value = audioMuted ? 0 : 0.9;
+  const comp = a.createDynamicsCompressor();
+  comp.threshold.value = -10; comp.knee.value = 8; comp.ratio.value = 4;
+  comp.attack.value = 0.003; comp.release.value = 0.2;
+  AU.master.connect(comp).connect(a.destination);
+
+  AU.musicFilter = a.createBiquadFilter();
+  AU.musicFilter.type = 'lowpass';
+  AU.musicFilter.frequency.value = 20000;
+  AU.musicFilter.Q.value = 0.9;
+  AU.musicFilter.connect(AU.master);
+  AU.musicBus = a.createGain();
+  AU.musicBus.gain.value = 0;
+  AU.musicBus.connect(AU.musicFilter);
+  AU.pulseDuck = a.createGain(); AU.pulseDuck.connect(AU.musicBus);
+  AU.kickDuck  = a.createGain(); AU.kickDuck.connect(AU.pulseDuck);
+  AU.sfxBus = a.createGain();
+  AU.sfxBus.connect(AU.master);
+
+  // Reverb: synthetic stereo impulse (decaying noise)
+  const len = Math.floor(a.sampleRate * 2.6);
+  const ir = a.createBuffer(2, len, a.sampleRate);
+  for (let ch = 0; ch < 2; ch++) {
+    const d = ir.getChannelData(ch);
+    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3.2);
+  }
+  AU.rev = a.createConvolver();
+  AU.rev.buffer = ir;
+  const revOut = a.createGain(); revOut.gain.value = 0.55;
+  AU.rev.connect(revOut).connect(AU.musicFilter);
+
+  // Tempo-synced dotted-8th delay with a darkening feedback loop
+  AU.dly = a.createDelay(2);
+  AU.dly.delayTime.value = 0.42;
+  const fb = a.createGain(); fb.gain.value = 0.38;
+  const fbLp = a.createBiquadFilter(); fbLp.type = 'lowpass'; fbLp.frequency.value = 2600;
+  AU.dly.connect(fbLp).connect(fb).connect(AU.dly);
+  const dlyOut = a.createGain(); dlyOut.gain.value = 0.5;
+  fbLp.connect(dlyOut).connect(AU.musicFilter);
+
+  // Shared noise buffer (2s) — voices read from random offsets
+  AU.noise = a.createBuffer(1, a.sampleRate * 2, a.sampleRate);
+  const nd = AU.noise.getChannelData(0);
+  for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
+
+  // Per-layer music gains
+  AU.L = {};
+  for (const k of ['pad', 'bass', 'lead', 'arp', 'tens']) {
+    AU.L[k] = a.createGain(); AU.L[k].gain.value = 0; AU.L[k].connect(AU.kickDuck);
+  }
+  for (const k of ['kick', 'snare', 'hat']) {
+    AU.L[k] = a.createGain(); AU.L[k].gain.value = 0; AU.L[k].connect(AU.musicBus);
+  }
+}
+
+// Route a voice's output to its destination plus optional reverb / delay sends
+function sendTo(node, out, rev, dly) {
+  node.connect(out);
+  if (rev) { const s = audioCtx.createGain(); s.gain.value = rev; node.connect(s).connect(AU.rev); }
+  if (dly) { const s = audioCtx.createGain(); s.gain.value = dly; node.connect(s).connect(AU.dly); }
+}
+
+// One oscillator note with an AD envelope and optional filter / pan sweep.
+function voice({ type = 'sine', f, f2 = null, t, dur, vol = 0.2, a = 0.004, out,
+                 rev = 0, dly = 0, lp = null, lp2 = null, hp = null, q = 0.8,
+                 detune = 0, pan = 0, pan2 = null }) {
+  const ctx = audioCtx;
+  const o = ctx.createOscillator();
   o.type = type;
-  o.frequency.setValueAtTime(freq, a.currentTime);
-  if (freq2 != null) o.frequency.exponentialRampToValueAtTime(Math.max(20, freq2), a.currentTime + dur);
-  g.gain.setValueAtTime(vol, a.currentTime);
-  g.gain.exponentialRampToValueAtTime(0.0001, a.currentTime + dur);
-  o.connect(g).connect(sfxBus);
-  o.start(); o.stop(a.currentTime + dur);
+  o.frequency.setValueAtTime(f, t);
+  if (f2) o.frequency.exponentialRampToValueAtTime(Math.max(20, f2), t + dur);
+  if (detune) o.detune.value = detune;
+  let node = o;
+  if (lp) {
+    const b = ctx.createBiquadFilter(); b.type = 'lowpass'; b.Q.value = q;
+    b.frequency.setValueAtTime(lp, t);
+    if (lp2) b.frequency.exponentialRampToValueAtTime(lp2, t + dur);
+    node.connect(b); node = b;
+  }
+  if (hp) {
+    const b = ctx.createBiquadFilter(); b.type = 'highpass'; b.frequency.value = hp;
+    node.connect(b); node = b;
+  }
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.linearRampToValueAtTime(vol, t + a);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  node.connect(g); node = g;
+  if (pan || pan2 != null) {
+    const p = ctx.createStereoPanner();
+    p.pan.setValueAtTime(pan, t);
+    if (pan2 != null) p.pan.linearRampToValueAtTime(pan2, t + dur);
+    node.connect(p); node = p;
+  }
+  sendTo(node, out, rev, dly);
+  o.start(t); o.stop(t + dur + 0.05);
 }
-function noiseBurst(dur, vol=0.25, filterFreq=1200, sweep=null) {
-  if (audioMuted) return;
-  const a = getAudio(); if (!a) return;
-  const buf = a.createBuffer(1, Math.floor(a.sampleRate * dur), a.sampleRate);
-  const data = buf.getChannelData(0);
-  for (let i = 0; i < data.length; i++) data[i] = Math.random()*2-1;
-  const src = a.createBufferSource(); src.buffer = buf;
-  const filt = a.createBiquadFilter(); filt.type='lowpass';
-  filt.frequency.setValueAtTime(filterFreq, a.currentTime);
-  if (sweep != null) filt.frequency.exponentialRampToValueAtTime(Math.max(60, sweep), a.currentTime+dur);
-  const g = a.createGain();
-  g.gain.setValueAtTime(vol, a.currentTime);
-  g.gain.exponentialRampToValueAtTime(0.0001, a.currentTime+dur);
-  src.connect(filt).connect(g).connect(sfxBus);
-  src.start(); src.stop(a.currentTime+dur);
+
+// Filtered noise hit (drums, whooshes, impacts)
+function noiseHit({ t, dur, vol = 0.2, a = 0.002, out, type = 'bandpass', f = 1000, f2 = null,
+                    q = 1, rev = 0, pan = 0, pan2 = null, swell = false }) {
+  const ctx = audioCtx;
+  const src = ctx.createBufferSource();
+  src.buffer = AU.noise;
+  const b = ctx.createBiquadFilter(); b.type = type; b.Q.value = q;
+  b.frequency.setValueAtTime(f, t);
+  if (f2) b.frequency.exponentialRampToValueAtTime(f2, t + dur);
+  const g = ctx.createGain();
+  if (swell) {                      // riser: fade *in* to the end
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + dur);
+    g.gain.linearRampToValueAtTime(0.0001, t + dur + 0.03);
+  } else {
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(vol, t + a);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  }
+  src.connect(b).connect(g);
+  let node = g;
+  if (pan || pan2 != null) {
+    const p = ctx.createStereoPanner();
+    p.pan.setValueAtTime(pan, t);
+    if (pan2 != null) p.pan.linearRampToValueAtTime(pan2, t + dur);
+    node.connect(p); node = p;
+  }
+  sendTo(node, out, rev, 0);
+  src.start(t, Math.random() * 1.5, dur + 0.1);
 }
-const sfxFlap   = () => { tone(300, 0.09, 'triangle', 0.12, 620); noiseBurst(0.05, 0.05, 3000, 900); };
-const sfxPulse  = () => { noiseBurst(0.28, 0.24, 2400, 160); tone(160, 0.3, 'sawtooth', 0.12, 45); tone(880, 0.16, 'sine', 0.06, 1760); };
-const sfxHit    = () => { noiseBurst(0.7, 0.36, 2200, 50); tone(180, 0.6, 'square', 0.16, 35); tone(90, 0.8, 'sine', 0.22, 30); };
-const sfxNear   = (tight) => { tone(tight ? 1180 : 940, 0.09, 'sine', 0.1, tight ? 1760 : 1320); };
-const sfxPhase  = () => { tone(440, 0.18, 'triangle', 0.1, 660); setTimeout(() => tone(660, 0.28, 'triangle', 0.1, 990), 110); };
-const sfxScore  = () => tone(880, 0.06, 'sine', 0.12);
-const sfxBonus  = () => tone(1320, 0.05, 'sine', 0.10);
+
+// ── Interactive music ─────────────────────────────────────────────────────────
+// Horizontal re-sequencing: each section (title + 4 phases) has its own
+// tempo, chord loop and groove; section changes land on the next downbeat,
+// with a riser + snare roll pre-scheduled when the game predicts a phase
+// change. Vertical layering: layer gains follow the section plus two live
+// game parameters — `intensity` (proximity danger) and `heat` (near-miss /
+// kill streak). Stingers are quantised to the 16th grid and pitched to the
+// current chord.
+const CH = (r, ...q) => ({ r, q });                       // root (MIDI, octave 2) + intervals
+const SECTIONS = {
+  menu: { bpm: 88,  style: 0, chords: [CH(45,0,3,7,10,14), CH(41,0,4,7,11,14), CH(48,0,4,7,11), CH(43,0,4,7,9)],
+          lv: { pad: .55, bass: .22, kick: 0,   snare: 0,   hat: .10, lead: 0,   arp: .32 } },
+  p1:   { bpm: 100, style: 1, chords: [CH(45,0,3,7), CH(41,0,4,7), CH(48,0,4,7), CH(43,0,4,7)],
+          lv: { pad: .45, bass: .38, kick: .35, snare: 0,   hat: .26, lead: 0,   arp: 0 } },
+  p2:   { bpm: 108, style: 2, chords: [CH(45,0,3,7), CH(41,0,4,7), CH(43,0,4,7), CH(40,0,3,7)],
+          lv: { pad: .32, bass: .50, kick: .75, snare: .38, hat: .34, lead: 0,   arp: 0 } },
+  p3:   { bpm: 116, style: 3, chords: [CH(45,0,3,7), CH(43,0,4,7), CH(41,0,4,7), CH(40,0,4,7)],
+          lv: { pad: .26, bass: .55, kick: .80, snare: .50, hat: .40, lead: .32, arp: 0 },
+          motif: [0,null,1,null,2,null,1,null, 3,2,1,0,null,1,2,null] },
+  p4:   { bpm: 126, style: 4, chords: [CH(45,0,3,7), CH(41,0,4,7), CH(38,0,3,7), CH(40,0,4,7,10)],
+          lv: { pad: .20, bass: .60, kick: .90, snare: .60, hat: .48, lead: .40, arp: 0 },
+          motif: [2,null,1,2,null,3,2,null, 1,null,0,1,null,2,4,null] },
+};
+// Bass rhythm per style: step → [interval, length in 16ths]
+const BASS = [
+  st => st === 0 ? [0, 16] : null,
+  st => st === 0 ? [0, 8] : st === 8 ? [7, 8] : null,
+  st => st % 2 === 0 ? [st === 6 || st === 14 ? 12 : 0, 2] : null,
+  st => [0, 3, 6, 8, 11, 14].includes(st) ? [[0, 12, 0, 7, 12, 0][[0, 3, 6, 8, 11, 14].indexOf(st)], 2] : null,
+  st => [st % 4 === 2 ? 12 : st % 8 === 7 ? 7 : 0, 1],
+];
+const KICK  = [[], [0, 8], [0, 4, 8, 12], [0, 4, 8, 12, 14], [0, 3, 4, 8, 11, 12]];
+const SNARE = [[], [], [4, 12], [4, 12], [4, 12, 15]];
+
+const Music = {
+  started: false, section: 'menu', pending: null,
+  bpm: 88, step: 0, bar: 0, nextT: 0, timer: null,
+  intensity: 0, intensityTarget: 0, heat: 0,
+  muffled: false, dying: false, timeScale: 1, comboNote: 0,
+  _resumeTimer: null, _lvAcc: 0,
+
+  get stepDur() { return 60 / this.bpm / 4; },
+  get barDur()  { return 60 / this.bpm * 4; },
+  chord() { const c = SECTIONS[this.section].chords[this.bar % 4]; return c; },
+  // Chord tones as MIDI, extending into higher octaves for index ≥ length
+  tone(i, base) {
+    const c = this.chord(), n = c.q.length;
+    const oct = Math.floor(i / n), k = ((i % n) + n) % n;
+    return c.r + base + c.q[k] + oct * 12;
+  },
+
+  start(section = 'menu') {
+    const a = getAudio(); if (!a) return;
+    if (!this.started) {
+      this.started = true;
+      this.applySection(section);
+      this.step = 0; this.bar = 0;
+      this.nextT = a.currentTime + 0.08;
+      this.tick();
+    } else {
+      this.pending = section;
+    }
+    this.fadeBus(1, 1.2);
+  },
+  fadeBus(v, tau) {
+    const t = audioCtx.currentTime;
+    AU.musicBus.gain.cancelScheduledValues(t);
+    AU.musicBus.gain.setTargetAtTime(v * 0.6, t, tau / 3);
+  },
+  applySection(name) {
+    this.section = name;
+    this.bpm = SECTIONS[name].bpm;
+    this.bar = 0;
+    AU.dly.delayTime.setTargetAtTime(this.stepDur * 3, audioCtx.currentTime, 0.05);  // dotted 8th
+  },
+  setSection(name) { if (this.started && !this.dying && name !== this.section) this.pending = name; },
+  // Make the next scheduled 16th a downbeat, so a pending section starts
+  // immediately (used when a run starts — no waiting for the bar to end).
+  jumpToBar() {
+    if (this.step % 16 === 0) return;
+    this.step = Math.ceil(this.step / 16) * 16;
+    this.bar++;
+  },
+
+  // Lookahead scheduler (25ms timer, 120ms horizon)
+  tick() {
+    const a = audioCtx;
+    if (this.nextT < a.currentTime - 0.2) this.nextT = a.currentTime + 0.05;   // fell behind: resync
+    while (this.nextT < a.currentTime + 0.12) {
+      this.playStep(this.step % 16, this.nextT);
+      this.nextT += this.stepDur;
+      this.step++;
+      if (this.step % 16 === 0) this.bar++;
+    }
+    this.timer = setTimeout(() => this.tick(), 25);
+  },
+
+  playStep(st, t) {
+    if (st === 0 && this.pending) {
+      const from = this.section;
+      this.applySection(this.pending);
+      this.pending = null;
+      if (this.section !== 'menu' && from !== this.section) this.impact(t);
+    }
+    const sec = SECTIONS[this.section], style = sec.style;
+    const L = AU.L, on = k => L[k].gain.value > 0.01 || this.levelTarget(k) > 0.01;
+    const sd = this.stepDur;
+
+    if (st === 0 && on('pad')) {
+      for (const m of this.chord().q.map(iv => this.chord().r + 12 + iv)) {
+        for (const dt of [-7, 7]) voice({ type: 'sawtooth', f: mtof(m), t, dur: this.barDur + 0.35, vol: 0.05,
+          a: style === 0 ? 0.9 : 0.35, out: L.pad, lp: 900 + style * 120, q: 0.5, detune: dt, rev: 0.45 });
+      }
+    }
+    const b = BASS[style](st);
+    if (b && on('bass')) {
+      const f = mtof(this.chord().r - 12 + b[0]);
+      const cut = 260 + style * 90 + this.intensity * 1600;
+      const dur = Math.max(0.09, b[1] * sd * 0.9);
+      voice({ type: 'sawtooth', f, t, dur, vol: 0.22, a: 0.006, out: L.bass, lp: cut * 2.2, lp2: cut, q: 4 });
+      voice({ type: 'sine', f: f / 2 < 30 ? f : f / 2, t, dur, vol: 0.28, a: 0.006, out: L.bass });
+    }
+    if (KICK[style].includes(st) && on('kick')) this.kick(t);
+    if (SNARE[style].includes(st) && on('snare')) this.snare(t, 0.5);
+    if (on('hat')) {
+      const dense = style === 4 || this.intensity > 0.35;
+      if (st % 2 === 0 || dense) {
+        const open = st % 4 === 2 && style >= 2;
+        noiseHit({ t, dur: open ? 0.14 : 0.035, vol: (st % 4 === 2 ? 0.32 : 0.18) * (st % 2 ? 0.6 : 1),
+          out: L.hat, type: 'highpass', f: 7500, pan: st % 4 === 2 ? 0.25 : -0.15 });
+      }
+    }
+    if (sec.motif && on('lead')) {
+      const deg = sec.motif[st];
+      if (deg != null) {
+        const m = this.tone(deg, 24) + (this.heat > 0.8 ? 12 : 0);
+        voice({ type: 'square', f: mtof(m), t, dur: sd * 1.6, vol: 0.07, out: L.lead, lp: 2800, q: 1, dly: 0.3, rev: 0.15 });
+        voice({ type: 'sawtooth', f: mtof(m), t, dur: sd * 1.6, vol: 0.04, out: L.lead, lp: 2400, detune: 9 });
+      }
+    }
+    if (on('arp')) {
+      if (style === 0) {
+        if (st % 2 === 0) voice({ type: 'sine', f: mtof(this.tone([0, 2, 1, 3, 2, 4, 3, 1][(st / 2) | 0], 36)),
+          t, dur: 0.6, vol: 0.06, out: L.arp, rev: 0.6, dly: 0.25 });
+      } else {
+        const seq = [0, 1, 2, 3, 4, 3, 2, 1];
+        voice({ type: 'triangle', f: mtof(this.tone(seq[st % 8] + (st >= 8 ? 1 : 0), 24)),
+          t, dur: 0.16, vol: 0.085, out: L.arp, dly: 0.3, rev: 0.1 });
+      }
+    }
+    if (this.intensity > 0.05 && style > 0) {
+      voice({ type: 'sawtooth', f: mtof(this.tone(2, 36)), t, dur: sd * 0.55, vol: 0.045,
+        out: L.tens, hp: 900, pan: st % 2 ? 0.4 : -0.4 });
+    }
+  },
+
+  kick(t) {
+    voice({ type: 'sine', f: 150, f2: 42, t, dur: 0.16, vol: 0.9, a: 0.002, out: AU.L.kick });
+    noiseHit({ t, dur: 0.02, vol: 0.25, out: AU.L.kick, type: 'highpass', f: 3000 });
+    // side-chain pump on the melodic layers
+    const g = AU.kickDuck.gain;
+    g.cancelScheduledValues(t);
+    g.setValueAtTime(0.45, t);
+    g.linearRampToValueAtTime(1, t + 0.2);
+  },
+  snare(t, v) {
+    noiseHit({ t, dur: 0.16, vol: v, out: AU.L.snare, type: 'bandpass', f: 1900, q: 0.7, rev: 0.12 });
+    voice({ type: 'triangle', f: 200, f2: 150, t, dur: 0.09, vol: v * 0.6, out: AU.L.snare });
+  },
+  crash(t, v = 0.28) {
+    noiseHit({ t, dur: 1.8, vol: v, out: AU.musicBus, type: 'highpass', f: 4500, rev: 0.35 });
+  },
+  impact(t) {
+    this.crash(t);
+    voice({ type: 'sine', f: 90, f2: 30, t, dur: 0.9, vol: 0.5, out: AU.musicBus });
+  },
+
+  // Pre-roll into a phase change predicted `secs` from now: noise riser +
+  // snare roll ending exactly on the downbeat where the new section lands.
+  riser(secs) {
+    if (!this.started || this.dying) return;
+    const now = audioCtx.currentTime;
+    const stepsToBar = (16 - (this.step % 16)) % 16;
+    let tb = this.nextT + stepsToBar * this.stepDur;
+    while (tb < now + secs) tb += this.barDur;
+    const dur = tb - now;
+    noiseHit({ t: now, dur, vol: 0.22, out: AU.musicBus, type: 'bandpass', f: 350, f2: 7000, q: 2.5, swell: true, rev: 0.2 });
+    voice({ type: 'sawtooth', f: mtof(this.tone(0, 12)), f2: mtof(this.tone(0, 36)), t: now, dur, vol: 0.05,
+      out: AU.musicBus, lp: 400, lp2: 5000, a: dur * 0.9 });
+    if (SECTIONS[this.section].style >= 2) {
+      const sd = this.stepDur, n = 16;
+      for (let i = 0; i < n; i++) {
+        const t = tb - (n - i) * sd;
+        if (t > now) this.snare(t, 0.12 + 0.4 * (i / n));
+      }
+    }
+  },
+
+  // Quantised stinger: next 16th, pitched to the live chord
+  nextGrid(div = 1) {
+    const sd = this.stepDur * div;
+    const now = audioCtx.currentTime;
+    const base = this.nextT - this.stepDur;              // time of the step most recently scheduled
+    let t = base;
+    while (t < now + 0.01) t += sd;
+    return t;
+  },
+  near(tight) {
+    if (!this.started) return;
+    this.heat = Math.min(1.2, this.heat + (tight ? 0.45 : 0.28));
+    const t = this.nextGrid();
+    const i = 2 + Math.min(8, this.comboNote++);
+    const bell = (m, tt, v) => {
+      voice({ type: 'sine', f: mtof(m), t: tt, dur: 0.7, vol: v, out: AU.musicBus, rev: 0.4, dly: 0.35 });
+      voice({ type: 'triangle', f: mtof(m + 12), t: tt, dur: 0.25, vol: v * 0.35, out: AU.musicBus });
+    };
+    bell(this.tone(i, 36), t, 0.11);
+    if (tight) bell(this.tone(i + 1, 36), t + this.stepDur, 0.1);
+  },
+  kill() {
+    if (!this.started) return;
+    this.heat = Math.min(1.2, this.heat + 0.2);
+    const t = this.nextGrid();
+    for (let k = 0; k < 3; k++) voice({ type: 'square', f: mtof(this.tone(k, 24)), t, dur: 0.14, vol: 0.05,
+      out: AU.musicBus, lp: 2200, rev: 0.15 });
+  },
+  accent() { if (this.started && !this.dying) this.crash(this.nextGrid(4), 0.12); },
+  pulseDuck() {
+    const t = audioCtx.currentTime, g = AU.pulseDuck.gain;
+    g.cancelScheduledValues(t);
+    g.setValueAtTime(g.value, t);
+    g.linearRampToValueAtTime(0.3, t + 0.03);
+    g.linearRampToValueAtTime(1, t + 0.6);
+  },
+
+  startRun() {
+    const a = getAudio(); if (!a) return;
+    clearTimeout(this._resumeTimer);
+    this.dying = false; this.muffled = false;
+    this.heat = 0; this.intensity = this.intensityTarget = 0; this.comboNote = 0;
+    AU.musicFilter.frequency.cancelScheduledValues(a.currentTime);
+    if (!this.started) this.start('p1');
+    else { this.pending = 'p1'; this.jumpToBar(); this.fadeBus(1, 0.3); }
+  },
+  toMenu() {
+    if (!this.started) return;
+    clearTimeout(this._resumeTimer);
+    this.dying = false; this.muffled = false;
+    this.pending = 'menu';
+    this.fadeBus(1, 1.5);
+  },
+  // Death: the music "powers down" (filter sweep + fade), then the title
+  // ambience drifts back in under the result screen.
+  die() {
+    if (!this.started) return;
+    this.dying = true;
+    const t = audioCtx.currentTime;
+    const f = AU.musicFilter.frequency;
+    f.cancelScheduledValues(t);
+    f.setValueAtTime(Math.min(f.value, 20000), t);
+    f.exponentialRampToValueAtTime(140, t + 1.3);
+    AU.musicBus.gain.cancelScheduledValues(t);
+    AU.musicBus.gain.setValueAtTime(AU.musicBus.gain.value, t);
+    AU.musicBus.gain.linearRampToValueAtTime(0, t + 1.5);
+    clearTimeout(this._resumeTimer);
+    this._resumeTimer = setTimeout(() => {
+      this.dying = false;
+      this.pending = 'menu'; this.jumpToBar();
+      this.heat = 0; this.intensity = this.intensityTarget = 0;
+      AU.musicFilter.frequency.cancelScheduledValues(audioCtx.currentTime);
+      this.fadeBus(0.8, 3);
+    }, 1700);
+  },
+  setMuffle(on) { this.muffled = on; },
+  setMute(m) {
+    if (!AU.master) return;
+    AU.master.gain.setTargetAtTime(m ? 0 : 0.9, audioCtx.currentTime, 0.05);
+  },
+
+  levelTarget(k) {
+    const sec = SECTIONS[this.section];
+    let v = sec.lv[k] || 0;
+    if (sec.style > 0) {
+      if (k === 'arp')  v = Math.max(v, Math.min(1, this.heat) * 0.5);
+      if (k === 'hat')  v += this.intensity * 0.18;
+      if (k === 'tens') v = this.intensity * 0.5;
+      if (k === 'lead') v *= 1 + Math.min(1, this.heat) * 0.3;
+    }
+    return v;
+  },
+  // Per-frame: smooth game parameters, steer layer gains and the filter.
+  update(realDt) {
+    if (!this.started || !audioCtx) return;
+    const s = realDt / 60;
+    this.intensity += (this.intensityTarget - this.intensity) * Math.min(1, s * 4);
+    this.heat = Math.max(0, this.heat - s * 0.12);
+    if (this.heat < 0.15) this.comboNote = 0;
+    this._lvAcc += s;
+    if (this._lvAcc < 0.06) return;
+    this._lvAcc = 0;
+    const t = audioCtx.currentTime;
+    for (const k in AU.L) AU.L[k].gain.setTargetAtTime(this.levelTarget(k), t, k === 'arp' || k === 'tens' ? 0.12 : 0.6);
+    if (!this.dying) {
+      let cut = 20000;
+      if (this.muffled) cut = 650;
+      if (this.timeScale < 0.999) cut = Math.min(cut, 220 + 19800 * this.timeScale * this.timeScale);
+      AU.musicFilter.frequency.setTargetAtTime(cut, t, 0.06);
+    }
+  },
+};
+
+// ── Sound effects ─────────────────────────────────────────────────────────────
+// Gameplay SFX are pitched to the live chord where it makes sense, so the
+// player's actions play along with the music.
+const sfx = {
+  ok() { return !!getAudio() && !audioMuted; },
+  now() { return audioCtx.currentTime; },
+  // Flap = playable instrument: altitude picks a chord tone (top = high).
+  flap(y) {
+    if (!this.ok()) return;
+    const t = this.now();
+    const idx = Math.max(0, Math.min(6, Math.floor((1 - y / VH) * 7)));
+    const m = Music.started ? Music.tone(idx, 24) : 69 + [0, 3, 7, 12, 15, 19, 24][idx];
+    voice({ type: 'triangle', f: mtof(m), t, dur: 0.22, vol: 0.07, out: AU.sfxBus, rev: 0.12 });
+    voice({ type: 'sine', f: mtof(m + 12), t, dur: 0.1, vol: 0.035, out: AU.sfxBus });
+    noiseHit({ t, dur: 0.06, vol: 0.05, out: AU.sfxBus, type: 'highpass', f: 2500 });
+  },
+  shot() {
+    if (!this.ok()) return;
+    voice({ type: 'square', f: 1500, f2: 420, t: this.now(), dur: 0.08, vol: 0.045, out: AU.sfxBus, lp: 4000, pan: 0.3 });
+  },
+  pulse() {
+    if (!this.ok()) return;
+    const t = this.now();
+    voice({ type: 'sine', f: 110, f2: 32, t, dur: 0.55, vol: 0.4, out: AU.sfxBus });
+    noiseHit({ t, dur: 0.5, vol: 0.32, out: AU.sfxBus, type: 'bandpass', f: 4000, f2: 180, q: 1.2, rev: 0.3 });
+    if (Music.started) for (let k = 0; k < 4; k++)
+      voice({ type: 'sine', f: mtof(Music.tone(4 - k, 36)), t: t + k * 0.04, dur: 0.35, vol: 0.05, out: AU.sfxBus, rev: 0.5 });
+    Music.pulseDuck();
+  },
+  pulseReady() {
+    if (!this.ok()) return;
+    const t = this.now();
+    const m = Music.started ? Music.tone(0, 36) : 81;
+    voice({ type: 'sine', f: mtof(m), t, dur: 0.25, vol: 0.05, out: AU.sfxBus, rev: 0.3 });
+    voice({ type: 'sine', f: mtof(m + 7), t: t + 0.07, dur: 0.3, vol: 0.05, out: AU.sfxBus, rev: 0.3 });
+  },
+  near(tight) {
+    if (!this.ok()) return;
+    // air pass-by: band-passed noise sweeping across the stereo field
+    noiseHit({ t: this.now(), dur: tight ? 0.3 : 0.22, vol: tight ? 0.2 : 0.12, out: AU.sfxBus, type: 'bandpass',
+      f: 900, f2: 3200, q: 1.5, pan: -0.7, pan2: 0.7 });
+    Music.near(tight);
+  },
+  kill() {
+    if (!this.ok()) return;
+    const t = this.now();
+    voice({ type: 'square', f: 900, f2: 90, t, dur: 0.14, vol: 0.07, out: AU.sfxBus, lp: 3000 });
+    noiseHit({ t, dur: 0.18, vol: 0.14, out: AU.sfxBus, type: 'lowpass', f: 5000, f2: 300 });
+    Music.kill();
+  },
+  shield() {
+    if (!this.ok()) return;
+    const t = this.now();
+    for (const [f, d] of [[2400, 0.5], [3170, 0.4], [4010, 0.35], [5230, 0.25]])
+      voice({ type: 'sine', f, t, dur: d, vol: 0.06, out: AU.sfxBus, rev: 0.4 });
+    noiseHit({ t, dur: 0.3, vol: 0.18, out: AU.sfxBus, type: 'highpass', f: 3000 });
+    voice({ type: 'sine', f: 80, f2: 40, t, dur: 0.4, vol: 0.3, out: AU.sfxBus });
+    Music.pulseDuck();
+  },
+  phoenix() {
+    if (!this.ok()) return;
+    const t = this.now();
+    voice({ type: 'sawtooth', f: 180, f2: 1400, t, dur: 0.7, vol: 0.08, out: AU.sfxBus, lp: 600, lp2: 6000, a: 0.5 });
+    for (const [i, m] of [69, 73, 76, 81].entries())
+      voice({ type: 'triangle', f: mtof(m), t: t + 0.5 + i * 0.06, dur: 1.2, vol: 0.07, out: AU.sfxBus, rev: 0.5 });
+    noiseHit({ t, dur: 0.7, vol: 0.18, out: AU.sfxBus, type: 'bandpass', f: 300, f2: 6000, swell: true });
+  },
+  death() {
+    if (!this.ok()) return;
+    const t = this.now();
+    noiseHit({ t, dur: 1.1, vol: 0.5, out: AU.sfxBus, type: 'lowpass', f: 4000, f2: 60, rev: 0.3 });
+    voice({ type: 'sine', f: 75, f2: 24, t, dur: 1.3, vol: 0.55, out: AU.sfxBus });
+    voice({ type: 'square', f: 180, f2: 38, t, dur: 0.45, vol: 0.12, out: AU.sfxBus, lp: 1800 });
+    // game-over sting (descending A minor), un-filtered so it rings over the power-down
+    for (const [i, m] of [76, 72, 69, 64].entries())
+      voice({ type: 'triangle', f: mtof(m), t: t + 0.45 + i * 0.2, dur: i === 3 ? 1.8 : 0.5, vol: 0.08, out: AU.sfxBus, rev: 0.55 });
+  },
+  record() {
+    if (!this.ok()) return;
+    const t = this.now() + 0.1;
+    // Picardy-major fanfare: A major arpeggio up to the octave
+    for (const [i, m] of [69, 73, 76, 81, 85].entries()) {
+      voice({ type: 'square', f: mtof(m), t: t + i * 0.09, dur: 0.35, vol: 0.05, out: AU.sfxBus, lp: 3500, rev: 0.3 });
+      voice({ type: 'triangle', f: mtof(m + 12), t: t + i * 0.09, dur: 0.5, vol: 0.04, out: AU.sfxBus, rev: 0.4 });
+    }
+    for (const m of [69, 73, 76, 81])
+      voice({ type: 'sawtooth', f: mtof(m), t: t + 0.5, dur: 1.6, vol: 0.03, out: AU.sfxBus, lp: 2500, a: 0.05, rev: 0.6, detune: 6 });
+  },
+  launch() {
+    if (!this.ok()) return;
+    const t = this.now();
+    noiseHit({ t, dur: 0.6, vol: 0.2, out: AU.sfxBus, type: 'bandpass', f: 300, f2: 5000, q: 1.5, pan: -0.5, pan2: 0.5 });
+    voice({ type: 'sawtooth', f: 110, f2: 880, t, dur: 0.5, vol: 0.06, out: AU.sfxBus, lp: 500, lp2: 5000 });
+  },
+};
+// UI sounds (menus, shop, skin)
+const ui = {
+  select()  { if (sfx.ok()) voice({ type: 'sine', f: 1760, t: sfx.now(), dur: 0.05, vol: 0.05, out: AU.sfxBus }); },
+  open()    { if (sfx.ok()) { const t = sfx.now(); voice({ type: 'triangle', f: mtof(76), t, dur: 0.12, vol: 0.06, out: AU.sfxBus });
+                               voice({ type: 'triangle', f: mtof(81), t: t + 0.06, dur: 0.2, vol: 0.06, out: AU.sfxBus, rev: 0.2 }); } },
+  back()    { if (sfx.ok()) { const t = sfx.now(); voice({ type: 'triangle', f: mtof(81), t, dur: 0.1, vol: 0.05, out: AU.sfxBus });
+                               voice({ type: 'triangle', f: mtof(76), t: t + 0.06, dur: 0.16, vol: 0.05, out: AU.sfxBus }); } },
+  confirm() { if (sfx.ok()) { const t = sfx.now(); for (const [i, m] of [69, 76, 81].entries())
+                voice({ type: 'square', f: mtof(m), t: t + i * 0.05, dur: 0.18, vol: 0.045, out: AU.sfxBus, lp: 3000, rev: 0.2 }); } },
+  buy()     { if (sfx.ok()) { const t = sfx.now(); for (const [i, m] of [69, 72, 76, 81, 84, 88].entries())
+                voice({ type: 'triangle', f: mtof(m), t: t + i * 0.045, dur: 0.4, vol: 0.06, out: AU.sfxBus, rev: 0.4 });
+                noiseHit({ t: t + 0.25, dur: 0.6, vol: 0.06, out: AU.sfxBus, type: 'highpass', f: 7000, rev: 0.4 }); } },
+  equip()   { if (sfx.ok()) { const t = sfx.now(); voice({ type: 'square', f: mtof(69), t, dur: 0.08, vol: 0.05, out: AU.sfxBus, lp: 2000 });
+                               voice({ type: 'square', f: mtof(76), t: t + 0.07, dur: 0.16, vol: 0.05, out: AU.sfxBus, lp: 2500, rev: 0.2 }); } },
+  skin()    { if (sfx.ok()) { const t = sfx.now(); noiseHit({ t, dur: 0.35, vol: 0.08, out: AU.sfxBus, type: 'bandpass', f: 600, f2: 4000, pan: -0.4, pan2: 0.4 });
+                               voice({ type: 'sine', f: mtof(88), t: t + 0.12, dur: 0.4, vol: 0.05, out: AU.sfxBus, rev: 0.5 }); } },
+};
+
+// Browsers only allow audio after a user gesture: start the title music on
+// the first interaction anywhere.
+function _unlockAudio() {
+  if (!getAudio()) return;
+  if (!Music.started) Music.start(gstate === 'play' ? 'p1' : 'menu');
+  removeEventListener('pointerdown', _unlockAudio, true);
+  removeEventListener('keydown', _unlockAudio, true);
+}
+addEventListener('pointerdown', _unlockAudio, true);
+addEventListener('keydown', _unlockAudio, true);
+// Background tab: suspend the whole context (timers are throttled anyway).
+document.addEventListener('visibilitychange', () => {
+  if (!audioCtx) return;
+  if (document.hidden) audioCtx.suspend(); else audioCtx.resume();
+});
 
 function vibrate(pattern) {
   if (navigator.vibrate) { try { navigator.vibrate(pattern); } catch (e) {} }
 }
-
-// ── BGM (procedural, layered synth) ───────────────────────────────────────────
-// 4 voices (pad / bass / drum / lead) all share one clock; phase progression
-// fades each voice in/out via per-voice GainNodes so transitions are seamless.
-const BGM = {
-  master: null, padG: null, bassG: null, drumG: null, leadG: null,
-  playing: false, startedAt: 0, nextBeat: 0,
-  bpm: 102, patternBars: 4, masterTarget: 0.42, schedTimer: null,
-
-  init() {
-    const a = getAudio(); if (!a || this.master) return;
-    this.master = a.createGain();
-    this.master.gain.value = 0;
-    // Soft-knee compressor keeps peaks in check when all 4 voices stack
-    const comp = a.createDynamicsCompressor();
-    comp.threshold.value = -16;
-    comp.ratio.value     = 4;
-    comp.attack.value    = 0.005;
-    comp.release.value   = 0.12;
-    this.master.connect(comp).connect(a.destination);
-    this.padG  = a.createGain(); this.padG.connect(this.master);
-    this.bassG = a.createGain(); this.bassG.connect(this.master);
-    this.drumG = a.createGain(); this.drumG.connect(this.master);
-    this.leadG = a.createGain(); this.leadG.connect(this.master);
-    this.padG.gain.value = 0;
-    this.bassG.gain.value = 0;
-    this.drumG.gain.value = 0;
-    this.leadG.gain.value = 0;
-  },
-
-  start() {
-    this.init();
-    if (!this.master || this.playing) return;
-    const a = getAudio();
-    this.playing = true;
-    this.startedAt = a.currentTime + 0.05;
-    this.nextBeat = 0;
-    const target = audioMuted ? 0 : this.masterTarget;
-    this.master.gain.cancelScheduledValues(a.currentTime);
-    this.master.gain.setValueAtTime(0, a.currentTime);
-    this.master.gain.linearRampToValueAtTime(target, a.currentTime + 0.6);
-    this.scheduler();
-  },
-
-  stop(fadeMs = 600) {
-    if (!this.master) return;
-    const a = getAudio();
-    const t = a.currentTime;
-    this.master.gain.cancelScheduledValues(t);
-    this.master.gain.setValueAtTime(this.master.gain.value, t);
-    this.master.gain.linearRampToValueAtTime(0, t + fadeMs / 1000);
-    this.playing = false;
-    if (this.schedTimer) { clearTimeout(this.schedTimer); this.schedTimer = null; }
-  },
-
-  setPhase(phase) {
-    if (!this.master) return;
-    const a = getAudio();
-    const t = a.currentTime;
-    const fade = 1.6;
-    const cfg = [
-      { pad: 0.22, bass: 0.00, drum: 0.06, lead: 0.00 }, // PHASE 1: ambient pad + faint hihat
-      { pad: 0.18, bass: 0.20, drum: 0.12, lead: 0.00 }, // PHASE 2: + bass + kick
-      { pad: 0.14, bass: 0.22, drum: 0.18, lead: 0.14 }, // PHASE 3: + lead
-      { pad: 0.10, bass: 0.26, drum: 0.24, lead: 0.20 }, // PHASE 4: full intensity
-    ][Math.max(0, Math.min(3, phase))];
-    for (const [g, v] of [[this.padG, cfg.pad], [this.bassG, cfg.bass],
-                           [this.drumG, cfg.drum], [this.leadG, cfg.lead]]) {
-      g.gain.cancelScheduledValues(t);
-      g.gain.setValueAtTime(g.gain.value, t);
-      g.gain.linearRampToValueAtTime(v, t + fade);
-    }
-  },
-
-  setMute(mute) {
-    if (!this.master) return;
-    const a = getAudio();
-    const t = a.currentTime;
-    this.master.gain.cancelScheduledValues(t);
-    this.master.gain.setValueAtTime(this.master.gain.value, t);
-    this.master.gain.linearRampToValueAtTime(
-      mute ? 0 : (this.playing ? this.masterTarget : 0),
-      t + 0.2
-    );
-  },
-
-  scheduler() {
-    if (!this.playing) return;
-    const a = getAudio();
-    const beatLen = 60 / this.bpm;
-    const now = a.currentTime;
-    // If tab was inactive and we fell behind, skip ahead instead of dumping
-    // hundreds of past-due notes into the audio graph.
-    const expectedBeat = (now - this.startedAt) / beatLen;
-    if (this.nextBeat < expectedBeat - 8) this.nextBeat = Math.floor(expectedBeat);
-    while (this.startedAt + this.nextBeat * beatLen < now + 0.25) {
-      const t = this.startedAt + this.nextBeat * beatLen;
-      if (t >= now - 0.05) this.scheduleBeat(this.nextBeat, t, beatLen);
-      this.nextBeat++;
-    }
-    this.schedTimer = setTimeout(() => this.scheduler(), 60);
-  },
-
-  scheduleBeat(beat, time, beatLen) {
-    const total = this.patternBars * 4;
-    const step = beat % total;        // 0..15
-    const half = beat % (total * 2);  // 0..31 for variation across two loops
-
-    // Chord progression Am - F - C - G (one chord per bar, A minor key)
-    const padFreqs = [110, 87.31, 130.81, 98];
-    if (step % 4 === 0) {
-      this.playPad(padFreqs[(step / 4) | 0], time, beatLen * 4);
-    }
-
-    // Bass: root note on every beat with octave bounce on offbeats
-    const bassRoot = padFreqs[(step / 4) | 0];
-    const bassFreq = (step % 2 === 0) ? bassRoot : bassRoot * 1.5; // root / fifth
-    this.playBass(bassFreq, time, beatLen * 0.85);
-
-    // Drums
-    this.playHihat(time,                0.5);
-    this.playHihat(time + beatLen * 0.5, 0.4);
-    if (step % 2 === 0) this.playKick(time);
-    if (step % 2 === 1) this.playSnare(time);
-
-    // Lead riff (16-step). Frequencies in upper octave; 0 = rest.
-    const leadPattern = [
-      440,   0, 523.25, 0, 587.33, 0, 523.25, 0,
-      659.25, 587.33, 523.25, 440, 0, 392, 440, 0,
-    ];
-    const leadFreq = leadPattern[step];
-    if (leadFreq) this.playLead(leadFreq, time, beatLen * 0.55);
-
-    // Variation: every other loop, drop in an upper octave on the lead
-    if (leadFreq && half >= total) {
-      this.playLead(leadFreq * 2, time, beatLen * 0.3);
-    }
-  },
-
-  playPad(freq, time, dur) {
-    const a = getAudio();
-    const o1 = a.createOscillator(); o1.type = 'sine';     o1.frequency.value = freq;
-    const o2 = a.createOscillator(); o2.type = 'triangle'; o2.frequency.value = freq * 1.005;
-    const filt = a.createBiquadFilter();
-    filt.type = 'lowpass'; filt.frequency.value = 1400;
-    const g = a.createGain();
-    g.gain.setValueAtTime(0.0001, time);
-    g.gain.linearRampToValueAtTime(1, time + 0.7);
-    g.gain.linearRampToValueAtTime(0.0001, time + dur);
-    o1.connect(filt); o2.connect(filt); filt.connect(g).connect(this.padG);
-    o1.start(time); o2.start(time);
-    o1.stop(time + dur + 0.1); o2.stop(time + dur + 0.1);
-  },
-
-  playBass(freq, time, dur) {
-    const a = getAudio();
-    const o = a.createOscillator(); o.type = 'sawtooth'; o.frequency.value = freq;
-    const filt = a.createBiquadFilter(); filt.type = 'lowpass';
-    filt.frequency.setValueAtTime(420, time);
-    filt.frequency.exponentialRampToValueAtTime(180, time + dur);
-    const g = a.createGain();
-    g.gain.setValueAtTime(0.0001, time);
-    g.gain.linearRampToValueAtTime(1, time + 0.005);
-    g.gain.exponentialRampToValueAtTime(0.001, time + dur);
-    o.connect(filt).connect(g).connect(this.bassG);
-    o.start(time); o.stop(time + dur);
-  },
-
-  playHihat(time, vol = 0.5) {
-    const a = getAudio();
-    const dur = 0.04;
-    const buf = a.createBuffer(1, Math.floor(a.sampleRate * dur), a.sampleRate);
-    const data = buf.getChannelData(0);
-    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
-    const src = a.createBufferSource(); src.buffer = buf;
-    const filt = a.createBiquadFilter(); filt.type = 'highpass'; filt.frequency.value = 7000;
-    const g = a.createGain();
-    g.gain.setValueAtTime(vol, time);
-    g.gain.exponentialRampToValueAtTime(0.001, time + dur);
-    src.connect(filt).connect(g).connect(this.drumG);
-    src.start(time);
-  },
-
-  playKick(time) {
-    const a = getAudio();
-    const dur = 0.16;
-    const o = a.createOscillator(); o.type = 'sine';
-    o.frequency.setValueAtTime(140, time);
-    o.frequency.exponentialRampToValueAtTime(40, time + dur);
-    const g = a.createGain();
-    g.gain.setValueAtTime(1, time);
-    g.gain.exponentialRampToValueAtTime(0.001, time + dur);
-    o.connect(g).connect(this.drumG);
-    o.start(time); o.stop(time + dur);
-  },
-
-  playSnare(time) {
-    const a = getAudio();
-    const dur = 0.10;
-    const buf = a.createBuffer(1, Math.floor(a.sampleRate * dur), a.sampleRate);
-    const data = buf.getChannelData(0);
-    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
-    const src = a.createBufferSource(); src.buffer = buf;
-    const filt = a.createBiquadFilter(); filt.type = 'bandpass'; filt.frequency.value = 1500;
-    const g = a.createGain();
-    g.gain.setValueAtTime(0.6, time);
-    g.gain.exponentialRampToValueAtTime(0.001, time + dur);
-    src.connect(filt).connect(g).connect(this.drumG);
-    src.start(time);
-  },
-
-  playLead(freq, time, dur) {
-    const a = getAudio();
-    const o = a.createOscillator(); o.type = 'square'; o.frequency.value = freq;
-    const filt = a.createBiquadFilter(); filt.type = 'lowpass'; filt.frequency.value = 2400;
-    const g = a.createGain();
-    g.gain.setValueAtTime(0.0001, time);
-    g.gain.linearRampToValueAtTime(0.5, time + 0.01);
-    g.gain.exponentialRampToValueAtTime(0.001, time + dur);
-    o.connect(filt).connect(g).connect(this.leadG);
-    o.start(time); o.stop(time + dur);
-  },
-};
 
 // ── Phases / difficulty ───────────────────────────────────────────────────────
 const PHASE_CONFIG = [
@@ -3263,6 +3583,7 @@ let killCount = 0, nearMissCount = 0;
 let nopulseStreak = 0;       // seconds since last pulse use
 let lastMilestone = 0;       // last 10-second beep
 let pulseUsedThisRun = false;
+let riserFor = -1;           // phase index whose transition riser is already scheduled
 let timeScale = 1;           // <1 = slow motion (death / shield break)
 let runBestPhase = 0;        // highest phase index reached this run
 let wasRecord = false;       // did this run beat the previous best?
@@ -3363,10 +3684,9 @@ function startGame() {
   hudBest.classList.remove('beaten');
   hudBestVal.textContent = hiScore;
   fxFlash(0x00e8ff, 0.35);
-  audioPaused = false;
-  getAudio();   // user-gesture audio unlock
-  BGM.start();
-  BGM.setPhase(0);
+  sfx.launch();
+  Music.startRun();
+  riserFor = -1;
 }
 
 function gotoMenu() {
@@ -3374,8 +3694,7 @@ function gotoMenu() {
   bonusPopups = [];
   gstate = 'menu';
   timeScale = 1;
-  if (audioPaused) { audioPaused = false; if (audioCtx) audioCtx.resume(); }
-  BGM.stop(500);
+  Music.toMenu();
   refreshTitleInfo();
 }
 
@@ -3383,14 +3702,12 @@ function pauseGame() {
   if (gstate !== 'play') return;
   gstate = 'paused';
   shakeX = shakeY = 0;
-  audioPaused = true;
-  if (audioCtx) audioCtx.suspend();
+  Music.setMuffle(true);
 }
 function resumeGame() {
   if (gstate !== 'paused') return;
   gstate = 'play';
-  audioPaused = false;
-  if (audioCtx) audioCtx.resume();
+  Music.setMuffle(false);
   P.inv = Math.max(P.inv, 30);   // half-second grace so un-pausing never insta-kills
 }
 
@@ -3414,7 +3731,7 @@ function die() {
   if (shieldCharges > 0) {
     shieldCharges--;
     P.inv = 90;          // 1.5s invulnerability after shield break
-    sfxBonus();
+    sfx.shield();
     vibrate(40);
     shakeX = 6; shakeY = 4;
     timeScale = 0.25; fx.aberr = 1; fxFlash(0x66ffaa, 0.35);
@@ -3427,7 +3744,7 @@ function die() {
   if (hasSkill('phoenix') && !phoenixUsed) {
     phoenixUsed = true;
     P.inv = 180;         // 3s invulnerability after revive
-    sfxBonus();
+    sfx.phoenix();
     vibrate([60, 30, 60]);
     shakeX = 10; shakeY = 7;
     timeScale = 0.2; fx.aberr = 1.2; fxFlash(0xff8844, 0.55);
@@ -3441,9 +3758,9 @@ function die() {
   timeScale = 0.18;
   fx.aberr = 1.6; fxFlash(0xffffff, 0.8);
   comboCount = 0; comboTimer = 0;
-  sfxHit();
+  sfx.death();
+  Music.die();
   vibrate([60, 40, 90]);
-  BGM.stop(800);
   const s = Math.floor(score);
   wasRecord = s > prevHiScore && s > 0;
   if (s > hiScore) { hiScore = s; localStorage.setItem('hd_hi', s); }
@@ -3507,6 +3824,7 @@ function update(dt) {
     pulseCooldown = 0;
     if (!pulseBtn.classList.contains('ready')) {
       pulseBtn.classList.add('ready', 'flash');
+      if (gstate === 'play' && !hasSkill('auto_pulse')) sfx.pulseReady();
       setTimeout(() => pulseBtn.classList.remove('flash'), 500);
     }
     pulseBtn.style.setProperty('--cd', 1);
@@ -3532,22 +3850,29 @@ function update(dt) {
   // Phase progression
   curPhase = getPhase(score);
   if (curPhase !== lastPhase) {
-    if (lastPhase >= 0) { phaseFlash = 90; sfxPhase(); showPhaseBanner(curPhase); fxFlash(0xffffff, 0.18); fx.aberr = Math.max(fx.aberr, 0.6); }
+    if (lastPhase >= 0) { phaseFlash = 90; showPhaseBanner(curPhase); fxFlash(0xffffff, 0.18); fx.aberr = Math.max(fx.aberr, 0.6); }
     runBestPhase = Math.max(runBestPhase, curPhase);
     if (curPhase === 3 && lastPhase < 3) {
       addRunXP(60);
       pushBonus(P.x, P.y - 28, '+60 XP', '#ffee66');
     }
-    BGM.setPhase(curPhase);
+    Music.setSection('p' + (curPhase + 1));
     lastPhase = curPhase;
   }
   const cfg = PHASE_CONFIG[curPhase];
   spd = Math.min(cfg.spdCap, 3 + Math.sqrt(score) * 0.35);
 
+  // Music: predict the next phase change and pre-roll a riser into it
+  const nextAt = [20, 50, 100][curPhase];
+  if (nextAt != null && riserFor !== curPhase && nextAt - score < Music.barDur * 1.05) {
+    riserFor = curPhase;
+    Music.riser(nextAt - score);
+  }
+
   // Score milestone beeps every 10s
   if (Math.floor(score / 10) > lastMilestone) {
     lastMilestone = Math.floor(score / 10);
-    sfxScore();
+    Music.accent();
   }
 
   // No-pulse streak counter
@@ -3590,6 +3915,7 @@ function update(dt) {
       const bulletXMin = Math.min(b.prevX, b.x), bulletXMax = Math.max(b.prevX, b.x);
       if (bulletXMax <= enemyXMin || bulletXMin >= enemyXMax) continue;  // segment misses
       killCount++;
+      sfx.kill();
       addRunXP(5);
       const kb = e.type === 'b' ? 10 : 15;
       score += kb / 60;
@@ -3638,7 +3964,7 @@ function update(dt) {
         }
         addRunXP((tight ? 8 : 3) * comboMul);
         pushBonus(P.x, P.y - 22, `+${bonus} NEAR!`, '#ffee44');
-        sfxNear(tight);
+        sfx.near(tight);
         fx.aberr = Math.max(fx.aberr, tight ? 0.7 : 0.35);
         if (tight) spawnSparks(P.x, P.y, 8, { vMin: 2, vMax: 5, szMax: 1.8, color: 0xffee66 });
         bumpScore();
@@ -3703,6 +4029,7 @@ function update(dt) {
       spawnSparks(e.x, e.y, 16, { vMin: 2, vMax: 7, szMax: 3.4, color: e.type === 'b' ? [15, 25] : [35, 45] });
       // Kill bonus
       killCount++;
+      sfx.kill();
       addRunXP(5);
       const kb = e.type === 'b' ? 15 : 20;
       score += kb / 60;
@@ -3719,6 +4046,18 @@ function update(dt) {
     }
     return true;
   });
+
+  // Music: danger "intensity" — how close the ship is to a wall lip just
+  // ahead, or to any enemy. Drives the tension layer / hats / bass filter.
+  let danger = 0;
+  for (const w of walls) {
+    const ahead = w.x - P.x;
+    if (ahead < -w.w || ahead > 140) continue;
+    const edge = Math.min(P.y - w.gapY, w.gapY + w.gap - P.y);
+    danger = Math.max(danger, (1 - Math.max(0, ahead) / 140) * Math.max(0, 1 - Math.max(0, edge) / 60));
+  }
+  for (const e of enemies) danger = Math.max(danger, 1 - Math.hypot(e.x - P.x, e.y - P.y) / 150);
+  Music.intensityTarget = Math.min(1, danger);
 
   if (P.inv > 0) { P.inv -= dt; return; }
   for (const w of walls)
@@ -4014,6 +4353,7 @@ function syncUI(now) {
     for (const [k, id] of Object.entries(SCREEN_IDS))
       document.getElementById(id).classList.toggle('on', st === k);
     if (st === 'menu') refreshTitleInfo();
+    if (st === 'dead' && wasRecord) sfx.record();
     if (st === 'play') { lastPhaseUI = -1; }
   }
 
@@ -4081,6 +4421,8 @@ function loop(now) {
   if (timeScale > 0.995) timeScale = 1;
   if (deadCooldown > 0) deadCooldown -= realDt;
   dtScale = gstate === 'paused' ? 0 : realDt * timeScale;
+  Music.timeScale = timeScale;
+  Music.update(realDt);
   if (gstate !== 'paused') update(dtScale);
   syncScene();
   fx.aberr *= Math.pow(0.9, realDt);
