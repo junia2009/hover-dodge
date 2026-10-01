@@ -4,7 +4,7 @@
 
 Three.js + WebGL で描画する一画面・タップで遊べるアーケードシューターです。ブラウザだけで動き、PWA としてホーム画面に追加すればオフラインでもプレイできます。フェーズに応じて重厚化する手続き合成 BGM 付き。
 
-[![Play](https://img.shields.io/badge/play-online-00e8ff?style=flat-square)](#) ![Version](https://img.shields.io/badge/version-1.1.0-aa44ff?style=flat-square)
+[![Play](https://img.shields.io/badge/play-online-00e8ff?style=flat-square)](#) ![Version](https://img.shields.io/badge/version-1.2.0-aa44ff?style=flat-square)
 
 ---
 
@@ -51,6 +51,8 @@ Three.js + WebGL で描画する一画面・タップで遊べるアーケード
 ## ✨ XP & ショップ
 
 ランごとに XP が貯まり、タイトル画面の `SHOP` ボタンから**装備型スキル**を購入できます。
+
+SHOP は ATTACK / DEFENSE / PASSIVE のタブ切替式で、各系統のスキルツリーを六角ノードと接続線のツリー図で表示します。ノードをタップすると右（縦画面では下）の詳細パネルに説明・前提・価格が出て、そこから UNLOCK / EQUIP / UNEQUIP します。上部の **LOADOUT** で装備中の 2 枠を常に確認できます。
 
 ### XP 獲得レート
 
@@ -113,7 +115,7 @@ Three.js + WebGL で描画する一画面・タップで遊べるアーケード
 
 ## 🎨 SKIN（自機カスタマイズ）
 
-タイトル画面の **SKIN** ボタンから、宇宙船のカラースキンを 6 種類から選択できます。タップで即座に反映、選択は `localStorage` に保存され再起動後も維持されます。
+タイトル画面の **SKIN** ボタンから、宇宙船のカラースキンを 6 種類から選択できます。横画面では**格納庫風のライブ 3D プレビュー**（実機モデルが回転）、縦画面では SVG のシルエットでプレビューします。タップで即座に反映、選択は `localStorage` に保存され再起動後も維持されます。
 
 | スキン | アクセントカラー |
 | --- | --- |
@@ -235,6 +237,7 @@ SW キャッシュキーを上げることで、既存 PWA ユーザーに新版
 
 | Version | 内容 |
 | :---: | --- |
+| **1.2.0**  | SHOP をスキルツリー図 + LOADOUT + 詳細パネルに刷新、SKIN を 3D 格納庫プレビュー付きに、HOW TO PLAY を共通デザインに |
 | **1.1.0**  | ビジュアル大刷新：フォント刷新、DOM HUD、タイトル / リザルト / ポーズ画面、レンズFX、スローモー、奥行きグリッド、トレイル、シールド表示。横画面から SHOP / SKIN を開けるように。ポーズ機能追加 |
 | **1.0.26** | スキル 5 種追加（TRIPLE SHOT / AUTO-PULSE / DOUBLE SHIELD / COMBO MULTIPLIER / GHOST DASH）、合計 13 種に |
 | **1.0.25** | スキルツリーをビジュアル強化（ROOT バッジ + ブランチ接続線） |
