@@ -955,402 +955,440 @@ button { font-family: var(--f-ui) }
   letter-spacing: 0;
 }
 
-/* ── Shop modal ───────────────────────────────────────────────────── */
-#shop-modal {
+/* ══ Modal shell (SHOP / SKIN / HOW TO PLAY) ═════════════════════════════
+   Full-viewport overlays shared by both orientations. Sizes are real px
+   (these live outside the scaled #wrap) with tighter variants for short
+   landscape phones and narrow portrait screens. */
+.modal {
   display: none;
   position: fixed; top: 0; left: 0; right: 0;
   height: 100vh; height: 100svh;
   z-index: 10000;
-  background: rgba(2, 4, 14, 0.9);
-  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
   font-family: var(--f-ui);
-  color: #00e8ff;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  padding: calc(56px + env(safe-area-inset-top, 0px)) 18px calc(48px + env(safe-area-inset-bottom, 0px));
-}
-#shop-modal.open { display: block; }
-.shop-panel {
-  max-width: 460px; margin: 0 auto;
-}
-.shop-head {
-  display: flex; align-items: center; justify-content: space-between;
-  border-bottom: 1px dashed rgba(0, 232, 255, 0.4);
-  padding-bottom: 10px;
-  margin-bottom: 14px;
-}
-.shop-title {
-  font: bold 22px/1 var(--f-disp);
-  letter-spacing: 6px;
-  color: #00e8ff;
-  text-shadow: 0 0 12px #00e8ff;
-}
-.shop-close {
-  width: 36px; height: 36px;
-  border-radius: 50%;
-  border: 1.5px solid rgba(0, 232, 255, 0.6);
-  background: rgba(0, 232, 255, 0.08);
-  color: #00e8ff;
-  font: 18px/1 var(--f-ui);
-  cursor: pointer;
-}
-.shop-info {
-  display: flex; justify-content: space-between;
-  font-size: 11px; letter-spacing: 2px;
-  color: rgba(180, 220, 240, 0.8);
-  margin-bottom: 14px;
-}
-.shop-info .xp-val {
-  color: #ffe680; font-weight: bold;
-  text-shadow: 0 0 6px rgba(255, 217, 102, 0.55);
-}
-.shop-info .slot-val { color: #00e8ff; font-weight: bold; }
-.shop-card {
-  position: relative;
-  border: 1px solid rgba(0, 232, 255, 0.35);
-  background: linear-gradient(180deg, rgba(0,232,255,0.05), rgba(0,232,255,0.02));
-  padding: 12px 14px;
-  margin-bottom: 12px;
-  border-radius: 6px;
-  box-shadow: 0 0 6px rgba(0, 232, 255, 0.10);
-}
-.shop-card.owned     { border-color: rgba(0, 232, 255, 0.6); }
-.shop-card.equipped  { border-color: #ffe680; box-shadow: 0 0 14px rgba(255, 217, 102, 0.45); }
-.shop-card.gated     {
-  border-color: rgba(255, 110, 110, 0.35);
-  opacity: 0.62;
-  background: linear-gradient(180deg, rgba(255, 80, 80, 0.04), rgba(0,0,0,0));
-}
-/* ── Tree visualisation ─────────────────────────────────────────── */
-/* Root nodes get a yellow ROOT chip; branch nodes get indented +
-   a short horizontal connector line on the left, colour-matched to
-   the kind chip. This makes the dependency chain readable at a
-   glance without ASCII art. */
-.shop-root-tag {
-  display: inline-block;
-  font: bold 9px var(--f-ui); letter-spacing: 1.5px;
-  color: #ffe680;
-  border: 1px solid rgba(255, 230, 128, 0.55);
-  padding: 2px 6px;
-  border-radius: 3px;
-  text-shadow: 0 0 6px rgba(255, 230, 128, 0.5);
-  margin-right: 6px;
-  vertical-align: middle;
-}
-.shop-card.is-branch {
-  margin-left: 24px;
-  position: relative;
-}
-.shop-card.is-branch::before {
-  /* horizontal connector line into the card */
-  content: '';
-  position: absolute;
-  left: -16px;
-  top: 28px;
-  width: 14px;
-  height: 1.5px;
-  background: rgba(0, 232, 255, 0.45);
-}
-.shop-card.is-branch::after {
-  /* small node dot at the card's left edge */
-  content: '';
-  position: absolute;
-  left: -4px;
-  top: 24px;
-  width: 7px; height: 7px;
-  border-radius: 50%;
-  background: rgba(0, 232, 255, 0.55);
-  box-shadow: 0 0 6px rgba(0, 232, 255, 0.6);
-}
-/* Colour-match the connector to the kind */
-.shop-card.is-branch.ATTACK::before  { background: rgba(255, 102, 224, 0.55); }
-.shop-card.is-branch.ATTACK::after   { background: #ff66e0; box-shadow: 0 0 6px #ff66e0; }
-.shop-card.is-branch.DEFENSE::before { background: rgba(170, 255, 170, 0.55); }
-.shop-card.is-branch.DEFENSE::after  { background: #aaffaa; box-shadow: 0 0 6px #aaffaa; }
-.shop-card.is-branch.PASSIVE::before { background: rgba(102, 200, 255, 0.55); }
-.shop-card.is-branch.PASSIVE::after  { background: #66c8ff; box-shadow: 0 0 6px #66c8ff; }
-.shop-card.is-branch.gated::before { background: rgba(255, 110, 110, 0.5); }
-.shop-card.is-branch.gated::after  { background: rgba(255, 110, 110, 0.7); box-shadow: 0 0 6px rgba(255, 110, 110, 0.5); }
-.shop-prereq {
-  font: 9px var(--f-ui);
-  letter-spacing: 1.5px;
-  color: rgba(255, 200, 200, 0.55);
-  margin-bottom: 6px;
-  text-transform: uppercase;
-}
-.shop-card.owned .shop-prereq {
-  color: rgba(0, 232, 255, 0.55);
-}
-.shop-card-head {
-  display: flex; justify-content: space-between; align-items: center;
-  margin-bottom: 6px;
-}
-.shop-kind {
-  font: 9px var(--f-ui); letter-spacing: 2px;
-  color: rgba(170, 68, 255, 0.85);
-  border: 1px solid rgba(170, 68, 255, 0.6);
-  padding: 2px 6px; border-radius: 3px;
-}
-.shop-kind.ATTACK  { color: #ff66e0; border-color: #ff66e0; }
-.shop-kind.DEFENSE { color: #aaffaa; border-color: #aaffaa; }
-.shop-kind.PASSIVE { color: #66c8ff; border-color: #66c8ff; }
-.shop-name {
-  font: bold 14px/1 var(--f-ui);
-  letter-spacing: 2px;
-  color: #ffffff;
-  text-shadow: 0 0 6px rgba(0, 232, 255, 0.6);
-}
-.shop-desc {
-  font: 11px/1.5 var(--f-ui);
-  letter-spacing: 1px;
-  color: rgba(180, 210, 240, 0.78);
-  margin-bottom: 10px;
-}
-.shop-action {
-  width: 100%;
-  padding: 9px 14px;
-  border-radius: 4px;
-  border: 1.5px solid #00e8ff;
-  background: rgba(0, 232, 255, 0.10);
-  color: #00e8ff;
-  font: bold 12px/1 var(--f-ui);
-  letter-spacing: 3px;
-  cursor: pointer;
+  color: var(--c-ink);
+  background: radial-gradient(ellipse at 50% 0%, rgba(24, 44, 100, 0.5), rgba(2, 3, 10, 0.94) 72%);
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  padding: max(10px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right))
+           max(10px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
   -webkit-user-select: none; user-select: none;
+  --k: var(--c-cyan);
 }
-.shop-action:hover    { background: rgba(0, 232, 255, 0.20); }
-.shop-action:disabled { opacity: 0.45; cursor: not-allowed; border-color: rgba(0, 232, 255, 0.3); color: rgba(0, 232, 255, 0.5); }
-.shop-action.equipped {
-  border-color: #ffe680; color: #ffe680;
-  background: rgba(255, 217, 102, 0.12);
+.modal.open { display: flex; animation: m-fade .25s ease-out; }
+.modal button { font-family: var(--f-ui); cursor: pointer; }
+@keyframes m-fade { from { opacity: 0; } }
+.m-panel {
+  position: relative;
+  margin: auto;
+  width: min(980px, 100%);
+  height: min(600px, 100%);
+  display: flex; flex-direction: column;
+  background: linear-gradient(180deg, rgba(16, 24, 50, 0.94), rgba(6, 9, 22, 0.97));
+  box-shadow: inset 0 1px 0 rgba(160, 200, 255, 0.16);
+  clip-path: polygon(18px 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%, 0 18px);
+  animation: m-rise .35s cubic-bezier(.2,.8,.2,1);
+  overflow: hidden;
 }
-.shop-action.locked   {
-  border-color: rgba(255, 100, 100, 0.5);
-  color: rgba(255, 140, 140, 0.7);
-  background: rgba(255, 100, 100, 0.06);
+.m-panel::before {
+  content: ''; position: absolute; left: 18px; right: 0; top: 0; height: 2px;
+  background: linear-gradient(90deg, var(--k), transparent 75%);
+  box-shadow: 0 0 12px var(--k);
 }
-.shop-empty {
-  text-align: center; padding: 40px 16px;
-  color: rgba(180, 210, 240, 0.55);
-  font: 11px/1.6 var(--f-ui);
+@keyframes m-rise { from { transform: translateY(14px) scale(.985); opacity: 0; } }
+.m-head {
+  flex: none;
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 12px 12px 24px;
+  border-bottom: 1px solid rgba(160, 200, 255, 0.09);
 }
-.shop-cat {
-  display: flex; align-items: center; gap: 10px;
-  margin: 14px 0 8px;
-  font: bold 10px var(--f-ui);
+.m-title {
+  font: 900 20px/1 var(--f-disp);
+  letter-spacing: 5px;
+  color: #fff;
+  text-shadow: 0 0 14px var(--k);
+}
+.m-sub {
+  margin-top: 5px;
+  font: 600 10px/1 var(--f-ui);
   letter-spacing: 4px;
-  color: rgba(180, 210, 240, 0.65);
-  text-transform: uppercase;
+  color: var(--c-dim);
 }
-.shop-cat:first-child { margin-top: 4px; }
-.shop-cat::before, .shop-cat::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(0, 232, 255, 0.35), transparent);
-}
-.shop-cat.ATTACK  { color: #ff66e0; }
-.shop-cat.ATTACK::before, .shop-cat.ATTACK::after  { background: linear-gradient(90deg, transparent, rgba(255, 102, 224, 0.45), transparent); }
-.shop-cat.DEFENSE { color: #aaffaa; }
-.shop-cat.DEFENSE::before, .shop-cat.DEFENSE::after { background: linear-gradient(90deg, transparent, rgba(170, 255, 170, 0.45), transparent); }
-.shop-cat.PASSIVE { color: #66c8ff; }
-.shop-cat.PASSIVE::before, .shop-cat.PASSIVE::after { background: linear-gradient(90deg, transparent, rgba(102, 200, 255, 0.45), transparent); }
-
-/* ── Skin modal ───────────────────────────────────────────────────── */
-#skin-modal {
-  display: none;
-  position: fixed; top: 0; left: 0; right: 0;
-  height: 100vh; height: 100svh;
-  z-index: 10000;
-  background: rgba(8, 2, 14, 0.9);
-  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
-  font-family: var(--f-ui);
-  color: #ffaaee;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  padding: calc(56px + env(safe-area-inset-top, 0px)) 18px calc(48px + env(safe-area-inset-bottom, 0px));
-}
-#skin-modal.open { display: block; }
-.skin-panel { max-width: 460px; margin: 0 auto; }
-.skin-head {
-  display: flex; align-items: center; justify-content: space-between;
-  border-bottom: 1px dashed rgba(255, 102, 224, 0.4);
-  padding-bottom: 10px;
-  margin-bottom: 18px;
-}
-.skin-title {
-  font: bold 22px/1 var(--f-disp);
-  letter-spacing: 6px;
-  color: #ff66e0;
-  text-shadow: 0 0 12px #ff66e0;
-}
-.skin-close {
+.m-spacer { flex: 1; }
+.m-close {
+  flex: none;
   width: 36px; height: 36px;
-  border-radius: 50%;
-  border: 1.5px solid rgba(255, 102, 224, 0.6);
-  background: rgba(255, 102, 224, 0.08);
-  color: #ff66e0;
-  font: 18px/1 var(--f-ui);
-  cursor: pointer;
+  border: none; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--c-ink);
+  font: 400 22px/1 var(--f-ui) !important;
+  transition: background .15s, transform .1s;
 }
-.skin-sub {
-  font-size: 10px; letter-spacing: 2px;
-  color: rgba(220, 200, 240, 0.7);
+.m-close:hover  { background: rgba(255, 255, 255, 0.14); }
+.m-close:active { transform: scale(.9); }
+.m-body { flex: 1; min-height: 0; }
+
+/* ── SHOP ─────────────────────────────────────────────────────────────── */
+#shop-modal { --k: var(--c-gold); }
+.wallet {
+  display: flex; align-items: baseline; gap: 8px;
+  padding: 8px 16px;
+  background: linear-gradient(90deg, rgba(255, 216, 74, 0.14), rgba(255, 216, 74, 0.04));
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+}
+.wallet span { font: 700 10px/1 var(--f-ui); letter-spacing: 3px; color: rgba(255, 216, 74, 0.75); }
+.wallet b {
+  font: 700 18px/1 var(--f-disp);
+  color: var(--c-gold);
+  text-shadow: 0 0 10px rgba(255, 216, 74, 0.55);
+  font-variant-numeric: tabular-nums;
+  display: inline-block;
+}
+.wallet b.bump { animation: wallet-bump .45s ease-out; }
+@keyframes wallet-bump { 0% { transform: scale(1.3); color: #fff; } 100% { transform: scale(1); } }
+
+.shop-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(250px, 34%); }
+.shop-main { display: flex; flex-direction: column; min-width: 0; min-height: 0; padding: 12px 16px 12px 24px; }
+.shop-side {
+  display: flex; flex-direction: column; min-height: 0;
+  border-left: 1px solid rgba(160, 200, 255, 0.09);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.tabs { flex: none; display: flex; gap: 6px; }
+.tab {
+  flex: 1;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 10px 12px;
+  border: none;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--c-dim);
+  font: 700 11px/1 var(--f-ui) !important;
+  letter-spacing: 3px;
+  transition: color .15s, background .15s, border-color .15s;
+}
+.tab .cnt { font: 500 10px/1 var(--f-disp); letter-spacing: 1px; opacity: .8; }
+.tab:hover { color: var(--c-ink); }
+.tab.on {
+  color: #fff;
+  border-bottom-color: var(--tk);
+  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--tk) 16%, transparent));
+  text-shadow: 0 0 8px var(--tk);
+}
+
+.tree { position: relative; flex: 1; min-height: 200px; margin-top: 14px; }
+.tree > svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.tree > svg path {
+  fill: none;
+  stroke: rgba(160, 200, 255, 0.16);
+  stroke-width: 2;
+  stroke-dasharray: 4 4;
+  vector-effect: non-scaling-stroke;
+}
+.tree > svg path.lit  { stroke: color-mix(in srgb, var(--tk) 60%, transparent); stroke-dasharray: none; }
+.tree > svg path.full { stroke: var(--tk); stroke-dasharray: none; filter: drop-shadow(0 0 4px var(--tk)); }
+
+.node {
+  position: absolute;
+  width: 104px;
+  transform: translate(-50%, -26px);       /* anchor = centre of the tile */
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  background: none; border: none; padding: 0;
+  color: var(--c-ink);
+  animation: node-in .4s cubic-bezier(.2,.8,.2,1) both;
+}
+@keyframes node-in { from { opacity: 0; transform: translate(-50%, -26px) scale(.7); } }
+.node .tw { position: relative; transition: transform .15s, filter .2s; }
+.node .tile {
+  position: relative;
+  width: 60px; height: 52px;
+  display: grid; place-items: center;
+  clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
+  background: rgba(160, 200, 255, 0.22);
+}
+.node .tile::before {
+  content: ''; position: absolute; inset: 2px;
+  clip-path: inherit;
+  background: #0a1022;
+}
+.node .ic {
+  position: relative;
+  width: 24px; height: 24px;
+  fill: none; stroke: currentColor; stroke-width: 1.8;
+  stroke-linecap: round; stroke-linejoin: round;
+  color: rgba(160, 190, 220, 0.45);
+}
+.node .nm {
+  font: 700 10px/1.2 var(--f-ui);
+  letter-spacing: 1.5px;
   text-align: center;
-  margin-bottom: 18px;
+  color: var(--c-dim);
 }
+.node .pr { font: 500 9px/1 var(--f-disp); letter-spacing: 1px; color: rgba(255, 216, 74, 0.8); }
+.node .lock {
+  position: absolute; right: -4px; bottom: -2px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: #1a1f30; color: rgba(255, 140, 140, 0.8);
+  display: grid; place-items: center;
+}
+.node .lock svg { width: 9px; height: 9px; fill: none; stroke: currentColor; stroke-width: 2.4; }
+.node .eq {
+  position: absolute; left: 50%; top: -9px; transform: translateX(-50%);
+  font: 900 7px/1 var(--f-disp); letter-spacing: 1.5px;
+  padding: 3px 5px;
+  color: #1a1000;
+  background: var(--c-gold);
+  box-shadow: 0 0 8px rgba(255, 216, 74, 0.7);
+}
+/* states */
+.node.nofund .tile { background: color-mix(in srgb, var(--tk) 35%, transparent); }
+.node.nofund .ic   { color: color-mix(in srgb, var(--tk) 55%, #8899aa); }
+.node.avail .tile  { background: var(--tk); }
+.node.avail .ic    { color: var(--tk); }
+.node.avail .nm    { color: var(--c-ink); }
+.node.avail .tw    { animation: avail 1.6s ease-in-out infinite; }
+@keyframes avail {
+  0%, 100% { filter: drop-shadow(0 0 2px var(--tk)); }
+  50%      { filter: drop-shadow(0 0 10px var(--tk)); }
+}
+.node.owned .tile  { background: var(--tk); }
+.node.owned .tile::before { background: linear-gradient(160deg, color-mix(in srgb, var(--tk) 55%, #0a1022), #0a1022 85%); }
+.node.owned .ic    { color: #fff; }
+.node.owned .nm    { color: #fff; }
+.node.owned .tw    { filter: drop-shadow(0 0 6px var(--tk)); }
+.node.equipped .tile { background: var(--c-gold); }
+.node.equipped .tw   { filter: drop-shadow(0 0 8px var(--c-gold)); }
+.node.locked .nm     { color: rgba(140, 160, 190, 0.45); }
+.node:hover .tw      { transform: translateY(-2px); }
+.node.sel .tw        { transform: scale(1.12); }
+.node.sel .nm        { color: #fff; text-shadow: 0 0 8px var(--tk); }
+.node.sel .tile { background: #fff; }
+.node.just .tw { animation: just .7s ease-out; }
+@keyframes just {
+  0%   { filter: drop-shadow(0 0 0 #fff) brightness(3); transform: scale(1.35); }
+  100% { filter: drop-shadow(0 0 6px var(--tk)); transform: scale(1.12); }
+}
+
+/* Loadout + detail */
+.loadout { flex: none; padding: 14px 16px; border-bottom: 1px solid rgba(160, 200, 255, 0.09); }
+.side-label {
+  display: flex; justify-content: space-between;
+  font: 700 10px/1 var(--f-ui); letter-spacing: 3px;
+  color: var(--c-dim);
+}
+.side-label b { font: 500 10px/1 var(--f-disp); color: var(--c-ink); letter-spacing: 1px; }
+.slots { margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.slot {
+  height: 48px;
+  display: flex; align-items: center; gap: 8px;
+  padding: 0 10px;
+  border: 1px dashed rgba(160, 200, 255, 0.22);
+  background: rgba(255, 255, 255, 0.02);
+  color: rgba(140, 165, 195, 0.5);
+  font: 700 9px/1.2 var(--f-ui) !important; letter-spacing: 2px;
+  text-align: left;
+  transition: background .15s;
+}
+.slot svg { flex: none; width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.slot.filled {
+  border: none;
+  border-left: 3px solid var(--sk);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--sk) 22%, transparent), rgba(255, 255, 255, 0.03));
+  color: #fff;
+}
+.slot.filled svg { color: var(--sk); filter: drop-shadow(0 0 4px var(--sk)); }
+.slot.filled:hover { background: linear-gradient(90deg, color-mix(in srgb, var(--sk) 32%, transparent), rgba(255, 255, 255, 0.05)); }
+
+.detail { flex: 1; min-height: 0; overflow-y: auto; padding: 14px 16px 16px; display: flex; flex-direction: column; }
+.d-top { display: flex; align-items: center; gap: 12px; }
+.d-top .node { position: static; transform: none; width: auto; animation: none; }
+.d-kind {
+  display: inline-block;
+  font: 700 9px/1 var(--f-ui); letter-spacing: 3px;
+  color: var(--tk);
+  padding: 3px 7px;
+  border: 1px solid color-mix(in srgb, var(--tk) 50%, transparent);
+}
+.d-name { margin-top: 6px; font: 900 16px/1.15 var(--f-disp); letter-spacing: 2px; color: #fff; }
+.d-desc { margin-top: 12px; font: 600 13px/1.6 var(--f-ui); letter-spacing: .5px; color: rgba(210, 225, 245, 0.88); }
+.d-meta { margin-top: 12px; display: grid; gap: 6px; }
+.d-meta div {
+  display: flex; justify-content: space-between; gap: 10px;
+  font: 700 10px/1.2 var(--f-ui); letter-spacing: 2px;
+  color: var(--c-dim);
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(160, 200, 255, 0.07);
+}
+.d-meta b { font-weight: 700; color: var(--c-ink); text-align: right; }
+.d-meta .ok { color: #8dffb8; }
+.d-meta .ng { color: #ff8c8c; }
+.d-act { margin-top: auto; padding-top: 14px; }
+.act {
+  width: 100%;
+  padding: 13px 14px;
+  border: none;
+  font: 900 13px/1 var(--f-disp) !important;
+  letter-spacing: 4px;
+  clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+  transition: filter .15s, transform .1s;
+}
+.act:active:not(:disabled) { transform: scale(.97); }
+.act:hover:not(:disabled)  { filter: brightness(1.12); }
+.act.buy   { color: #1a1000; background: linear-gradient(100deg, #ffe680, var(--c-gold) 50%, #ffb340); box-shadow: 0 0 20px rgba(255, 216, 74, 0.45); }
+.act.equip { color: #021018; background: linear-gradient(100deg, #5ff4ff, var(--c-cyan) 50%, #3aa8ff); }
+.act.unequip { color: var(--c-ink); background: rgba(255, 255, 255, 0.08); }
+.act:disabled { cursor: not-allowed; color: rgba(160, 180, 210, 0.45); background: rgba(255, 255, 255, 0.04); }
+.d-hint { margin-top: 8px; min-height: 12px; font: 600 11px/1.3 var(--f-ui); letter-spacing: 1px; color: rgba(255, 170, 150, 0.8); text-align: center; }
+
+/* ── SKIN (hangar) ────────────────────────────────────────────────────── */
+#skin-modal { --k: var(--skin-accent, var(--c-cyan)); }
+.skin-stage {
+  flex: 1;
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+  padding-bottom: 6%;
+  pointer-events: none;
+}
+.skin-ship { width: min(70%, 360px); height: auto; filter: drop-shadow(0 0 18px var(--k)); }
+.skin-ship .flame { animation: flame .18s ease-in-out infinite alternate; transform-origin: 30px 50%; }
+@keyframes flame { to { transform: scaleX(0.75); } }
+.stage-name {
+  font: 900 30px/1 var(--f-disp);
+  letter-spacing: 10px;
+  color: #fff;
+  text-shadow: 0 0 18px var(--k), 0 0 40px var(--k);
+}
+.stage-sub { margin-top: 8px; font: 600 10px/1 var(--f-ui); letter-spacing: 5px; color: var(--c-dim); }
+.skin-panel { margin: 0; width: min(400px, 46%); height: 100%; }
 .skin-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
+  flex: 1; min-height: 0; overflow-y: auto;
+  padding: 16px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-content: start;
 }
 .skin-card {
-  display: flex; flex-direction: column;
-  align-items: center; gap: 8px;
-  padding: 14px 10px 10px;
-  border: 1.5px solid rgba(180, 180, 200, 0.3);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.03);
-  cursor: pointer;
-  -webkit-user-select: none; user-select: none;
-  transition: border-color 0.15s, transform 0.1s, box-shadow 0.2s;
-}
-.skin-card:active { transform: scale(0.96); }
-.skin-card.selected {
-  border-color: #fff;
-  box-shadow: 0 0 14px var(--accent, #ff66e0), inset 0 0 8px rgba(255,255,255,0.1);
-}
-.skin-swatch {
-  width: 56px; height: 56px;
-  border-radius: 50%;
-  background: var(--accent, #00e8ff);
-  box-shadow: 0 0 18px var(--accent, #00e8ff), inset 0 -8px 16px rgba(0, 0, 0, 0.4);
   position: relative;
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 12px;
+  border: none;
+  background: rgba(255, 255, 255, 0.035);
+  color: var(--c-ink);
+  text-align: left;
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+  transition: background .15s, transform .1s;
 }
-.skin-swatch::after {
-  content: '';
-  position: absolute;
-  top: 8px; left: 14px;
-  width: 14px; height: 8px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.55);
-  filter: blur(1px);
+.skin-card:hover  { background: rgba(255, 255, 255, 0.07); }
+.skin-card:active { transform: scale(.97); }
+.skin-card .bar {
+  height: 26px;
+  background: linear-gradient(100deg, var(--c1), var(--c2) 55%, var(--c3));
+  box-shadow: 0 0 14px color-mix(in srgb, var(--c2) 50%, transparent);
+  clip-path: polygon(0 0, 100% 0, 92% 100%, 0 100%);
 }
-.skin-card.selected .skin-swatch::before {
-  content: '✓';
-  position: absolute;
-  inset: 0;
-  display: flex; align-items: center; justify-content: center;
-  color: #fff;
-  font: bold 24px/1 var(--f-ui);
-  text-shadow: 0 0 8px rgba(0, 0, 0, 0.6);
+.skin-card .nm { font: 700 12px/1 var(--f-disp) !important; letter-spacing: 3px; color: var(--c2); }
+.skin-card.selected { background: color-mix(in srgb, var(--c2) 16%, rgba(255,255,255,0.03)); }
+.skin-card.selected::after {
+  content: 'EQUIPPED';
+  position: absolute; right: 10px; bottom: 12px;
+  font: 900 7px/1 var(--f-disp); letter-spacing: 1.5px;
+  padding: 3px 5px;
+  color: #000; background: var(--c2);
 }
-.skin-name {
-  font: bold 11px/1 var(--f-ui);
-  letter-spacing: 2px;
-  color: var(--accent, #ffffff);
-  text-shadow: 0 0 6px var(--accent, transparent);
+.skin-card.selected .nm { color: #fff; text-shadow: 0 0 8px var(--c2); }
+.skin-foot { flex: none; padding: 12px 16px; font: 600 10px/1 var(--f-ui); letter-spacing: 3px; color: var(--c-dim); border-top: 1px solid rgba(160, 200, 255, 0.09); }
+
+/* Landscape: the real 3D ship is shown behind the modal's clear left side
+   (see skinPreview in syncScene), so the SVG stand-in is hidden. */
+@media (orientation: landscape) {
+  #skin-modal {
+    background: linear-gradient(90deg, transparent 0%, transparent 42%, rgba(2, 3, 10, 0.85) 62%);
+    -webkit-backdrop-filter: none; backdrop-filter: none;
+  }
+  .skin-ship { display: none; }
 }
-.skin-card.selected .skin-name {
-  color: #fff;
+body.skin-open #title-screen { opacity: 0; visibility: hidden; }
+@media (orientation: portrait) {
+  #skin-modal.open { flex-direction: column; }
+  .skin-stage { flex: none; height: 32%; justify-content: center; padding: 0; }
+  .skin-panel { width: 100%; height: auto; flex: 1; }
 }
 
-/* ── HOW TO PLAY modal ────────────────────────────────────────────── */
-#howto-modal {
-  display: none;
-  position: fixed; top: 0; left: 0; right: 0;
-  height: 100vh; height: 100svh;
-  z-index: 10000;
-  background: rgba(2, 8, 18, 0.9);
-  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
-  font-family: var(--f-ui);
-  color: #aae0ff;
+/* ── HOW TO PLAY ──────────────────────────────────────────────────────── */
+#howto-modal { --k: #66c8ff; }
+.howto-body {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  padding: calc(56px + env(safe-area-inset-top, 0px)) 18px calc(48px + env(safe-area-inset-bottom, 0px));
-}
-#howto-modal.open { display: block; }
-.howto-panel { max-width: 480px; margin: 0 auto; }
-.howto-head {
-  display: flex; align-items: center; justify-content: space-between;
-  border-bottom: 1px dashed rgba(102, 200, 255, 0.45);
-  padding-bottom: 10px;
-  margin-bottom: 18px;
-}
-.howto-title {
-  font: bold 20px/1 var(--f-disp);
-  letter-spacing: 5px;
-  color: #66c8ff;
-  text-shadow: 0 0 12px #66c8ff;
-}
-.howto-close {
-  width: 36px; height: 36px;
-  border-radius: 50%;
-  border: 1.5px solid rgba(102, 200, 255, 0.6);
-  background: rgba(102, 200, 255, 0.08);
-  color: #66c8ff;
-  font: 18px/1 var(--f-ui);
-  cursor: pointer;
+  padding: 16px 24px 20px;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px;
+  align-content: start;
 }
 .howto-sec {
-  margin-bottom: 18px;
-  padding-left: 12px;
-  border-left: 2px solid rgba(102, 200, 255, 0.35);
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.03);
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
 }
 .howto-sec h3 {
-  font: bold 12px/1 var(--f-ui);
+  font: 700 11px/1 var(--f-disp);
   letter-spacing: 3px;
   color: #66c8ff;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   text-shadow: 0 0 6px rgba(102, 200, 255, 0.5);
 }
 .howto-sec p {
-  font: 12px/1.7 var(--f-ui);
-  letter-spacing: 1px;
-  color: rgba(200, 220, 240, 0.85);
+  font: 600 13px/1.65 var(--f-ui);
+  letter-spacing: .5px;
+  color: rgba(210, 225, 245, 0.85);
   margin-bottom: 6px;
 }
 .howto-sec dl {
   display: grid;
-  grid-template-columns: minmax(110px, max-content) 1fr;
-  gap: 4px 14px;
-  font: 11px/1.5 var(--f-ui);
-  letter-spacing: 1px;
+  grid-template-columns: minmax(96px, max-content) 1fr;
+  gap: 6px 14px;
+  font: 600 12px/1.45 var(--f-ui);
+  letter-spacing: .5px;
 }
-.howto-sec dt {
-  color: #fff;
-  font-weight: bold;
-  text-shadow: 0 0 6px rgba(102, 200, 255, 0.5);
-}
-.howto-sec dd {
-  color: rgba(200, 220, 240, 0.78);
-}
-.howto-sec ul {
-  list-style: none;
-  font: 11px/1.7 var(--f-ui);
-  letter-spacing: 1px;
-  color: rgba(200, 220, 240, 0.85);
-}
-.howto-sec ul li {
-  padding-left: 14px;
-  position: relative;
-}
-.howto-sec ul li::before {
-  content: '▸';
-  position: absolute;
-  left: 0;
-  color: rgba(102, 200, 255, 0.7);
-}
+.howto-sec dt { color: #fff; font-weight: 700; }
+.howto-sec dd { color: rgba(200, 220, 240, 0.8); }
+.howto-sec ul { list-style: none; font: 600 12px/1.7 var(--f-ui); letter-spacing: .5px; color: rgba(210, 225, 245, 0.85); }
+.howto-sec ul li { padding-left: 14px; position: relative; }
+.howto-sec ul li::before { content: '▸'; position: absolute; left: 0; color: rgba(102, 200, 255, 0.7); }
 .howto-sec ul li b { color: #fff; }
-.howto-sec .ph-num {
-  display: inline-block;
-  min-width: 64px;
-  color: #66c8ff;
-  font-weight: bold;
+.howto-sec .ph-num { display: inline-block; min-width: 60px; color: #66c8ff; font-weight: 700; }
+.howto-sec .bonus-val { font-family: var(--f-disp); color: var(--c-gold); text-shadow: 0 0 4px rgba(255, 216, 74, 0.4); }
+
+/* ── Compact variants ─────────────────────────────────────────────────── */
+@media (max-height: 460px) {
+  .m-head { padding: 8px 10px 8px 20px; }
+  .m-title { font-size: 17px; }
+  .m-sub { display: none; }
+  .shop-main { padding: 8px 12px 8px 20px; }
+  .tab { padding: 8px 10px; }
+  .tree { margin-top: 8px; min-height: 0; }
+  .node { width: 92px; transform: translate(-50%, -21px); gap: 4px; }
+  @keyframes node-in { from { opacity: 0; transform: translate(-50%, -21px) scale(.7); } }
+  .node .tile { width: 48px; height: 42px; }
+  .node .ic { width: 20px; height: 20px; }
+  .node .nm { font-size: 9px; }
+  .loadout { padding: 10px 12px; }
+  .slots { margin-top: 8px; }
+  .slot { height: 40px; }
+  .detail { padding: 10px 12px 12px; }
+  .d-desc { margin-top: 8px; font-size: 12px; line-height: 1.5; }
+  .d-meta { margin-top: 8px; }
+  .act { padding: 11px 12px; }
+  .skin-grid { padding: 12px; gap: 8px; }
+  .skin-card { padding: 10px; gap: 8px; }
+  .skin-card .bar { height: 18px; }
+  .howto-body { padding: 12px 20px 16px; }
 }
-.howto-sec .bonus-val {
-  color: #ffee66;
-  text-shadow: 0 0 4px rgba(255, 238, 102, 0.4);
+@media (max-width: 640px) {
+  .m-panel { height: 100%; }
+  .shop-body { grid-template-columns: 1fr; grid-auto-rows: max-content; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+  .shop-main { padding: 12px 14px; }
+  .tree { flex: none; height: 260px; }
+  .shop-side { border-left: none; border-top: 1px solid rgba(160, 200, 255, 0.09); }
+  .detail { overflow: visible; }
+  .tab { padding: 10px 8px; letter-spacing: 2px; }
+  .howto-body { padding: 14px; }
+  .m-head { padding-left: 20px; }
 }
 </style>
 </head>
@@ -1408,43 +1446,68 @@ button { font-family: var(--f-ui) }
     </button>
   </div>
 
-  <p class="rot-version">SYS_REV  1.1.0</p>
+  <p class="rot-version">SYS_REV  1.2.0</p>
 </div>
 
-<div id="shop-modal">
-  <div class="shop-panel">
-    <div class="shop-head">
-      <span class="shop-title">SHOP</span>
-      <button class="shop-close" id="shop-close" type="button">×</button>
+<div id="shop-modal" class="modal">
+  <div class="m-panel">
+    <header class="m-head">
+      <div><div class="m-title">SHOP</div><div class="m-sub">SKILL TREE &amp; LOADOUT</div></div>
+      <div class="m-spacer"></div>
+      <div class="wallet"><span>XP</span><b id="shop-xp">0</b></div>
+      <button class="m-close" id="shop-close" type="button" aria-label="Close">×</button>
+    </header>
+    <div class="m-body shop-body">
+      <div class="shop-main">
+        <nav class="tabs" id="shop-tabs"></nav>
+        <div class="tree" id="shop-tree"></div>
+      </div>
+      <aside class="shop-side">
+        <div class="loadout">
+          <div class="side-label">LOADOUT <b id="shop-slots">0/2</b></div>
+          <div class="slots" id="shop-slot-list"></div>
+        </div>
+        <div class="detail" id="shop-detail"></div>
+      </aside>
     </div>
-    <div class="shop-info">
-      <span>XP&nbsp; <span class="xp-val" id="shop-xp">0</span></span>
-      <span>EQUIPPED&nbsp; <span class="slot-val" id="shop-slots">0/2</span></span>
-    </div>
-    <div id="shop-list"></div>
   </div>
 </div>
 
-<div id="skin-modal">
-  <div class="skin-panel">
-    <div class="skin-head">
-      <span class="skin-title">SKIN</span>
-      <button class="skin-close" id="skin-close" type="button">×</button>
-    </div>
-    <div class="skin-sub">タップでカラーを変更（即時反映）</div>
+<div id="skin-modal" class="modal">
+  <div class="skin-stage">
+    <svg class="skin-ship" id="skin-ship" viewBox="0 0 120 60" aria-hidden="true">
+      <path class="flame" d="M30 30 L2 25 L8 30 L2 35 Z" fill="var(--s-flame)" opacity=".85"/>
+      <path d="M64 22 L38 3 L29 14 L41 19 Z" fill="var(--s-wing)"/>
+      <path d="M64 38 L38 57 L29 46 L41 41 Z" fill="var(--s-wing)"/>
+      <path d="M114 30 C100 22 62 11 40 11 L40 20 C47 22 53 27 50 30 C53 33 47 38 40 40 L40 49 C62 49 100 38 114 30 Z" fill="var(--s-hull)"/>
+      <ellipse cx="76" cy="30" rx="12" ry="6" fill="var(--s-cockpit)" opacity=".9"/>
+      <circle cx="34" cy="30" r="5" fill="var(--s-engine)"/>
+    </svg>
+    <div class="stage-name" id="skin-stage-name">CYAN</div>
+    <div class="stage-sub">HANGAR · LIVE PREVIEW</div>
+  </div>
+  <div class="m-panel skin-panel">
+    <header class="m-head">
+      <div><div class="m-title">SKIN</div><div class="m-sub">SHIP PAINT</div></div>
+      <div class="m-spacer"></div>
+      <button class="m-close" id="skin-close" type="button" aria-label="Close">×</button>
+    </header>
     <div class="skin-grid" id="skin-grid"></div>
+    <div class="skin-foot">タップで即時反映・自動保存</div>
   </div>
 </div>
 
-<div id="howto-modal">
-  <div class="howto-panel">
-    <div class="howto-head">
-      <span class="howto-title">HOW TO PLAY</span>
-      <button class="howto-close" id="howto-close" type="button">×</button>
-    </div>
+<div id="howto-modal" class="modal">
+  <div class="m-panel">
+    <header class="m-head">
+      <div><div class="m-title">HOW TO PLAY</div><div class="m-sub">FLIGHT MANUAL</div></div>
+      <div class="m-spacer"></div>
+      <button class="m-close" id="howto-close" type="button" aria-label="Close">×</button>
+    </header>
+    <div class="m-body howto-body">
 
     <section class="howto-sec">
-      <h3>▸ 基本操作</h3>
+      <h3>基本操作</h3>
       <dl>
         <dt>タップ / SPACE</dt><dd>自機を上昇させる（重力で落下）</dd>
         <dt>Z / PULSE</dt><dd>範囲攻撃。CDあり (5秒)</dd>
@@ -1455,13 +1518,12 @@ button { font-family: var(--f-ui) }
     </section>
 
     <section class="howto-sec">
-      <h3>▸ 目的</h3>
-      <p>壁と敵をよけて長く生存する。スコア=生存秒数+ボーナス。<br>
-         死んだら RETRY で即再挑戦。自己ベストはローカルに保存。</p>
+      <h3>目的</h3>
+      <p>壁と敵をよけて長く生存する。スコア=生存秒数+ボーナス。死んだら RETRY で即再挑戦。自己ベストはローカルに保存。</p>
     </section>
 
     <section class="howto-sec">
-      <h3>▸ スコア・ボーナス</h3>
+      <h3>スコア・ボーナス</h3>
       <dl>
         <dt><span class="bonus-val">+10</span></dt><dd>壁スレスレ通過（隙間の外側30%以内）</dd>
         <dt><span class="bonus-val">+25</span></dt><dd>極スレスレ NEAR! （外側15%以内）</dd>
@@ -1471,7 +1533,7 @@ button { font-family: var(--f-ui) }
     </section>
 
     <section class="howto-sec">
-      <h3>▸ フェーズ進行</h3>
+      <h3>フェーズ進行</h3>
       <p>生存時間に応じて4段階に難易度UP。BGMもフェーズに合わせて重厚に。</p>
       <ul>
         <li><span class="ph-num">PHASE 1</span> <b>WALLS</b> (0–20s) — 壁のみ</li>
@@ -1482,11 +1544,8 @@ button { font-family: var(--f-ui) }
     </section>
 
     <section class="howto-sec">
-      <h3>▸ XP & スキルツリー (SHOP)</h3>
-      <p>プレイ中に XP 獲得 → タイトル画面の <b>SHOP</b> でスキルを解放。<br>
-         ルートスキル (FORWARD SHOT / SHIELD / MAGNET) を購入すると<br>
-         上位スキルが解放され、より強力な効果を装備可能に。<br>
-         装備枠は最大 2 つ。</p>
+      <h3>XP & スキルツリー (SHOP)</h3>
+      <p>プレイ中に XP 獲得 → タイトル画面の <b>SHOP</b> でスキルを解放。ルートスキル (FORWARD SHOT / SHIELD / MAGNET) を購入すると上位スキルが解放され、より強力な効果を装備可能に。装備枠は最大 2 つ。</p>
       <dl>
         <dt>+2 / 秒</dt><dd>生存（時間経過）</dd>
         <dt>+5</dt><dd>敵撃破（PULSE / 前方弾）</dd>
@@ -1496,13 +1555,12 @@ button { font-family: var(--f-ui) }
     </section>
 
     <section class="howto-sec">
-      <h3>▸ SKIN</h3>
-      <p>タイトル画面の <b>SKIN</b> ボタンから機体カラーを6色変更可能。<br>
-         CYAN / MAGENTA / EMERALD / FIRE / VOID / GOLD。</p>
+      <h3>SKIN</h3>
+      <p>タイトル画面の <b>SKIN</b> ボタンから機体カラーを6色変更可能。CYAN / MAGENTA / EMERALD / FIRE / VOID / GOLD。</p>
     </section>
 
     <section class="howto-sec">
-      <h3>▸ コツ</h3>
+      <h3>コツ</h3>
       <ul>
         <li>壁の隙間ギリギリを狙うと NEAR ボーナスでスコアと XP が伸びる</li>
         <li>PULSE は敵が集中した時に温存して使うと効果大</li>
@@ -1510,6 +1568,7 @@ button { font-family: var(--f-ui) }
         <li>SHIELD / PHOENIX を装備すれば最初の被弾を生き残れる</li>
       </ul>
     </section>
+    </div>
   </div>
 </div>
 
@@ -1564,7 +1623,7 @@ button { font-family: var(--f-ui) }
       <div class="t-foot">
         <span class="best">BEST<b id="t-best">—</b></span>
         <span>SOUND<b id="t-sound">ON</b> [M]</span>
-        <span>VER<b>1.1.0</b></span>
+        <span>VER<b>1.2.0</b></span>
       </div>
     </div>
 
@@ -2052,6 +2111,22 @@ shieldGroup.add(shieldGlow, shieldRing, shieldRing2);
 shieldGroup.visible = false;
 scene.add(shieldGroup);
 
+// ── Hangar platform (SKIN preview) ────────────────────────────────────────────
+const hangar = new THREE.Group();
+const hangarRing = new THREE.Mesh(
+  new THREE.TorusGeometry(70, 1.2, 6, 96),
+  new THREE.MeshBasicMaterial({ color: 0x00e8ff, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false })
+);
+const hangarRing2 = new THREE.Mesh(
+  new THREE.TorusGeometry(54, 0.6, 6, 96),
+  new THREE.MeshBasicMaterial({ color: 0x00e8ff, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending, depthWrite: false })
+);
+hangarRing.rotation.x = hangarRing2.rotation.x = Math.PI / 2 - 0.42;   // tilted so it reads as a floor disc
+const hangarGlow = glowSprite(0x00e8ff, 200, 0.22);
+hangar.add(hangarRing, hangarRing2, hangarGlow);
+hangar.visible = false;
+scene.add(hangar);
+
 // ── Wall mesh pool ────────────────────────────────────────────────────────────
 const wallMeshMap = new Map();
 
@@ -2329,98 +2404,247 @@ onTap(document.getElementById('t-skin-btn'),  () => openSkin());
 
 // ── Shop UI ──────────────────────────────────────────────────────────────────
 const shopModal   = document.getElementById('shop-modal');
-const shopList    = document.getElementById('shop-list');
+const shopTabsEl     = document.getElementById('shop-tabs');
+const shopTreeEl     = document.getElementById('shop-tree');
+const shopSlotListEl = document.getElementById('shop-slot-list');
+const shopDetailEl   = document.getElementById('shop-detail');
 const shopXpEl    = document.getElementById('shop-xp');
 const shopSlotsEl = document.getElementById('shop-slots');
 const shopCloseBtn= document.getElementById('shop-close');
 const rotShopBtn  = document.getElementById('rot-shop-btn');
 const rotXpEl     = document.getElementById('rot-xp');
 
+// 24×24 stroke icons (rendered with stroke="currentColor")
+const SKILL_ICONS = {
+  forward_shot:     '<path d="M3 12h13"/><path d="M12 7l5 5-5 5"/><path d="M20 9v6"/>',
+  rapid_pulse:      '<circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/><path d="M2 5l3 2M22 5l-3 2"/>',
+  mega_pulse:       '<circle cx="12" cy="12" r="2.5"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="9.5" stroke-dasharray="3 2.5"/>',
+  triple_shot:      '<path d="M3 12h14M3 6l12 3M3 18l12-3"/><path d="M14 9.5l3 2.5-3 2.5"/>',
+  auto_pulse:       '<path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 4v5h-5"/><circle cx="12" cy="12" r="2.5"/>',
+  shield:           '<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>',
+  double_shield:    '<path d="M10 4l6 2.3v4.6c0 3.8-2.6 6.1-6 6.9-3.4-.8-6-3.1-6-6.9V6.3z"/><path d="M18 9.5c1 .4 2 .7 2 .7v4c0 3.6-2.5 5.9-6 6.8-1.2-.3-2.3-.8-3.2-1.5"/>',
+  phoenix:          '<path d="M12 21c-4 0-6-3-6-6 0-4 3-5 3-9 2 1 3 3 3 5 1-1 1.5-3 1-5 4 2 7 6 7 9 0 3-3 6-8 6z"/><path d="M12 21c-1.5 0-2.5-1-2.5-2.5 0-2 2.5-3 2.5-5 1.5 1.5 2.5 3 2.5 5 0 1.5-1 2.5-2.5 2.5z"/>',
+  magnet:           '<path d="M6 3v9a6 6 0 0 0 12 0V3"/><path d="M6 7h4M14 7h4M10 3v4M14 3v4"/>',
+  xp_boost:         '<path d="M12 19V5"/><path d="M6 11l6-6 6 6"/><path d="M5 21h14"/>',
+  combo_multiplier: '<path d="M4 8l6 8M10 8l-6 8"/><path d="M14 8h5l-3 3.5a2.5 2.5 0 1 1-2.5 3.5"/>',
+  smaller_hitbox:   '<path d="M3 3l5 5M21 3l-5 5M3 21l5-5M21 21l-5-5"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/>',
+  ghost_dash:       '<path d="M6 21V11a6 6 0 0 1 12 0v10l-2-1.6-2 1.6-2-1.6-2 1.6-2-1.6z"/><path d="M10 11v1M14 11v1"/><path d="M1 13h3M1 17h3"/>',
+};
+const LOCK_ICON = '<svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="1"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
+const icon = (id, cls = 'ic') => `<svg class="${cls}" viewBox="0 0 24 24">${SKILL_ICONS[id] || ''}</svg>`;
+const KIND_COLOR = { ATTACK: '#ff5ad9', DEFENSE: '#6dffa8', PASSIVE: '#5cc8ff' };
+const KINDS = ['ATTACK', 'DEFENSE', 'PASSIVE'];
+const skillById = id => SKILL_DEFS.find(s => s.id === id);
+
+// Tree layout for one kind: root in column 0, its children stacked in
+// column 1, grandchildren in column 2 on their parent's row. Coordinates
+// are percentages of the tree box (x, y = centre of the node's tile).
+function layoutKind(kind) {
+  const list = SKILL_DEFS.filter(s => s.kind === kind);
+  const root = list.find(s => !s.requires || !s.requires.length);
+  const kids = list.filter(s => s.requires && s.requires.includes(root.id));
+  const span = Math.min(70, (kids.length - 1) * 35);
+  const y0 = 42 - span / 2;
+  const pos = new Map([[root.id, { x: 12, y: 42 }]]);
+  const edges = [];
+  kids.forEach((k, i) => {
+    const y = kids.length > 1 ? y0 + i * (span / (kids.length - 1)) : 42;
+    pos.set(k.id, { x: 48, y });
+    edges.push([root.id, k.id]);
+    for (const g of list.filter(s => s.requires && s.requires.includes(k.id))) {
+      pos.set(g.id, { x: 84, y });
+      edges.push([k.id, g.id]);
+    }
+  });
+  return { pos, edges };
+}
+
+function skillState(sk) {
+  const owned = ownedSkills.includes(sk.id);
+  const equipped = equippedSkills.includes(sk.id);
+  const unlockable = isUnlockable(sk);
+  return {
+    owned, equipped, unlockable,
+    cls: equipped ? 'owned equipped' : owned ? 'owned'
+       : !unlockable ? 'locked' : totalXP >= sk.price ? 'avail' : 'nofund',
+  };
+}
+
+let shopTab = 'ATTACK';
+let shopSel = 'forward_shot';
+let shopJust = null;          // id that was just bought/equipped → flash anim
+
+function nodeHtml(sk, st, extraCls = '') {
+  return `
+    <span class="tw">
+      <span class="tile">${icon(sk.id)}</span>
+      ${st.cls === 'locked' ? `<span class="lock">${LOCK_ICON}</span>` : ''}
+      ${st.equipped ? '<span class="eq">EQUIP</span>' : ''}
+    </span>`;
+}
+
 function renderShopUI() {
   loadProgression();
   if (shopXpEl)    shopXpEl.textContent = totalXP;
   if (shopSlotsEl) shopSlotsEl.textContent = `${equippedSkills.length}/${MAX_EQUIP_SLOTS}`;
   if (rotXpEl)     rotXpEl.textContent = totalXP;
-  if (!shopList) return;
-  shopList.innerHTML = '';
-  let lastKind = null;
-  for (const sk of SKILL_DEFS) {
-    if (sk.kind !== lastKind) {
-      const hdr = document.createElement('div');
-      hdr.className = 'shop-cat ' + sk.kind;
-      hdr.textContent = sk.kind;
-      shopList.appendChild(hdr);
-      lastKind = sk.kind;
-    }
-    const owned    = ownedSkills.includes(sk.id);
-    const equipped = equippedSkills.includes(sk.id);
-    const canAfford = totalXP >= sk.price;
-    const slotsFull = equippedSkills.length >= MAX_EQUIP_SLOTS;
-    const unlockable = isUnlockable(sk);
-    const gated = !owned && !unlockable;
-    const isBranch = !!(sk.requires && sk.requires.length);
 
-    const card = document.createElement('div');
-    card.className = 'shop-card'
-      + (owned ? ' owned' : '')
-      + (equipped ? ' equipped' : '')
-      + (gated ? ' gated' : '')
-      + (isBranch ? ` is-branch ${sk.kind}` : ' is-root');
-
-    let actLabel, actClass = '', disabled = false;
-    if (owned) {
-      if (equipped) { actLabel = 'EQUIPPED · TAP TO UNEQUIP'; actClass = 'equipped'; }
-      else if (slotsFull) { actLabel = `EQUIP SLOTS FULL (${MAX_EQUIP_SLOTS})`; disabled = true; }
-      else { actLabel = 'EQUIP'; }
-    } else if (!unlockable) {
-      const reqNames = sk.requires
-        .map(req => SKILL_DEFS.find(s => s.id === req))
-        .filter(Boolean).map(s => s.name);
-      actLabel = `🔒 REQUIRES: ${reqNames.join(' + ')}`;
-      actClass = 'locked';
-      disabled = true;
-    } else if (canAfford) {
-      actLabel = `BUY · ${sk.price} XP`;
-    } else {
-      actLabel = `LOCKED · ${sk.price} XP`;
-      actClass = 'locked';
-      disabled = true;
-    }
-
-    // Prerequisite chain indicator (e.g. "↑ from FORWARD SHOT")
-    let prereqHtml = '';
-    if (sk.requires && sk.requires.length) {
-      const reqNames = sk.requires
-        .map(req => SKILL_DEFS.find(s => s.id === req))
-        .filter(Boolean).map(s => s.name);
-      prereqHtml = `<div class="shop-prereq">↑ from ${reqNames.join(' + ')}</div>`;
-    }
-
-    const rootBadge = isBranch ? '' : '<span class="shop-root-tag">⚡ ROOT</span>';
-    card.innerHTML = `
-      ${prereqHtml}
-      <div class="shop-card-head">
-        <span class="shop-name">${rootBadge}${sk.name}</span>
-        <span class="shop-kind ${sk.kind}">${sk.kind}</span>
-      </div>
-      <div class="shop-desc">${sk.desc}</div>
-      <button class="shop-action ${actClass}" type="button"${disabled ? ' disabled' : ''}>${actLabel}</button>
-    `;
-    const btn = card.querySelector('.shop-action');
-    btn.addEventListener('click', () => {
-      if (!owned) {
-        if (buySkill(sk.id)) { sfxBonus(); vibrate(20); }
-      } else {
-        toggleEquip(sk.id);
-        sfxScore();
-      }
+  // Tabs
+  shopTabsEl.innerHTML = '';
+  for (const kind of KINDS) {
+    const all = SKILL_DEFS.filter(s => s.kind === kind);
+    const own = all.filter(s => ownedSkills.includes(s.id)).length;
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'tab' + (kind === shopTab ? ' on' : '');
+    b.style.setProperty('--tk', KIND_COLOR[kind]);
+    b.innerHTML = `${kind}<span class="cnt">${own}/${all.length}</span>`;
+    b.addEventListener('click', () => {
+      if (shopTab === kind) return;
+      shopTab = kind;
+      shopSel = defaultSelection(kind);
+      sfxScore();
       renderShopUI();
     });
-    shopList.appendChild(card);
+    shopTabsEl.appendChild(b);
   }
+
+  // Tree
+  const { pos, edges } = layoutKind(shopTab);
+  const tk = KIND_COLOR[shopTab];
+  shopTreeEl.style.setProperty('--tk', tk);
+  let svg = '<svg viewBox="0 0 100 100" preserveAspectRatio="none">';
+  for (const [a, b] of edges) {
+    const pa = pos.get(a), pb = pos.get(b);
+    const xm = (pa.x + pb.x) / 2;
+    const cls = ownedSkills.includes(b) ? 'full' : ownedSkills.includes(a) ? 'lit' : '';
+    svg += `<path class="${cls}" d="M${pa.x} ${pa.y} H${xm} V${pb.y} H${pb.x}"/>`;
+  }
+  shopTreeEl.innerHTML = svg + '</svg>';
+  let n = 0;
+  for (const [id, p] of pos) {
+    const sk = skillById(id), st = skillState(sk);
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = `node ${st.cls}` + (id === shopSel ? ' sel' : '') + (id === shopJust ? ' just' : '');
+    b.style.left = p.x + '%';
+    b.style.top  = p.y + '%';
+    b.style.animationDelay = (n++ * 0.04) + 's';
+    b.innerHTML = nodeHtml(sk, st) +
+      `<span class="nm">${sk.name}</span>` +
+      (!st.owned ? `<span class="pr">${sk.price} XP</span>` : '');
+    b.addEventListener('click', () => {
+      if (shopSel === id) return;
+      shopSel = id;
+      shopJust = null;
+      sfxScore();
+      renderShopUI();
+    });
+    shopTreeEl.appendChild(b);
+  }
+
+  // Loadout slots
+  shopSlotListEl.innerHTML = '';
+  for (let i = 0; i < MAX_EQUIP_SLOTS; i++) {
+    const id = equippedSkills[i];
+    const b = document.createElement('button');
+    b.type = 'button';
+    if (id) {
+      const sk = skillById(id);
+      b.className = 'slot filled';
+      b.style.setProperty('--sk', KIND_COLOR[sk.kind]);
+      b.innerHTML = `${icon(id, '')}<span>${sk.name}</span>`;
+      b.addEventListener('click', () => {
+        shopTab = sk.kind; shopSel = id; shopJust = null;
+        sfxScore();
+        renderShopUI();
+      });
+    } else {
+      b.className = 'slot';
+      b.innerHTML = `<span>SLOT ${i + 1}<br>EMPTY</span>`;
+      b.disabled = true;
+    }
+    shopSlotListEl.appendChild(b);
+  }
+
+  renderShopDetail();
+  shopJust = null;
 }
 
-function openShop()  { renderShopUI(); shopModal.classList.add('open'); }
+function renderShopDetail() {
+  const sk = skillById(shopSel);
+  if (!sk) { shopDetailEl.innerHTML = ''; return; }
+  const st = skillState(sk);
+  const tk = KIND_COLOR[sk.kind];
+  shopDetailEl.style.setProperty('--tk', tk);
+  const reqs = (sk.requires || []).map(skillById).filter(Boolean);
+  const slotsFull = equippedSkills.length >= MAX_EQUIP_SLOTS;
+
+  let act = '', hint = '';
+  if (st.owned && st.equipped) {
+    act = '<button class="act unequip" type="button" data-do="equip">UNEQUIP</button>';
+  } else if (st.owned) {
+    act = `<button class="act equip" type="button" data-do="equip"${slotsFull ? ' disabled' : ''}>EQUIP</button>`;
+    if (slotsFull) hint = '装備枠がいっぱい — LOADOUT から 1 つ外してください';
+  } else if (!st.unlockable) {
+    act = '<button class="act" type="button" disabled>LOCKED</button>';
+    hint = `先に ${reqs.map(r => r.name).join(' + ')} を解放`;
+  } else if (totalXP >= sk.price) {
+    act = `<button class="act buy" type="button" data-do="buy">UNLOCK · ${sk.price} XP</button>`;
+  } else {
+    act = `<button class="act" type="button" disabled>UNLOCK · ${sk.price} XP</button>`;
+    hint = `あと ${sk.price - totalXP} XP 必要`;
+  }
+
+  const status = st.equipped ? '<b class="ok">EQUIPPED</b>' : st.owned ? '<b class="ok">OWNED</b>'
+    : st.unlockable ? '<b>AVAILABLE</b>' : '<b class="ng">LOCKED</b>';
+  const reqRow = reqs.length
+    ? `<div>REQUIRES ${reqs.map(r => `<b class="${ownedSkills.includes(r.id) ? 'ok' : 'ng'}">${r.name}</b>`).join(' ')}</div>`
+    : '<div>TYPE <b>ROOT SKILL</b></div>';
+
+  shopDetailEl.innerHTML = `
+    <div class="d-top">
+      <span class="node ${st.cls}" style="--tk:${tk}">${nodeHtml(sk, st)}</span>
+      <div>
+        <span class="d-kind">${sk.kind}</span>
+        <div class="d-name">${sk.name}</div>
+      </div>
+    </div>
+    <div class="d-desc">${sk.desc}</div>
+    <div class="d-meta">
+      <div>STATUS ${status}</div>
+      ${reqRow}
+      ${st.owned ? '' : `<div>COST <b>${sk.price} XP</b></div>`}
+    </div>
+    <div class="d-act">${act}<div class="d-hint">${hint}</div></div>`;
+
+  const btn = shopDetailEl.querySelector('[data-do]');
+  if (btn) btn.addEventListener('click', () => {
+    if (btn.dataset.do === 'buy') {
+      if (!buySkill(sk.id)) return;
+      sfxPhase(); vibrate(25);
+      shopJust = sk.id;
+      restartAnim(shopXpEl, 'bump');
+    } else {
+      toggleEquip(sk.id);
+      sfxBonus(); vibrate(10);
+      shopJust = sk.id;
+    }
+    renderShopUI();
+  });
+}
+
+// Prefer something actionable when landing on a tab: the cheapest node you
+// can buy right now, else the first owned-but-unequipped, else the root.
+function defaultSelection(kind) {
+  const list = SKILL_DEFS.filter(s => s.kind === kind);
+  const buyable = list.filter(s => skillState(s).cls === 'avail').sort((a, b) => a.price - b.price)[0];
+  if (buyable) return buyable.id;
+  const idle = list.find(s => ownedSkills.includes(s.id) && !equippedSkills.includes(s.id));
+  return (idle || list[0]).id;
+}
+
+function openShop()  { loadProgression(); shopSel = defaultSelection(shopTab); renderShopUI(); shopModal.classList.add('open'); }
 function closeShop() { shopModal.classList.remove('open'); refreshTitleInfo(); }
 
 if (rotShopBtn) {
@@ -2480,21 +2704,38 @@ function refreshSkinSwatchPreview() {
   rotSkinSwatch.style.background = s.accent;
   rotSkinSwatch.style.boxShadow  = `0 0 6px ${s.accent}`;
 }
+const hexCss = n => '#' + n.toString(16).padStart(6, '0');
+let skinPreview = false;      // landscape: show the real 3D ship large on the left
+
+function paintSkinStage(s) {
+  skinModal.style.setProperty('--skin-accent', s.accent);
+  const svg = document.getElementById('skin-ship');
+  svg.style.setProperty('--s-hull', hexCss(s.hull.color));
+  svg.style.setProperty('--s-wing', hexCss(s.wing.color));
+  svg.style.setProperty('--s-cockpit', hexCss(s.cockpit.color));
+  svg.style.setProperty('--s-engine', hexCss(s.engine));
+  svg.style.setProperty('--s-flame', hexCss(s.flame));
+  setText(document.getElementById('skin-stage-name'), s.name);
+}
 function renderSkinUI() {
   if (!skinGrid) return;
+  const cur = SHIP_SKINS.find(x => x.id === currentSkinId) || SHIP_SKINS[0];
+  paintSkinStage(cur);
   skinGrid.innerHTML = '';
   for (const s of SHIP_SKINS) {
-    const card = document.createElement('div');
+    const card = document.createElement('button');
+    card.type = 'button';
     card.className = 'skin-card' + (s.id === currentSkinId ? ' selected' : '');
-    card.style.setProperty('--accent', s.accent);
-    card.innerHTML = `
-      <div class="skin-swatch"></div>
-      <span class="skin-name">${s.name}</span>
-    `;
+    card.style.setProperty('--c1', hexCss(s.wing.color));
+    card.style.setProperty('--c2', s.accent);
+    card.style.setProperty('--c3', hexCss(s.flame));
+    card.innerHTML = `<span class="bar"></span><span class="nm">${s.name}</span>`;
     card.addEventListener('click', () => {
+      if (s.id === currentSkinId) return;
       currentSkinId = s.id;
       localStorage.setItem('hd_skin', s.id);
       applySkin(s.id);
+      fxFlash(parseInt(s.accent.slice(1), 16), 0.18);
       sfxScore();
       vibrate(10);
       refreshSkinSwatchPreview();
@@ -2503,8 +2744,19 @@ function renderSkinUI() {
     skinGrid.appendChild(card);
   }
 }
-function openSkin()  { renderSkinUI(); skinModal.classList.add('open'); }
-function closeSkin() { skinModal.classList.remove('open'); refreshTitleInfo(); }
+function openSkin() {
+  renderSkinUI();
+  skinPreview = true;
+  document.body.classList.add('skin-open');
+  skinModal.classList.add('open');
+}
+function closeSkin() {
+  skinModal.classList.remove('open');
+  skinPreview = false;
+  trailPrimed = false;
+  document.body.classList.remove('skin-open');
+  refreshTitleInfo();
+}
 
 if (rotSkinBtn) {
   rotSkinBtn.addEventListener('click',      e => { e.stopPropagation(); openSkin(); });
@@ -3491,7 +3743,26 @@ function syncScene() {
   if (engine) engine.scale.setScalar(0.7 + Math.abs(Math.sin(tick*0.44))*0.5);
 
   let sx, sy;
-  if (gstate === 'menu') {
+  const preview = gstate === 'menu' && skinPreview;
+  hangar.visible = preview;
+  shipGroup.scale.setScalar(preview ? 2.6 : 0.85);
+  if (preview) {
+    // SKIN hangar: big, slowly turning ship on a platform, left of the panel
+    sx = VW * 0.27; sy = VH * 0.42 + Math.sin(tick * 0.04) * 4;
+    shipGroup.visible = true;
+    shipGroup.position.copy(W(sx, sy, 0));
+    shipGroup.rotation.set(0.35 + Math.sin(tick * 0.02) * 0.12, Math.sin(tick * 0.012) * 0.7, 0.08);
+    shipLight.position.copy(W(sx, sy - 30, 90));
+    shipLight.intensity = 9;
+    shipLight.distance = 400;
+    hangar.position.copy(W(sx, VH * 0.42 + 78, -10));
+    hangarRing.rotation.z = hangarRing2.rotation.z = tick * 0.01;
+    const acc = shipParts.flame.material.color;
+    hangarRing.material.color.copy(acc);
+    hangarRing2.material.color.copy(acc);
+    hangarGlow.material.color.copy(acc);
+  } else if (gstate === 'menu') {
+    shipLight.distance = 140;
     // Title: the ship cruises on the left third, clear of the logo column
     sx = VW * 0.17 + Math.sin(tick * 0.018) * 22;
     sy = VH * 0.55 + Math.sin(tick * 0.035) * 26;
@@ -3499,6 +3770,7 @@ function syncScene() {
     shipGroup.position.copy(W(sx, sy, 0));
     shipGroup.rotation.z = Math.cos(tick * 0.035) * 0.16;
     shipGroup.rotation.x = Math.sin(tick * 0.03) * 0.35;
+    shipGroup.rotation.y = 0;
     shipLight.position.copy(W(sx, sy, 25));
     shipLight.intensity = 5 + Math.sin(tick * 0.065) * 3.5;  // 呼吸グロー
   } else {
@@ -3508,6 +3780,8 @@ function syncScene() {
     shipGroup.position.copy(W(sx, sy, 0)).add(sk);
     shipGroup.rotation.z = -P.bankAngle;
     shipGroup.rotation.x = 0;
+    shipGroup.rotation.y = 0;
+    shipLight.distance = 140;
     shipLight.position.copy(W(P.x, P.y, 25));
     shipLight.intensity = gstate === 'dead' ? 0 : 4;
   }
@@ -3525,7 +3799,7 @@ function syncScene() {
   }
   trailPts[0].x = ex; trailPts[0].y = ey;
   trailColor.copy(shipParts.flame.material.color);
-  const trailOn = gstate !== 'dead' ? 1 : 0;
+  const trailOn = gstate !== 'dead' && !preview ? 1 : 0;
   for (let i = 0; i < TRAIL_N; i++) {
     const t = 1 - i / (TRAIL_N - 1);              // 1 at the engine, 0 at the tail
     const half = 4.5 * t + 0.3;
