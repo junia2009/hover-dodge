@@ -1,4 +1,4 @@
-const CACHE = 'hoverdodge-v1.0.28';
+const CACHE = 'hoverdodge-v1.1.0';
 const PRECACHE = [
   './',
   './index.html',
@@ -34,8 +34,9 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
 
-  // CDN (Three.js) → cache-first, 初回ロード時に保存
-  if (url.hostname.includes('cdn.jsdelivr.net') || url.hostname.includes('unpkg.com')) {
+  // CDN (Three.js) / Google Fonts → cache-first, 初回ロード時に保存
+  if (url.hostname.includes('cdn.jsdelivr.net') || url.hostname.includes('unpkg.com') ||
+      url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
     e.respondWith(
       caches.match(e.request).then(hit => hit || fetch(e.request).then(res => {
         const clone = res.clone();
