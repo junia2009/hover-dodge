@@ -1239,6 +1239,65 @@ button { font-family: var(--f-ui) }
 .act:disabled { cursor: not-allowed; color: rgba(160, 180, 210, 0.45); background: rgba(255, 255, 255, 0.04); }
 .d-hint { margin-top: 8px; min-height: 12px; font: 600 11px/1.3 var(--f-ui); letter-spacing: 1px; color: rgba(255, 170, 150, 0.8); text-align: center; }
 
+/* Ranks, ultimates, synergies, slots, respec */
+.pips { display: flex; gap: 3px; margin-top: 1px; }
+.pips i { width: 9px; height: 3px; background: rgba(160, 200, 255, 0.2); }
+.pips i.on { background: var(--tk); box-shadow: 0 0 5px var(--tk); }
+.d-top .pips { margin-top: 7px; }
+.d-top .pips i { width: 16px; height: 4px; }
+.node .star {
+  position: absolute; right: -6px; top: -6px;
+  font: 900 11px/1 var(--f-disp);
+  color: #1a1000; background: var(--c-gold);
+  width: 17px; height: 17px; border-radius: 50%;
+  display: grid; place-items: center;
+  box-shadow: 0 0 8px rgba(255, 216, 74, 0.8);
+}
+.node.ult .tile { width: 66px; height: 58px; }
+.node.ult .nm { color: #ffe9a8; }
+.node.ult.locked .nm { color: rgba(255, 233, 168, 0.45); }
+.lv { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 5px; }
+.lv span {
+  font: 700 10px/1 var(--f-ui); letter-spacing: 1px;
+  padding: 5px 7px;
+  color: rgba(160, 180, 210, 0.5);
+  background: rgba(255, 255, 255, 0.04);
+}
+.lv span.on  { color: var(--c-ink); background: color-mix(in srgb, var(--tk) 18%, transparent); }
+.lv span.cur { color: #fff; box-shadow: inset 0 -2px 0 var(--tk); }
+.d-syn { margin-top: 12px; }
+.syn-list { margin-top: 10px; display: grid; gap: 6px; }
+.syn {
+  margin-top: 6px;
+  padding: 7px 9px;
+  background: rgba(255, 255, 255, 0.03);
+  border-left: 2px solid rgba(200, 180, 255, 0.25);
+  display: grid; gap: 3px;
+}
+.syn-list .syn { margin-top: 0; }
+.syn b { font: 700 10px/1 var(--f-disp); letter-spacing: 2px; color: rgba(210, 190, 255, 0.6); }
+.syn span { font: 600 11px/1.35 var(--f-ui); color: rgba(200, 215, 235, 0.6); }
+.syn.on { border-left-color: #c8a8ff; background: rgba(170, 120, 255, 0.12); }
+.syn.on b { color: #e2d2ff; text-shadow: 0 0 8px #a87cff; }
+.syn.on span { color: rgba(225, 235, 250, 0.9); }
+.syn-hint { font: 600 10px/1.4 var(--f-ui); letter-spacing: 1px; color: rgba(160, 180, 210, 0.45); }
+.slot.buy { border-color: rgba(255, 216, 74, 0.3); color: rgba(255, 216, 74, 0.5); }
+.slot.buy b { font-family: var(--f-disp); font-weight: 500; letter-spacing: 1px; }
+.slot.buy.afford { color: var(--c-gold); border-color: var(--c-gold); background: rgba(255, 216, 74, 0.08); animation: avail 1.6s ease-in-out infinite; --tk: var(--c-gold); }
+.respec {
+  margin-top: 10px; width: 100%;
+  padding: 7px; border: none;
+  background: none;
+  font: 700 9px/1 var(--f-ui) !important; letter-spacing: 2px;
+  color: rgba(160, 180, 210, 0.45);
+  text-decoration: underline dotted;
+}
+.respec:hover:not(:disabled) { color: var(--c-ink); }
+.respec.armed { color: #ff9c8c; text-decoration: none; background: rgba(255, 100, 80, 0.1); }
+.respec:disabled { opacity: 0.3; cursor: default; }
+.act-row { display: flex; gap: 8px; }
+.act-row .act { flex: 1; padding-left: 8px; padding-right: 8px; letter-spacing: 2px; font-size: 12px !important; }
+
 /* ── SKIN (hangar) ────────────────────────────────────────────────────── */
 #skin-modal { --k: var(--skin-accent, var(--c-cyan)); }
 .skin-stage {
@@ -1368,8 +1427,15 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
   .node .ic { width: 20px; height: 20px; }
   .node .nm { font-size: 9px; }
   .loadout { padding: 10px 12px; }
-  .slots { margin-top: 8px; }
-  .slot { height: 40px; }
+  .slots { margin-top: 8px; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .slot { height: 38px; justify-content: center; padding: 0 4px; }
+  .slot.filled span { display: none; }
+  .slot:not(.filled) span { font-size: 8px; letter-spacing: 1px; text-align: center; }
+  .slot.buy, .slot:not(.filled) { padding: 0 2px; }
+  .syn-list { margin-top: 6px; gap: 4px; }
+  .syn-list .syn { padding: 5px 8px; }
+  .syn-list .syn span { display: none; }
+  .respec { margin-top: 4px; padding: 4px; }
   .detail { padding: 10px 12px 12px; }
   .d-desc { margin-top: 8px; font-size: 12px; line-height: 1.5; }
   .d-meta { margin-top: 8px; }
@@ -1381,6 +1447,10 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
 }
 @media (max-width: 640px) {
   .m-panel { height: 100%; }
+  .node { width: 82px; }
+  .node .nm { font-size: 8.5px; letter-spacing: 1px; }
+  .node .tile { width: 50px; height: 44px; }
+  .node.ult .tile { width: 54px; height: 48px; }
   .shop-body { grid-template-columns: 1fr; grid-auto-rows: max-content; overflow-y: auto; -webkit-overflow-scrolling: touch; }
   .shop-main { padding: 12px 14px; }
   .tree { flex: none; height: 260px; }
@@ -1446,7 +1516,7 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
     </button>
   </div>
 
-  <p class="rot-version">SYS_REV  1.3.0</p>
+  <p class="rot-version">SYS_REV  1.4.0</p>
 </div>
 
 <div id="shop-modal" class="modal">
@@ -1466,6 +1536,8 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
         <div class="loadout">
           <div class="side-label">LOADOUT <b id="shop-slots">0/2</b></div>
           <div class="slots" id="shop-slot-list"></div>
+          <div class="syn-list" id="shop-syn"></div>
+          <button class="respec" id="shop-respec" type="button">RESPEC</button>
         </div>
         <div class="detail" id="shop-detail"></div>
       </aside>
@@ -1545,11 +1617,16 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
 
     <section class="howto-sec">
       <h3>XP & スキルツリー (SHOP)</h3>
-      <p>プレイ中に XP 獲得 → タイトル画面の <b>SHOP</b> でスキルを解放。ルートスキル (FORWARD SHOT / SHIELD / MAGNET) を購入すると上位スキルが解放され、より強力な効果を装備可能に。装備枠は最大 2 つ。</p>
+      <p>プレイ中に XP を獲得 → タイトル画面の <b>SHOP</b> でスキルを解放・強化・装備。全 25 スキル、各系統の最深部には <b>★ULTIMATE</b>。</p>
       <dl>
+        <dt>ランク</dt><dd>取得済みスキルは Lv2〜3 に強化できる（●●○ で表示）</dd>
+        <dt>装備枠</dt><dd>最初は 2 枠。XP で 3 枠 (1200) → 4 枠 (3000) に拡張</dd>
+        <dt>シナジー</dt><dd>特定の 2 スキルを同時装備でボーナス効果 (⟡)</dd>
+        <dt>リスペック</dt><dd>いつでも全額返還で振り直し可能</dd>
+        <dt>XP オーブ</dt><dd>壁の隙間に浮かぶ緑の結晶。縁寄りは価値 2 倍。MAGNET で吸い寄せ</dd>
         <dt>+2 / 秒</dt><dd>生存（時間経過）</dd>
-        <dt>+5</dt><dd>敵撃破（PULSE / 前方弾）</dd>
-        <dt>+3 / +8</dt><dd>Near-miss / NEAR! </dd>
+        <dt>+5</dt><dd>敵撃破</dd>
+        <dt>+3 / +8</dt><dd>Near-miss / NEAR!</dd>
         <dt>+60</dt><dd>PHASE 4 初到達</dd>
       </dl>
     </section>
@@ -1623,7 +1700,7 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
       <div class="t-foot">
         <span class="best">BEST<b id="t-best">—</b></span>
         <span>SOUND<b id="t-sound">ON</b> [M]</span>
-        <span>VER<b>1.3.0</b></span>
+        <span>VER<b>1.4.0</b></span>
       </div>
     </div>
 
@@ -2249,6 +2326,29 @@ function removeEnemyMesh(e) {
   }
 }
 
+// ── XP orb meshes ─────────────────────────────────────────────────────────────
+const orbMeshMap = new Map();
+const ORB_GEOM = new THREE.OctahedronGeometry(4.5, 0);
+function getOrCreateOrb(o) {
+  let m = orbMeshMap.get(o);
+  if (m) return m;
+  const col = o.gold ? 0xffd84a : 0x5dffb0;
+  m = new THREE.Mesh(ORB_GEOM, new THREE.MeshBasicMaterial({ color: col }));
+  if (o.gold) m.scale.setScalar(1.4);
+  m.add(glowSprite(col, o.gold ? 34 : 24, 0.75));
+  scene.add(m);
+  orbMeshMap.set(o, m);
+  return m;
+}
+function removeOrbMesh(o) {
+  const m = orbMeshMap.get(o);
+  if (!m) return;
+  scene.remove(m);
+  m.material.dispose();
+  for (const c of m.children) c.material.dispose();
+  orbMeshMap.delete(o);
+}
+
 // ── Sparks ────────────────────────────────────────────────────────────────────
 const sparkMeshPool = [];
 const SPARK_GEOM = new THREE.SphereGeometry(1, 6, 6);
@@ -2291,27 +2391,80 @@ function flap() {
   P.vy = FLAP_VY;
   sfx.flap(P.y);
   fireForwardShot();
-  // GHOST DASH skill: brief invuln on every flap (~0.15s @ 60fps)
-  if (hasSkill('ghost_dash')) P.inv = Math.max(P.inv, 9);
+  // GHOST DASH / PHASE SHIFT: brief invulnerability on every flap
+  // (re-arm cooldown stops flap-spam from chaining into permanent invulnerability)
+  const ghost = hasSkill('phase_shift') ? 18 : hasSkill('ghost_dash') ? 9 : 0;
+  if (ghost && P.ghostCD <= 0) { P.inv = Math.max(P.inv, ghost); P.ghost = ghost; P.ghostCD = ghost * 2 + 12; }
 }
 
 function fireForwardShot() {
-  // TRIPLE SHOT is an upgrade path on top of FORWARD SHOT in the tree, but
-  // at equip time it stands alone — equipping just TRIPLE SHOT must also
-  // enable the per-flap shooter. Gate on either skill.
-  const tripled = hasSkill('triple_shot');
-  if (!hasSkill('forward_shot') && !tripled) return;
-  if (bulletCooldown > 0) return;
-  bulletCooldown = BULLET_CD;
-  if (tripled) {
-    // Spread: centre bullet + two angled bullets (vy gives spread over time)
-    bullets.push({ x: P.x + 18, y: P.y - 8, vx: 11, vy: -1.6, prevX: P.x + 18 });
-    bullets.push({ x: P.x + 18, y: P.y,     vx: 11, vy:  0,   prevX: P.x + 18 });
-    bullets.push({ x: P.x + 18, y: P.y + 8, vx: 11, vy:  1.6, prevX: P.x + 18 });
-  } else {
-    bullets.push({ x: P.x + 18, y: P.y, vx: 11, vy: 0, prevX: P.x + 18 });
-  }
+  // Every shot skill works on its own once equipped (the tree only gates
+  // unlocking), so any of them enables the per-flap shooter.
+  if (!['forward_shot', 'triple_shot', 'piercing', 'railgun'].some(hasSkill)) return;
+  const bulletTime = hasSynergy('bullettime') && timeScale < 0.9;
+  if (bulletCooldown > 0 && !bulletTime) return;
+  bulletCooldown = [24, 24, 19, 15][rank('forward_shot')];
+  const pierce = hasSkill('piercing') ? 2 : 0;
+  const vx = pierce ? 14 : 11;
+  const shoot = (dy, vy) => bullets.push({ x: P.x + 18, y: P.y + dy, vx, vy, prevX: P.x + 18, pierce });
+  if (hasSkill('triple_shot')) { shoot(-8, -1.6); shoot(0, 0); shoot(8, 1.6); }
+  else shoot(0, 0);
   sfx.shot();
+  if (hasSkill('railgun') && ++shotCount % 6 === 0) fireRailgun();
+}
+
+// RAILGUN: an instant full-length beam along the ship's row
+function fireRailgun() {
+  for (const e of enemies) if (!e.dead && e.x > P.x && Math.abs(e.y - P.y) < 20) killEnemy(e, 'shot');
+  const len = VW + 40 - P.x;
+  for (const [h, col, op] of [[16, 0x2ad8ff, 0.55], [5, 0xffffff, 1]]) {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(len, h), new THREE.MeshBasicMaterial({
+      color: col, transparent: true, opacity: op, blending: THREE.AdditiveBlending, depthWrite: false }));
+    m.position.copy(W(P.x + 16 + len / 2, P.y, 7));
+    scene.add(m);
+    beams.push({ mesh: m, life: 1, decay: 0.07, op });
+  }
+  spawnSparks(P.x + 20, P.y, 12, { vMin: 3, vMax: 9, color: 0x9ff8ff });
+  shakeX = Math.max(shakeX, 5); fx.aberr = Math.max(fx.aberr, 0.9); fxFlash(0x9ff8ff, 0.15);
+  pushBonus(P.x + 40, P.y - 18, 'RAILGUN', '#9ff8ff');
+  sfx.rail();
+}
+
+// STORM: jagged lightning between two points
+function spawnBolt(x1, y1, x2, y2) {
+  const pts = [];
+  const n = 7;
+  for (let i = 0; i <= n; i++) {
+    const t = i / n, j = (i === 0 || i === n) ? 0 : (Math.random() - 0.5) * 18;
+    const p = W(x1 + (x2 - x1) * t + j * 0.3, y1 + (y2 - y1) * t + j, 7);
+    pts.push(p.x, p.y, p.z);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(pts), 3));
+  const m = new THREE.Line(g, new THREE.LineBasicMaterial({ color: 0xc8b4ff, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+  scene.add(m);
+  beams.push({ mesh: m, life: 1, decay: 0.08, op: 1 });
+  // flash at the strike point so the chain reads at a glance
+  const fl = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({
+    map: GLOW_TEX, color: 0xb89cff, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+  fl.scale.set(60, 60, 1);
+  fl.position.copy(W(x2, y2, 8));
+  scene.add(fl);
+  beams.push({ mesh: fl, life: 1, decay: 0.06, op: 1 });
+}
+
+// Pulse-style expanding double ring; enemies it sweeps over are destroyed.
+function spawnRing(x, y, c1, c2, maxR = null, thick = 0.018) {
+  const makeRing = (color, z) => {
+    const m = new THREE.Mesh(
+      new THREE.TorusGeometry(1, thick, 6, 64),
+      new THREE.MeshBasicMaterial({ color, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })
+    );
+    m.position.copy(W(x, y, z));
+    scene.add(m);
+    return m;
+  };
+  pulseRings.push({ r: 0, prevR: 0, x, y, maxR, mesh: makeRing(c1, 8), mesh2: makeRing(c2, 6) });
 }
 
 function firePulse() {
@@ -2321,25 +2474,13 @@ function firePulse() {
   vibrate(20);
   pulseUsedThisRun = true;
   nopulseStreak = 0;
+  if (hasSynergy('barrier')) P.inv = Math.max(P.inv, 30);
 
   // 発射時バーストスパーク
   spawnSparks(P.x, P.y, 14, { vMin: 3, vMax: 8, szMax: 2.6, color: 0x00e8ff });
   fx.aberr = Math.max(fx.aberr, 0.5);
   fxFlash(0x00e8ff, 0.12);
-
-  // 二重拡張リング
-  const makeRing = (color, z) => {
-    const m = new THREE.Mesh(
-      new THREE.TorusGeometry(1, 0.018, 6, 64),
-      new THREE.MeshBasicMaterial({ color, transparent:true, depthWrite:false, blending:THREE.AdditiveBlending })
-    );
-    m.position.copy(W(P.x, P.y, z));
-    scene.add(m);
-    return m;
-  };
-  pulseRings.push({ r:0, prevR:0, x:P.x, y:P.y,
-    mesh:  makeRing(0x00e8ff, 8),
-    mesh2: makeRing(0xaa44ff, 6) });
+  spawnRing(P.x, P.y, 0x00e8ff, 0xaa44ff);
 }
 
 // Bind a handler to both click and touchstart (touch fires instantly and
@@ -2408,6 +2549,8 @@ const shopTabsEl     = document.getElementById('shop-tabs');
 const shopTreeEl     = document.getElementById('shop-tree');
 const shopSlotListEl = document.getElementById('shop-slot-list');
 const shopDetailEl   = document.getElementById('shop-detail');
+const shopSynEl      = document.getElementById('shop-syn');
+const shopRespecEl   = document.getElementById('shop-respec');
 const shopXpEl    = document.getElementById('shop-xp');
 const shopSlotsEl = document.getElementById('shop-slots');
 const shopCloseBtn= document.getElementById('shop-close');
@@ -2417,44 +2560,63 @@ const rotXpEl     = document.getElementById('rot-xp');
 // 24×24 stroke icons (rendered with stroke="currentColor")
 const SKILL_ICONS = {
   forward_shot:     '<path d="M3 12h13"/><path d="M12 7l5 5-5 5"/><path d="M20 9v6"/>',
-  rapid_pulse:      '<circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/><path d="M2 5l3 2M22 5l-3 2"/>',
-  mega_pulse:       '<circle cx="12" cy="12" r="2.5"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="9.5" stroke-dasharray="3 2.5"/>',
   triple_shot:      '<path d="M3 12h14M3 6l12 3M3 18l12-3"/><path d="M14 9.5l3 2.5-3 2.5"/>',
+  piercing:         '<path d="M2 12h20"/><path d="M18 8l4 4-4 4"/><circle cx="8" cy="12" r="2.5"/><circle cx="14" cy="12" r="2.5"/>',
+  railgun:          '<rect x="2" y="9" width="7" height="6" rx="1"/><path d="M9 10.5h13M9 13.5h13"/><path d="M5 9V6M5 15v3"/>',
+  mega_pulse:       '<circle cx="12" cy="12" r="2.5"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="9.5" stroke-dasharray="3 2.5"/>',
+  overload:         '<circle cx="12" cy="12" r="8.5"/><path d="M13 5l-4 8h4l-2 6"/>',
+  rapid_pulse:      '<circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/><path d="M2 5l3 2M22 5l-3 2"/>',
   auto_pulse:       '<path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 4v5h-5"/><circle cx="12" cy="12" r="2.5"/>',
+  storm:            '<path d="M6 14a4 4 0 0 1 .5-8A5.5 5.5 0 0 1 17 7a3.5 3.5 0 0 1 1 7"/><path d="M12 11l-3 5h4l-2 5"/>',
   shield:           '<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>',
   double_shield:    '<path d="M10 4l6 2.3v4.6c0 3.8-2.6 6.1-6 6.9-3.4-.8-6-3.1-6-6.9V6.3z"/><path d="M18 9.5c1 .4 2 .7 2 .7v4c0 3.6-2.5 5.9-6 6.8-1.2-.3-2.3-.8-3.2-1.5"/>',
+  regen_shield:     '<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M15.5 10.5a3.5 3.5 0 1 1-1-2.4"/><path d="M15.5 6.5v2.5H13"/>',
+  aegis:            '<path d="M12 2l9 3.5v6.5c0 5.5-4 9-9 10-5-1-9-4.5-9-10V5.5z"/><path d="M12 7l1.5 3 3.3.5-2.4 2.3.6 3.3L12 14.6 9 16.1l.6-3.3-2.4-2.3 3.3-.5z"/>',
   phoenix:          '<path d="M12 21c-4 0-6-3-6-6 0-4 3-5 3-9 2 1 3 3 3 5 1-1 1.5-3 1-5 4 2 7 6 7 9 0 3-3 6-8 6z"/><path d="M12 21c-1.5 0-2.5-1-2.5-2.5 0-2 2.5-3 2.5-5 1.5 1.5 2.5 3 2.5 5 0 1.5-1 2.5-2.5 2.5z"/>',
+  last_stand:       '<path d="M12 2v6M12 16v6M2 12h6M16 12h6"/><circle cx="12" cy="12" r="4"/><path d="M5 5l2.5 2.5M19 5l-2.5 2.5M5 19l2.5-2.5M19 19l-2.5-2.5"/>',
+  time_warp:        '<path d="M7 3h10M7 21h10"/><path d="M8 3c0 5 8 5 8 9s-8 4-8 9M16 3c0 5-8 5-8 9"/>',
+  chrono:           '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5"/><path d="M10 2h4M12 2v3"/><path d="M4 7l2 2M20 7l-2 2"/>',
   magnet:           '<path d="M6 3v9a6 6 0 0 0 12 0V3"/><path d="M6 7h4M14 7h4M10 3v4M14 3v4"/>',
   xp_boost:         '<path d="M12 19V5"/><path d="M6 11l6-6 6 6"/><path d="M5 21h14"/>',
+  golden_orbs:      '<path d="M12 3l5 9-5 9-5-9z"/><path d="M7 12h10"/><path d="M19 4l.8 1.7L21.5 6.5l-1.7.8L19 9l-.8-1.7-1.7-.8 1.7-.8z"/>',
   combo_multiplier: '<path d="M4 8l6 8M10 8l-6 8"/><path d="M14 8h5l-3 3.5a2.5 2.5 0 1 1-2.5 3.5"/>',
+  overdrive:        '<path d="M3 17a9 9 0 0 1 18 0"/><path d="M12 17l5-6"/><circle cx="12" cy="17" r="1.5"/><path d="M6.5 12.5l1 1M12 8v1.5M17.5 12.5l-1 1"/>',
   smaller_hitbox:   '<path d="M3 3l5 5M21 3l-5 5M3 21l5-5M21 21l-5-5"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/>',
   ghost_dash:       '<path d="M6 21V11a6 6 0 0 1 12 0v10l-2-1.6-2 1.6-2-1.6-2 1.6-2-1.6z"/><path d="M10 11v1M14 11v1"/><path d="M1 13h3M1 17h3"/>',
+  phase_shift:      '<path d="M8 21V11a5 5 0 0 1 10 0v10l-1.7-1.4-1.6 1.4-1.7-1.4-1.6 1.4-1.7-1.4z"/><path d="M4 4v16" stroke-dasharray="2 2"/><path d="M1 10h4M1 14h4"/>',
 };
 const LOCK_ICON = '<svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="1"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
 const icon = (id, cls = 'ic') => `<svg class="${cls}" viewBox="0 0 24 24">${SKILL_ICONS[id] || ''}</svg>`;
 const KIND_COLOR = { ATTACK: '#ff5ad9', DEFENSE: '#6dffa8', PASSIVE: '#5cc8ff' };
 const KINDS = ['ATTACK', 'DEFENSE', 'PASSIVE'];
-const skillById = id => SKILL_DEFS.find(s => s.id === id);
+const skillById = id => skillDef(id);   // skillDef is defined further down (progression section)
 
-// Tree layout for one kind: root in column 0, its children stacked in
-// column 1, grandchildren in column 2 on their parent's row. Coordinates
-// are percentages of the tree box (x, y = centre of the node's tile).
+// Tree layout for one kind: the root sits in column 0, each of its children
+// starts a branch on its own row, and every descendant stays on its
+// branch's row one column further right. Coordinates are percentages of the
+// tree box (x, y = centre of the node's tile).
+const TREE_COLS = [10, 37, 64, 90];
 function layoutKind(kind) {
   const list = SKILL_DEFS.filter(s => s.kind === kind);
   const root = list.find(s => !s.requires || !s.requires.length);
-  const kids = list.filter(s => s.requires && s.requires.includes(root.id));
+  const kidsOf = id => list.filter(s => s.requires && s.requires.includes(id));
+  const kids = kidsOf(root.id);
   const span = Math.min(70, (kids.length - 1) * 35);
   const y0 = 42 - span / 2;
-  const pos = new Map([[root.id, { x: 12, y: 42 }]]);
+  const pos = new Map([[root.id, { x: TREE_COLS[0], y: 42 }]]);
   const edges = [];
+  const walk = (parent, depth, y) => {
+    for (const c of kidsOf(parent)) {
+      pos.set(c.id, { x: TREE_COLS[Math.min(depth, 3)], y });
+      edges.push([parent, c.id]);
+      walk(c.id, depth + 1, y);
+    }
+  };
   kids.forEach((k, i) => {
     const y = kids.length > 1 ? y0 + i * (span / (kids.length - 1)) : 42;
-    pos.set(k.id, { x: 48, y });
+    pos.set(k.id, { x: TREE_COLS[1], y });
     edges.push([root.id, k.id]);
-    for (const g of list.filter(s => s.requires && s.requires.includes(k.id))) {
-      pos.set(g.id, { x: 84, y });
-      edges.push([k.id, g.id]);
-    }
+    walk(k.id, 2, y);
   });
   return { pos, edges };
 }
@@ -2464,29 +2626,33 @@ function skillState(sk) {
   const equipped = equippedSkills.includes(sk.id);
   const unlockable = isUnlockable(sk);
   return {
-    owned, equipped, unlockable,
-    cls: equipped ? 'owned equipped' : owned ? 'owned'
-       : !unlockable ? 'locked' : totalXP >= sk.price ? 'avail' : 'nofund',
+    owned, equipped, unlockable, rank: ownedRank(sk.id), max: maxRank(sk),
+    cls: (equipped ? 'owned equipped' : owned ? 'owned'
+       : !unlockable ? 'locked' : totalXP >= sk.price ? 'avail' : 'nofund') + (sk.ult ? ' ult' : ''),
   };
 }
+const pipsHtml = (r, max) => max > 1
+  ? `<span class="pips">${Array.from({ length: max }, (_, i) => `<i class="${i < r ? 'on' : ''}"></i>`).join('')}</span>` : '';
 
 let shopTab = 'ATTACK';
 let shopSel = 'forward_shot';
-let shopJust = null;          // id that was just bought/equipped → flash anim
+let shopJust = null;          // id that was just bought/upgraded/equipped → flash anim
+let respecArmed = false;
 
-function nodeHtml(sk, st, extraCls = '') {
+function nodeHtml(sk, st) {
   return `
     <span class="tw">
       <span class="tile">${icon(sk.id)}</span>
-      ${st.cls === 'locked' ? `<span class="lock">${LOCK_ICON}</span>` : ''}
+      ${st.cls.includes('locked') ? `<span class="lock">${LOCK_ICON}</span>` : ''}
       ${st.equipped ? '<span class="eq">EQUIP</span>' : ''}
+      ${sk.ult ? '<span class="star">★</span>' : ''}
     </span>`;
 }
 
 function renderShopUI() {
   loadProgression();
   if (shopXpEl)    shopXpEl.textContent = totalXP;
-  if (shopSlotsEl) shopSlotsEl.textContent = `${equippedSkills.length}/${MAX_EQUIP_SLOTS}`;
+  if (shopSlotsEl) shopSlotsEl.textContent = `${equippedSkills.length}/${equipSlots}`;
   if (rotXpEl)     rotXpEl.textContent = totalXP;
 
   // Tabs
@@ -2518,7 +2684,8 @@ function renderShopUI() {
     const pa = pos.get(a), pb = pos.get(b);
     const xm = (pa.x + pb.x) / 2;
     const cls = ownedSkills.includes(b) ? 'full' : ownedSkills.includes(a) ? 'lit' : '';
-    svg += `<path class="${cls}" d="M${pa.x} ${pa.y} H${xm} V${pb.y} H${pb.x}"/>`;
+    const d = pa.y === pb.y ? `M${pa.x} ${pa.y} H${pb.x}` : `M${pa.x} ${pa.y} H${xm} V${pb.y} H${pb.x}`;
+    svg += `<path class="${cls}" d="${d}"/>`;
   }
   shopTreeEl.innerHTML = svg + '</svg>';
   let n = 0;
@@ -2529,10 +2696,10 @@ function renderShopUI() {
     b.className = `node ${st.cls}` + (id === shopSel ? ' sel' : '') + (id === shopJust ? ' just' : '');
     b.style.left = p.x + '%';
     b.style.top  = p.y + '%';
-    b.style.animationDelay = (n++ * 0.04) + 's';
+    b.style.animationDelay = (n++ * 0.035) + 's';
     b.innerHTML = nodeHtml(sk, st) +
       `<span class="nm">${sk.name}</span>` +
-      (!st.owned ? `<span class="pr">${sk.price} XP</span>` : '');
+      (st.owned ? pipsHtml(st.rank, st.max) : `<span class="pr">${sk.price} XP</span>`);
     b.addEventListener('click', () => {
       if (shopSel === id) return;
       shopSel = id;
@@ -2543,13 +2710,24 @@ function renderShopUI() {
     shopTreeEl.appendChild(b);
   }
 
-  // Loadout slots
+  // Loadout slots (+ the next purchasable slot)
   shopSlotListEl.innerHTML = '';
-  for (let i = 0; i < MAX_EQUIP_SLOTS; i++) {
+  for (let i = 0; i < Math.min(MAX_SLOTS, equipSlots + 1); i++) {
     const id = equippedSkills[i];
     const b = document.createElement('button');
     b.type = 'button';
-    if (id) {
+    if (i >= equipSlots) {
+      const cost = SLOT_COSTS[i + 1];
+      b.className = 'slot buy' + (totalXP >= cost ? ' afford' : '');
+      b.innerHTML = `<span>+ SLOT ${i + 1}<br><b>${cost} XP</b></span>`;
+      b.disabled = totalXP < cost;
+      b.addEventListener('click', () => {
+        if (!buySlot()) return;
+        ui.buy(); vibrate(25);
+        restartAnim(shopXpEl, 'bump');
+        renderShopUI();
+      });
+    } else if (id) {
       const sk = skillById(id);
       b.className = 'slot filled';
       b.style.setProperty('--sk', KIND_COLOR[sk.kind]);
@@ -2567,6 +2745,18 @@ function renderShopUI() {
     shopSlotListEl.appendChild(b);
   }
 
+  // Active synergies
+  const act = SYNERGIES.filter(x => hasSkill(x.a) && hasSkill(x.b));
+  shopSynEl.innerHTML = act.length
+    ? act.map(x => `<div class="syn on"><b>⟡ ${x.name}</b><span>${x.desc}</span></div>`).join('')
+    : '<div class="syn-hint">特定の2スキルを同時装備で SYNERGY 発動</div>';
+
+  // Respec
+  const spent = spentOnSkills();
+  shopRespecEl.disabled = spent === 0;
+  shopRespecEl.classList.toggle('armed', respecArmed);
+  shopRespecEl.textContent = respecArmed ? `もう一度タップで確定 (+${spent} XP)` : `RESPEC · 全額返還 ${spent} XP`;
+
   renderShopDetail();
   shopJust = null;
 }
@@ -2578,21 +2768,24 @@ function renderShopDetail() {
   const tk = KIND_COLOR[sk.kind];
   shopDetailEl.style.setProperty('--tk', tk);
   const reqs = (sk.requires || []).map(skillById).filter(Boolean);
-  const slotsFull = equippedSkills.length >= MAX_EQUIP_SLOTS;
+  const slotsFull = equippedSkills.length >= equipSlots;
+  const upCost = nextRankCost(sk);
 
-  let act = '', hint = '';
-  if (st.owned && st.equipped) {
-    act = '<button class="act unequip" type="button" data-do="equip">UNEQUIP</button>';
-  } else if (st.owned) {
-    act = `<button class="act equip" type="button" data-do="equip"${slotsFull ? ' disabled' : ''}>EQUIP</button>`;
-    if (slotsFull) hint = '装備枠がいっぱい — LOADOUT から 1 つ外してください';
+  const btns = [];
+  let hint = '';
+  if (st.owned) {
+    if (upCost != null) btns.push(`<button class="act buy" type="button" data-do="rank"${totalXP < upCost ? ' disabled' : ''}>RANK UP · ${upCost} XP</button>`);
+    if (st.equipped) btns.push('<button class="act unequip" type="button" data-do="equip">UNEQUIP</button>');
+    else btns.push(`<button class="act equip" type="button" data-do="equip"${slotsFull ? ' disabled' : ''}>EQUIP</button>`);
+    if (!st.equipped && slotsFull) hint = '装備枠がいっぱい — LOADOUT から外すか、枠を増やそう';
+    else if (upCost != null && totalXP < upCost) hint = `次のランクまで あと ${upCost - totalXP} XP`;
   } else if (!st.unlockable) {
-    act = '<button class="act" type="button" disabled>LOCKED</button>';
+    btns.push('<button class="act" type="button" disabled>LOCKED</button>');
     hint = `先に ${reqs.map(r => r.name).join(' + ')} を解放`;
   } else if (totalXP >= sk.price) {
-    act = `<button class="act buy" type="button" data-do="buy">UNLOCK · ${sk.price} XP</button>`;
+    btns.push(`<button class="act buy" type="button" data-do="buy">UNLOCK · ${sk.price} XP</button>`);
   } else {
-    act = `<button class="act" type="button" disabled>UNLOCK · ${sk.price} XP</button>`;
+    btns.push(`<button class="act" type="button" disabled>UNLOCK · ${sk.price} XP</button>`);
     hint = `あと ${sk.price - totalXP} XP 必要`;
   }
 
@@ -2601,35 +2794,49 @@ function renderShopDetail() {
   const reqRow = reqs.length
     ? `<div>REQUIRES ${reqs.map(r => `<b class="${ownedSkills.includes(r.id) ? 'ok' : 'ng'}">${r.name}</b>`).join(' ')}</div>`
     : '<div>TYPE <b>ROOT SKILL</b></div>';
+  const lvRows = sk.lv ? `<div class="lv">${sk.lv.map((t, i) =>
+    `<span class="${i < st.rank ? 'on' : ''}${i === st.rank - 1 ? ' cur' : ''}">Lv${i + 1} ${t}</span>`).join('')}</div>` : '';
+  const syns = SYNERGIES.filter(x => x.a === sk.id || x.b === sk.id).map(x => {
+    const other = skillById(x.a === sk.id ? x.b : x.a);
+    const on = hasSkill(x.a) && hasSkill(x.b);
+    return `<div class="syn${on ? ' on' : ''}"><b>⟡ ${x.name}</b><span>+ ${other.name}: ${x.desc}</span></div>`;
+  }).join('');
 
   shopDetailEl.innerHTML = `
     <div class="d-top">
       <span class="node ${st.cls}" style="--tk:${tk}">${nodeHtml(sk, st)}</span>
       <div>
-        <span class="d-kind">${sk.kind}</span>
+        <span class="d-kind">${sk.ult ? '★ ULTIMATE' : sk.kind}</span>
         <div class="d-name">${sk.name}</div>
+        ${st.owned ? pipsHtml(st.rank, st.max) : ''}
       </div>
     </div>
     <div class="d-desc">${sk.desc}</div>
+    ${lvRows}
     <div class="d-meta">
       <div>STATUS ${status}</div>
       ${reqRow}
       ${st.owned ? '' : `<div>COST <b>${sk.price} XP</b></div>`}
     </div>
-    <div class="d-act">${act}<div class="d-hint">${hint}</div></div>`;
+    ${syns ? `<div class="d-syn"><div class="side-label">SYNERGY</div>${syns}</div>` : ''}
+    <div class="d-act"><div class="act-row">${btns.join('')}</div><div class="d-hint">${hint}</div></div>`;
 
-  const btn = shopDetailEl.querySelector('[data-do]');
-  if (btn) btn.addEventListener('click', () => {
-    if (btn.dataset.do === 'buy') {
+  for (const btn of shopDetailEl.querySelectorAll('[data-do]')) btn.addEventListener('click', () => {
+    const what = btn.dataset.do;
+    if (what === 'buy') {
       if (!buySkill(sk.id)) return;
       ui.buy(); vibrate(25);
-      shopJust = sk.id;
+      restartAnim(shopXpEl, 'bump');
+    } else if (what === 'rank') {
+      if (!rankUp(sk.id)) return;
+      ui.buy(); vibrate(25);
       restartAnim(shopXpEl, 'bump');
     } else {
       toggleEquip(sk.id);
       ui.equip(); vibrate(10);
-      shopJust = sk.id;
     }
+    shopJust = sk.id;
+    respecArmed = false;
     renderShopUI();
   });
 }
@@ -2638,13 +2845,22 @@ function renderShopDetail() {
 // can buy right now, else the first owned-but-unequipped, else the root.
 function defaultSelection(kind) {
   const list = SKILL_DEFS.filter(s => s.kind === kind);
-  const buyable = list.filter(s => skillState(s).cls === 'avail').sort((a, b) => a.price - b.price)[0];
+  const buyable = list.filter(s => skillState(s).cls.startsWith('avail')).sort((a, b) => a.price - b.price)[0];
   if (buyable) return buyable.id;
   const idle = list.find(s => ownedSkills.includes(s.id) && !equippedSkills.includes(s.id));
   return (idle || list[0]).id;
 }
 
-function openShop()  { ui.open(); loadProgression(); shopSel = defaultSelection(shopTab); renderShopUI(); shopModal.classList.add('open'); }
+function openShop()  { ui.open(); respecArmed = false; loadProgression(); shopSel = defaultSelection(shopTab); renderShopUI(); shopModal.classList.add('open'); }
+onTap(shopRespecEl, () => {
+  if (!respecArmed) { respecArmed = true; ui.select(); renderShopUI(); return; }
+  respecArmed = false;
+  respec();
+  ui.back(); vibrate(30);
+  shopSel = defaultSelection(shopTab);
+  restartAnim(shopXpEl, 'bump');
+  renderShopUI();
+});
 function closeShop() { ui.back(); shopModal.classList.remove('open'); refreshTitleInfo(); }
 
 if (rotShopBtn) {
@@ -3349,6 +3565,47 @@ const sfx = {
     for (const m of [69, 73, 76, 81])
       voice({ type: 'sawtooth', f: mtof(m), t: t + 0.5, dur: 1.6, vol: 0.03, out: AU.sfxBus, lp: 2500, a: 0.05, rev: 0.6, detune: 6 });
   },
+  // XP orb pickup: chord-tone pluck that climbs with consecutive pickups
+  orb(gold) {
+    if (!this.ok()) return;
+    const t = this.now();
+    this._orbN = (this._orbT && t - this._orbT < 1.5) ? (this._orbN || 0) + 1 : 0;
+    this._orbT = t;
+    const m = Music.started ? Music.tone(3 + Math.min(6, this._orbN), 36) : 81 + this._orbN * 2;
+    voice({ type: 'sine', f: mtof(m), t, dur: 0.3, vol: 0.07, out: AU.sfxBus, rev: 0.3, dly: 0.2 });
+    voice({ type: 'triangle', f: mtof(m + 12), t, dur: 0.12, vol: 0.03, out: AU.sfxBus });
+    if (gold) for (const [i, k] of [0, 4, 7, 12].entries())
+      voice({ type: 'triangle', f: mtof(m + k), t: t + 0.05 + i * 0.05, dur: 0.4, vol: 0.05, out: AU.sfxBus, rev: 0.4 });
+    Music.heat = Math.min(1.2, Music.heat + (gold ? 0.25 : 0.06));
+  },
+  rail() {
+    if (!this.ok()) return;
+    const t = this.now();
+    voice({ type: 'sawtooth', f: 2400, f2: 180, t, dur: 0.35, vol: 0.08, out: AU.sfxBus, lp: 6000, lp2: 600, pan: -0.2, pan2: 0.6 });
+    noiseHit({ t, dur: 0.4, vol: 0.22, out: AU.sfxBus, type: 'highpass', f: 2000, pan: -0.2, pan2: 0.7, rev: 0.2 });
+    voice({ type: 'sine', f: 70, f2: 35, t, dur: 0.35, vol: 0.3, out: AU.sfxBus });
+    Music.pulseDuck();
+  },
+  warp() {
+    if (!this.ok()) return;
+    const t = this.now();
+    voice({ type: 'sine', f: 1200, f2: 160, t, dur: 0.7, vol: 0.09, out: AU.sfxBus, rev: 0.5 });
+    noiseHit({ t, dur: 0.6, vol: 0.12, out: AU.sfxBus, type: 'lowpass', f: 6000, f2: 300, rev: 0.4 });
+  },
+  overdrive() {
+    if (!this.ok()) return;
+    const t = this.now();
+    noiseHit({ t, dur: 0.35, vol: 0.14, out: AU.sfxBus, type: 'bandpass', f: 500, f2: 6000, q: 2, swell: true });
+    if (Music.started) for (let k = 0; k < 3; k++)
+      voice({ type: 'square', f: mtof(Music.tone(k, 36)), t: t + 0.33, dur: 0.3, vol: 0.05, out: AU.sfxBus, lp: 3500, rev: 0.3 });
+    Music.heat = 1.2;
+  },
+  regen() {
+    if (!this.ok()) return;
+    const t = this.now();
+    voice({ type: 'sine', f: 1568, t, dur: 0.3, vol: 0.06, out: AU.sfxBus, rev: 0.4 });
+    voice({ type: 'sine', f: 2349, t: t + 0.08, dur: 0.4, vol: 0.06, out: AU.sfxBus, rev: 0.4 });
+  },
   launch() {
     if (!this.ok()) return;
     const t = this.now();
@@ -3414,100 +3671,89 @@ let dtScale = 1;
 let worldScroll = 0;         // accumulated background scroll (game units)
 
 // ── Progression: XP + Skills ──────────────────────────────────────────────────
-// Add a new entry to SKILL_DEFS to expose a new skill in the shop. Effects are
-// gated by hasSkill(id) checks scattered through the gameplay code below.
-// Grouped by kind (ATTACK / DEFENSE / PASSIVE), then sorted by price ascending
-// inside each group — renderShopUI() relies on this order to draw category
-// dividers without re-sorting.
-// Skill tree: each skill optionally declares `requires: [id, ...]`. A skill
-// can only be purchased once every prerequisite is owned. Within each kind
-// the array is ordered root-first so the rendered list reads top-to-bottom
-// as a dependency chain.
+// SKILL_DEFS drives the shop tree and every gameplay check. Fields:
+//   requires  — parent in the tree (must be owned to unlock)
+//   ranks     — cost of each rank (ranks[0] === price); omit for single-rank
+//   lv        — short per-rank effect labels shown in the detail panel
+//   ult       — ★ ULTIMATE (deepest node of a branch)
+// Equipped skills stand alone: equipping a deeper node does NOT need its
+// parent equipped (the tree only gates *unlocking*). rank(id) is 0 when the
+// skill isn't equipped, so gameplay code reads `rank('x')` / `hasSkill('x')`.
 const SKILL_DEFS = [
   // ── ATTACK ────────────────────────────────────────────────
-  {
-    id: 'forward_shot', name: 'FORWARD SHOT', kind: 'ATTACK',
-    desc: 'タップ/SPACEで前方に弾を発射 (CD 0.4s)',
-    price: 100,
-  },
-  {
-    id: 'rapid_pulse', name: 'RAPID PULSE', kind: 'ATTACK',
-    desc: 'PULSEのクールダウン30%短縮 (5s→3.5s)',
-    price: 250,
-    requires: ['forward_shot'],
-  },
-  {
-    id: 'mega_pulse', name: 'MEGA PULSE', kind: 'ATTACK',
-    desc: 'PULSEの攻撃範囲を30%拡大 (130→170)',
-    price: 350,
-    requires: ['forward_shot'],
-  },
-  {
-    id: 'triple_shot', name: 'TRIPLE SHOT', kind: 'ATTACK',
-    desc: 'タップで前方3発スプレッド射撃',
-    price: 400,
-    requires: ['forward_shot'],
-  },
-  {
-    id: 'auto_pulse', name: 'AUTO-PULSE', kind: 'ATTACK',
-    desc: 'PULSEがクールダウン解除で自動発射',
-    price: 500,
-    requires: ['rapid_pulse'],
-  },
+  { id: 'forward_shot', name: 'FORWARD SHOT', kind: 'ATTACK', price: 100, ranks: [100, 250, 500],
+    desc: 'タップ/SPACEで前方に弾を発射', lv: ['CD 0.40s', 'CD 0.32s', 'CD 0.25s'] },
+  { id: 'triple_shot', name: 'TRIPLE SHOT', kind: 'ATTACK', price: 400, requires: ['forward_shot'],
+    desc: 'タップで前方3発スプレッド射撃' },
+  { id: 'piercing', name: 'PIERCING ROUNDS', kind: 'ATTACK', price: 650, requires: ['triple_shot'],
+    desc: '弾が高速化し、敵を2体まで貫通する' },
+  { id: 'railgun', name: 'RAILGUN', kind: 'ATTACK', price: 1500, requires: ['piercing'], ult: true,
+    desc: '6発ごとに、画面端まで届く極太ビームで前方の敵を一掃' },
+  { id: 'mega_pulse', name: 'MEGA PULSE', kind: 'ATTACK', price: 350, ranks: [350, 700], requires: ['forward_shot'],
+    desc: 'PULSEの攻撃範囲を拡大', lv: ['範囲 +30%', '範囲 +60%'] },
+  { id: 'overload', name: 'OVERLOAD', kind: 'ATTACK', price: 650, requires: ['mega_pulse'],
+    desc: 'PULSEで敵を倒すたびにクールダウン1秒回復' },
+  { id: 'rapid_pulse', name: 'RAPID PULSE', kind: 'ATTACK', price: 250, ranks: [250, 600], requires: ['forward_shot'],
+    desc: 'PULSEのクールダウン短縮', lv: ['CD -30% (3.5s)', 'CD -45% (2.75s)'] },
+  { id: 'auto_pulse', name: 'AUTO-PULSE', kind: 'ATTACK', price: 500, requires: ['rapid_pulse'],
+    desc: 'PULSEがクールダウン解除で自動発射' },
+  { id: 'storm', name: 'STORM', kind: 'ATTACK', price: 1500, requires: ['auto_pulse'], ult: true,
+    desc: '撃破時に稲妻が近くの敵へ連鎖（最大2体）' },
   // ── DEFENSE ───────────────────────────────────────────────
-  {
-    id: 'shield', name: 'SHIELD', kind: 'DEFENSE',
-    desc: '1ラン中に最初の1回の被弾を吸収',
-    price: 150,
-  },
-  {
-    id: 'double_shield', name: 'DOUBLE SHIELD', kind: 'DEFENSE',
-    desc: '開始時にシールドを2枚装備 (1→2)',
-    price: 350,
-    requires: ['shield'],
-  },
-  {
-    id: 'phoenix', name: 'PHOENIX', kind: 'DEFENSE',
-    desc: '死亡時に1度だけ復活、3秒間無敵',
-    price: 500,
-    requires: ['shield'],
-  },
+  { id: 'shield', name: 'SHIELD', kind: 'DEFENSE', price: 150,
+    desc: '被弾を1回吸収し、周囲の敵を吹き飛ばす' },
+  { id: 'double_shield', name: 'DOUBLE SHIELD', kind: 'DEFENSE', price: 350, requires: ['shield'],
+    desc: '開始時にシールドを2枚装備' },
+  { id: 'regen_shield', name: 'REGEN SHIELD', kind: 'DEFENSE', price: 750, requires: ['double_shield'],
+    desc: 'シールド1枚。失ったシールドは20秒で再生する' },
+  { id: 'aegis', name: 'AEGIS', kind: 'DEFENSE', price: 1500, requires: ['regen_shield'], ult: true,
+    desc: 'シールド1枚。破壊時に超巨大な衝撃波を放ち、時間が止まる' },
+  { id: 'phoenix', name: 'PHOENIX', kind: 'DEFENSE', price: 500, requires: ['shield'],
+    desc: '死亡時に1度だけ復活、3秒間無敵' },
+  { id: 'last_stand', name: 'LAST STAND', kind: 'DEFENSE', price: 800, requires: ['phoenix'],
+    desc: '1度だけ復活し、その後10秒間スコアとXPが2倍' },
+  { id: 'time_warp', name: 'TIME WARP', kind: 'DEFENSE', price: 450, ranks: [450, 900], requires: ['shield'],
+    desc: '衝突の直前に自動でスローモーション発動', lv: ['CD 12s', 'CD 8s'] },
+  { id: 'chrono', name: 'CHRONO BREAK', kind: 'DEFENSE', price: 1000, requires: ['time_warp'],
+    desc: 'TIME WARP (CD 10s) + 発動中0.5秒無敵' },
   // ── PASSIVE ───────────────────────────────────────────────
-  {
-    id: 'magnet', name: 'MAGNET', kind: 'PASSIVE',
-    desc: 'NEAR-MISS判定範囲を50%拡大、ボーナス回数UP',
-    price: 150,
-  },
-  {
-    id: 'xp_boost', name: 'XP BOOST', kind: 'PASSIVE',
-    desc: '獲得XP全体を25%増加',
-    price: 350,
-    requires: ['magnet'],
-  },
-  {
-    id: 'combo_multiplier', name: 'COMBO MULTIPLIER', kind: 'PASSIVE',
-    desc: 'NEAR連続でXP倍率UP (最大3x、5秒以内継続)',
-    price: 400,
-    requires: ['magnet'],
-  },
-  {
-    id: 'smaller_hitbox', name: 'SMALLER HITBOX', kind: 'PASSIVE',
-    desc: '当たり判定33%縮小（面積で約55%減）',
-    price: 400,
-    requires: ['magnet'],
-  },
-  {
-    id: 'ghost_dash', name: 'GHOST DASH', kind: 'PASSIVE',
-    desc: 'フラップ直後0.15秒間無敵',
-    price: 500,
-    requires: ['smaller_hitbox'],
-  },
+  { id: 'magnet', name: 'MAGNET', kind: 'PASSIVE', price: 150, ranks: [150, 400],
+    desc: 'NEAR判定を広げ、XPオーブを吸い寄せる', lv: ['NEAR +50% / 吸引 90', 'NEAR +80% / 吸引 140'] },
+  { id: 'xp_boost', name: 'XP BOOST', kind: 'PASSIVE', price: 350, ranks: [350, 700, 1200], requires: ['magnet'],
+    desc: '獲得XP全体を増加', lv: ['XP +25%', 'XP +40%', 'XP +60%'] },
+  { id: 'golden_orbs', name: 'GOLDEN ORBS', kind: 'PASSIVE', price: 700, requires: ['xp_boost'],
+    desc: 'オーブのXP 2倍、たまに金オーブ (+40 XP) が出現' },
+  { id: 'combo_multiplier', name: 'COMBO MULTIPLIER', kind: 'PASSIVE', price: 400, requires: ['magnet'],
+    desc: 'NEAR連続でXP倍率UP (最大3x、5秒以内継続)' },
+  { id: 'overdrive', name: 'OVERDRIVE', kind: 'PASSIVE', price: 800, requires: ['combo_multiplier'],
+    desc: 'NEAR 5連続でOVERDRIVE: スコア1.5倍・NEARボーナス2倍' },
+  { id: 'smaller_hitbox', name: 'SMALLER HITBOX', kind: 'PASSIVE', price: 400, requires: ['magnet'],
+    desc: '当たり判定33%縮小（面積で約55%減）' },
+  { id: 'ghost_dash', name: 'GHOST DASH', kind: 'PASSIVE', price: 500, requires: ['smaller_hitbox'],
+    desc: 'フラップ直後0.15秒間無敵' },
+  { id: 'phase_shift', name: 'PHASE SHIFT', kind: 'PASSIVE', price: 1500, requires: ['ghost_dash'], ult: true,
+    desc: 'フラップ直後0.3秒無敵。無敵中に壁をすり抜けると PHASE ボーナス' },
 ];
-const MAX_EQUIP_SLOTS = 2;
+
+// Two specific skills equipped together unlock a bonus effect.
+const SYNERGIES = [
+  { id: 'barrier',   name: 'BARRIER PULSE', a: 'rapid_pulse',      b: 'shield',        desc: 'PULSE発動時に0.5秒無敵' },
+  { id: 'scavenger', name: 'SCAVENGER',     a: 'triple_shot',      b: 'magnet',        desc: '弾で倒した敵がXPオーブを落とす' },
+  { id: 'slipstream',name: 'SLIPSTREAM',    a: 'combo_multiplier', b: 'ghost_dash',    desc: 'NEARのたびにPULSEのCDが1秒回復' },
+  { id: 'salvage',   name: 'SALVAGE',       a: 'phoenix',          b: 'xp_boost',      desc: '復活時に +100 XP' },
+  { id: 'fortress',  name: 'FORTRESS',      a: 'auto_pulse',       b: 'double_shield', desc: 'シールド破壊でPULSEが即チャージ' },
+  { id: 'bullettime',name: 'BULLET TIME',   a: 'time_warp',        b: 'forward_shot',  desc: 'スローモーション中は射撃CDなし' },
+];
+
+// Loadout slots beyond the starting two are bought with XP.
+const SLOT_COSTS = { 3: 1200, 4: 3000 };
+const MAX_SLOTS = 4;
 
 let totalXP = 0, runXP = 0;
 let ownedSkills = [];
 let equippedSkills = [];
+let skillRanks = {};          // id → rank (1-based); missing = 1 when owned
+let equipSlots = 2;
 
 function loadProgression() {
   totalXP = +localStorage.getItem('hd_xp') || 0;
@@ -3515,6 +3761,9 @@ function loadProgression() {
   catch (e) { ownedSkills = []; }
   try { equippedSkills = JSON.parse(localStorage.getItem('hd_equip') || '[]') || []; }
   catch (e) { equippedSkills = []; }
+  try { skillRanks = JSON.parse(localStorage.getItem('hd_ranks') || '{}') || {}; }
+  catch (e) { skillRanks = {}; }
+  equipSlots = Math.max(2, Math.min(MAX_SLOTS, +localStorage.getItem('hd_slots') || 2));
   // One-shot migration: slow_gravity was removed in v1.0.15 (it actually hurt
   // the player by floating them past wall gaps). Convert any owned/equipped
   // entry to its replacement, smaller_hitbox, which has the same price.
@@ -3526,43 +3775,96 @@ function loadProgression() {
     if (equippedSkills[i] === 'slow_gravity') { equippedSkills[i] = 'smaller_hitbox'; migrated = true; }
   }
   // Tree migration (v1.0.24): retroactively grant the root skill to anyone
-  // who already owns a skill that now has a prerequisite. Without this an
-  // existing player could be in an "impossible" state (owns XP_BOOST but
-  // not MAGNET) which would never have been reachable post-migration.
-  // Idempotent — re-running yields the same result.
+  // who already owns a skill that now has a prerequisite. Idempotent.
   for (const sk of SKILL_DEFS) {
     if (!sk.requires || !ownedSkills.includes(sk.id)) continue;
     for (const reqId of sk.requires) {
       if (!ownedSkills.includes(reqId)) { ownedSkills.push(reqId); migrated = true; }
     }
   }
+  // Drop unknown ids and trim the loadout to the slot count.
+  const known = new Set(SKILL_DEFS.map(s => s.id));
+  const o = ownedSkills.filter(id => known.has(id));
+  const e = [...new Set(equippedSkills)].filter(id => o.includes(id)).slice(0, equipSlots);
+  if (o.length !== ownedSkills.length || e.length !== equippedSkills.length) migrated = true;
+  ownedSkills = o; equippedSkills = e;
   if (migrated) saveProgression();
 }
 function saveProgression() {
   localStorage.setItem('hd_xp', String(totalXP));
   localStorage.setItem('hd_owned', JSON.stringify(ownedSkills));
   localStorage.setItem('hd_equip', JSON.stringify(equippedSkills));
+  localStorage.setItem('hd_ranks', JSON.stringify(skillRanks));
+  localStorage.setItem('hd_slots', String(equipSlots));
 }
+const skillDef = id => SKILL_DEFS.find(s => s.id === id);
 function hasSkill(id) { return equippedSkills.includes(id); }
-function addRunXP(n) { runXP += n * (hasSkill('xp_boost') ? 1.25 : 1); }
+function ownedRank(id) { return ownedSkills.includes(id) ? (skillRanks[id] || 1) : 0; }
+function rank(id) { return hasSkill(id) ? ownedRank(id) : 0; }
+function maxRank(sk) { return sk.ranks ? sk.ranks.length : 1; }
+function hasSynergy(sid) {
+  const s = SYNERGIES.find(x => x.id === sid);
+  return !!s && hasSkill(s.a) && hasSkill(s.b);
+}
+let xpMult = 1;               // run-time multiplier (LAST STAND)
+function addRunXP(n) {
+  const boost = [1, 1.25, 1.4, 1.6][rank('xp_boost')];
+  runXP += n * boost * xpMult;
+}
 function isUnlockable(sk) {
   return !sk.requires || sk.requires.every(req => ownedSkills.includes(req));
 }
 function buySkill(id) {
-  const sk = SKILL_DEFS.find(s => s.id === id);
+  const sk = skillDef(id);
   if (!sk || ownedSkills.includes(id) || totalXP < sk.price) return false;
   if (!isUnlockable(sk)) return false;
   totalXP -= sk.price;
   ownedSkills.push(id);
+  skillRanks[id] = 1;
   saveProgression();
   return true;
+}
+function nextRankCost(sk) {
+  const r = ownedRank(sk.id);
+  return r && r < maxRank(sk) ? sk.ranks[r] : null;
+}
+function rankUp(id) {
+  const sk = skillDef(id), cost = sk && nextRankCost(sk);
+  if (!cost || totalXP < cost) return false;
+  totalXP -= cost;
+  skillRanks[id] = ownedRank(id) + 1;
+  saveProgression();
+  return true;
+}
+function buySlot() {
+  const cost = SLOT_COSTS[equipSlots + 1];
+  if (!cost || totalXP < cost) return false;
+  totalXP -= cost;
+  equipSlots++;
+  saveProgression();
+  return true;
+}
+// Full refund of every skill + rank (slots are kept).
+function spentOnSkills() {
+  let sum = 0;
+  for (const id of ownedSkills) {
+    const sk = skillDef(id); if (!sk) continue;
+    const r = ownedRank(id);
+    sum += sk.ranks ? sk.ranks.slice(0, r).reduce((a, b) => a + b, 0) : sk.price;
+  }
+  return sum;
+}
+function respec() {
+  totalXP += spentOnSkills();
+  ownedSkills = []; equippedSkills = []; skillRanks = {};
+  saveProgression();
 }
 function toggleEquip(id) {
   if (!ownedSkills.includes(id)) return;
   const i = equippedSkills.indexOf(id);
   if (i >= 0) {
     equippedSkills.splice(i, 1);
-  } else if (equippedSkills.length < MAX_EQUIP_SLOTS) {
+  } else if (equippedSkills.length < equipSlots) {
     equippedSkills.push(id);
   }
   saveProgression();
@@ -3589,14 +3891,21 @@ let runBestPhase = 0;        // highest phase index reached this run
 let wasRecord = false;       // did this run beat the previous best?
 let prevHiScore = 0;         // best at run start (for the "beaten" HUD state)
 
-const P = { x: 150, y: VH/2, vx: 0, vy: 0, bankAngle: 0, r: 6, inv: 0 };
+const P = { x: 150, y: VH/2, vx: 0, vy: 0, bankAngle: 0, r: 6, inv: 0, ghost: 0, ghostCD: 0 };
 let walls = [], enemies = [], sparks = [], bullets = [];
+let orbs = [];                    // XP orbs floating in wall gaps
+let beams = [];                   // short-lived beam / lightning visuals
 let bulletCooldown = 0;
 let shieldCharges = 0;
 let phoenixUsed = false;          // PHOENIX skill: revive flag (per run)
 let comboCount = 0;               // COMBO MULTIPLIER: consecutive near-miss streak
 let comboTimer = 0;               // frames before the combo decays back to 0
-const BULLET_CD = 24;          // frames (0.4s @ 60fps)
+let shieldMax = 0;                // shield charges the loadout starts with
+let shieldRegen = 0;              // REGEN SHIELD: frames accumulated toward the next charge
+let warpCD = 0;                   // TIME WARP cooldown (frames)
+let lastStandT = 0;               // LAST STAND: frames of ×2 remaining
+let shotCount = 0;                // RAILGUN fires on every 6th shot
+let overdriveOn = false;          // OVERDRIVE active (combo ≥ 5)
 const bulletMeshMap = new Map();
 
 // ── Spawners ──────────────────────────────────────────────────────────────────
@@ -3605,7 +3914,18 @@ function addWall(startX) {
   const margin = 55;
   const gap = Math.max(cfg.gapMin, cfg.gapBase - score * 0.18);
   const gapY = margin + Math.random() * (VH - margin*2 - gap);
-  walls.push({ x: startX ?? VW+10, gapY, gap, w: WALL_W, pulse: Math.random()*Math.PI*2, passed: false });
+  const w = { x: startX ?? VW+10, gapY, gap, w: WALL_W, pulse: Math.random()*Math.PI*2, passed: false };
+  walls.push(w);
+  // XP orb in ~45% of gaps; ones near the lips are worth double (risk/reward)
+  if (Math.random() < 0.45) {
+    const u = Math.random();
+    let value = Math.abs(u - 0.5) * 2 > 0.6 ? 10 : 5, gold = false;
+    if (hasSkill('golden_orbs')) {
+      value *= 2;
+      if (Math.random() < 0.12) { gold = true; value = 40; }
+    }
+    dropOrb(w.x + w.w / 2, gapY + gap * (0.12 + 0.76 * u), value, gold);
+  }
 }
 function addEnemy() {
   const cfg = PHASE_CONFIG[curPhase];
@@ -3629,6 +3949,43 @@ function pushBonus(x, y, text, color) {
   bonusPopups.push({ x, y, text, color, life: 1 });
 }
 
+// Score multiplier from LAST STAND / OVERDRIVE (applies to time + bonuses)
+const scoreMult = () => (lastStandT > 0 ? 2 : 1) * (overdriveOn ? 1.5 : 1);
+function addScore(v) { score += v * scoreMult(); }
+
+function dropOrb(x, y, value, gold = false) {
+  orbs.push({ x, y, value, gold, t: Math.random() * 6 });
+}
+
+// Single kill path for every damage source (shot / pulse / storm chain).
+// Enemies are flagged dead and swept from the array afterwards, so chain
+// kills can safely reach into the list mid-iteration.
+function killEnemy(e, src, depth = 0) {
+  if (e.dead) return;
+  e.dead = true;
+  killCount++;
+  sfx.kill();
+  addRunXP(5);
+  const kb = src === 'pulse' ? (e.type === 'b' ? 15 : 20) : (e.type === 'b' ? 10 : 15);
+  addScore(kb / 60);
+  pushBonus(e.x, e.y, `+${kb}`, src === 'pulse' ? (e.type === 'b' ? '#ff8844' : '#ffaa55') : src === 'storm' ? '#c8b4ff' : '#88ffcc');
+  spawnSparks(e.x, e.y, src === 'pulse' ? 16 : 12, { vMin: 2, vMax: 7, szMin: 0.7, szMax: 3.2, color: e.type === 'b' ? [15, 25] : [35, 45] });
+  if (src === 'pulse' && hasSkill('overload')) pulseCooldown = Math.max(0, pulseCooldown - 60);
+  if (src === 'shot' && hasSynergy('scavenger')) dropOrb(e.x, e.y, 5);
+  if (hasSkill('storm') && depth < 2) {
+    let best = null, bd = 160;
+    for (const o of enemies) {
+      if (o.dead) continue;
+      const d = Math.hypot(o.x - e.x, o.y - e.y);
+      if (d < bd) { bd = d; best = o; }
+    }
+    if (best) { spawnBolt(e.x, e.y, best.x, best.y); killEnemy(best, 'storm', depth + 1); }
+  }
+}
+function sweepDeadEnemies() {
+  enemies = enemies.filter(e => { if (e.dead) { removeEnemyMesh(e); return false; } return true; });
+}
+
 // ── Game flow ─────────────────────────────────────────────────────────────────
 function removeBulletMesh(b) {
   const m = bulletMeshMap.get(b);
@@ -3647,7 +4004,9 @@ function clearWorld() {
   for (const b of bullets) removeBulletMesh(b);
   for (const sm of sparkMeshPool) { scene.remove(sm); sm.material.dispose(); }
   sparkMeshPool.length = 0;
-  walls = []; enemies = []; sparks = []; bullets = [];
+  for (const o of orbs) removeOrbMesh(o);
+  for (const b of beams) { scene.remove(b.mesh); b.mesh.geometry.dispose(); b.mesh.material.dispose(); }
+  walls = []; enemies = []; sparks = []; bullets = []; orbs = []; beams = [];
   bulletCooldown = 0;
   for (const pr of pulseRings) {
     scene.remove(pr.mesh);  pr.mesh.geometry.dispose();  pr.mesh.material.dispose();
@@ -3670,12 +4029,16 @@ function startGame() {
   // SHIELD provides 1 charge, DOUBLE SHIELD provides 2. Either equipped on
   // its own should grant its respective count — the prerequisite chain only
   // matters for *unlocking* DOUBLE SHIELD, not for equipping it standalone.
-  shieldCharges = hasSkill('double_shield') ? 2 : (hasSkill('shield') ? 1 : 0);
+  shieldMax = hasSkill('double_shield') ? 2
+    : ['shield', 'regen_shield', 'aegis'].some(hasSkill) ? 1 : 0;
+  shieldCharges = shieldMax; shieldRegen = 0;
   comboCount = 0; comboTimer = 0;
   phoenixUsed = false;
-  // Apply PULSE skill modifiers
-  PULSE_COOLDOWN = hasSkill('rapid_pulse') ? Math.round(PULSE_COOLDOWN_BASE * 0.7) : PULSE_COOLDOWN_BASE;
-  PULSE_MAX_R    = hasSkill('mega_pulse')  ? Math.round(PULSE_MAX_R_BASE * 1.3)    : PULSE_MAX_R_BASE;
+  warpCD = 0; lastStandT = 0; xpMult = 1; shotCount = 0; overdriveOn = false;
+  P.ghost = 0; P.ghostCD = 0;
+  // Apply PULSE skill modifiers (rank-scaled)
+  PULSE_COOLDOWN = Math.round(PULSE_COOLDOWN_BASE * [1, 0.7, 0.55][rank('rapid_pulse')]);
+  PULSE_MAX_R    = Math.round(PULSE_MAX_R_BASE    * [1, 1.3, 1.6][rank('mega_pulse')]);
   bonusPopups = [];
   clearWorld();
   for (let i = 0; i < 4; i++) addWall(VW + i*265);
@@ -3712,21 +4075,6 @@ function resumeGame() {
 }
 
 function die() {
-  // Reusable helper: spawn a coloured pulse-style ring around the player.
-  const spawnSaveRing = (c1, c2) => {
-    const makeRing = (color, z) => {
-      const m = new THREE.Mesh(
-        new THREE.TorusGeometry(1, 0.020, 6, 64),
-        new THREE.MeshBasicMaterial({ color, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })
-      );
-      m.position.copy(W(P.x, P.y, z));
-      scene.add(m);
-      return m;
-    };
-    pulseRings.push({ r: 0, prevR: 0, x: P.x, y: P.y,
-      mesh: makeRing(c1, 8), mesh2: makeRing(c2, 6) });
-  };
-
   // SHIELD skill: first hit is absorbed (consumes the charge).
   if (shieldCharges > 0) {
     shieldCharges--;
@@ -3736,12 +4084,21 @@ function die() {
     shakeX = 6; shakeY = 4;
     timeScale = 0.25; fx.aberr = 1; fxFlash(0x66ffaa, 0.35);
     spawnSparks(P.x, P.y, 20, { vMin: 3, vMax: 8, color: 0x88ffbb });
-    spawnSaveRing(0xaaffaa, 0x44ff88);
-    pushBonus(P.x, P.y - 22, 'SHIELD!', '#aaffaa');
+    shieldRegen = 0;
+    if (hasSkill('aegis')) {
+      // AEGIS: arena-wide shockwave + near time-stop
+      spawnRing(P.x, P.y, 0xffffff, 0x44ff88, 300, 0.03);
+      timeScale = 0.1; P.inv = 150; fxFlash(0xc8ffe0, 0.6); shakeX = 12; shakeY = 9;
+      pushBonus(P.x, P.y - 22, 'AEGIS!', '#c8ffe0');
+    } else {
+      spawnRing(P.x, P.y, 0xaaffaa, 0x44ff88);
+      pushBonus(P.x, P.y - 22, 'SHIELD!', '#aaffaa');
+    }
+    if (hasSynergy('fortress')) pulseCooldown = 0;
     return;
   }
   // PHOENIX skill: one-time per-run revive with 3s invulnerability.
-  if (hasSkill('phoenix') && !phoenixUsed) {
+  if ((hasSkill('phoenix') || hasSkill('last_stand')) && !phoenixUsed) {
     phoenixUsed = true;
     P.inv = 180;         // 3s invulnerability after revive
     sfx.phoenix();
@@ -3749,8 +4106,13 @@ function die() {
     shakeX = 10; shakeY = 7;
     timeScale = 0.2; fx.aberr = 1.2; fxFlash(0xff8844, 0.55);
     spawnSparks(P.x, P.y, 34, { vMin: 3, vMax: 10, szMax: 3.5, color: [15, 30, 45] });
-    spawnSaveRing(0xffaa55, 0xff4422);   // fiery orange-red ring
+    spawnRing(P.x, P.y, 0xffaa55, 0xff4422);   // fiery orange-red ring
     pushBonus(P.x, P.y - 22, 'PHOENIX!', '#ffaa55');
+    if (hasSynergy('salvage')) { addRunXP(100); pushBonus(P.x, P.y - 58, '+100 XP', '#9dffc4'); }
+    if (hasSkill('last_stand')) {
+      lastStandT = 600; xpMult = 2;
+      pushBonus(P.x, P.y - 40, 'LAST STAND ×2', '#ffd84a');
+    }
     return;
   }
   gstate = 'dead';
@@ -3845,7 +4207,26 @@ function update(dt) {
 
   if (gstate !== 'play') return;
   frame += dt;
-  score += dt / 60;
+  addScore(dt / 60);
+
+  // Timed skill states
+  if (lastStandT > 0) { lastStandT -= dt; if (lastStandT <= 0) { lastStandT = 0; xpMult = 1; } }
+  if (warpCD > 0) warpCD -= dt;
+  if (hasSkill('regen_shield') && shieldCharges < Math.max(1, shieldMax)) {
+    shieldRegen += dt;
+    if (shieldRegen >= 1200) {
+      shieldRegen = 0; shieldCharges++;
+      pushBonus(P.x, P.y - 22, 'SHIELD +1', '#aaffaa');
+      sfx.regen();
+    }
+  }
+  const od = hasSkill('overdrive') && comboCount >= 5;
+  if (od && !overdriveOn) {
+    pushBonus(P.x, P.y - 48, 'OVERDRIVE!', '#ff9a3c');
+    fxFlash(0xff9a3c, 0.2); fx.aberr = Math.max(fx.aberr, 0.8);
+    sfx.overdrive();
+  }
+  overdriveOn = od;
 
   // Phase progression
   curPhase = getPhase(score);
@@ -3904,9 +4285,9 @@ function update(dt) {
     if (b.vy) b.y += b.vy * dt;   // TRIPLE SHOT spread uses vy
   }
   bullets = bullets.filter(b => {
-    if (b.x > VW + 20) { removeBulletMesh(b); return false; }
-    for (let i = enemies.length - 1; i >= 0; i--) {
-      const e = enemies[i];
+    if (b.x > VW + 20 || b.y < -20 || b.y > VH + 20) { removeBulletMesh(b); return false; }
+    for (const e of enemies) {
+      if (e.dead) continue;
       const dy = b.y - e.y;
       const rr = 4 + e.r;
       if (Math.abs(dy) >= rr) continue;                  // segment can't reach this y
@@ -3914,20 +4295,14 @@ function update(dt) {
       const enemyXMin = e.x - xExt, enemyXMax = e.x + xExt;
       const bulletXMin = Math.min(b.prevX, b.x), bulletXMax = Math.max(b.prevX, b.x);
       if (bulletXMax <= enemyXMin || bulletXMin >= enemyXMax) continue;  // segment misses
-      killCount++;
-      sfx.kill();
-      addRunXP(5);
-      const kb = e.type === 'b' ? 10 : 15;
-      score += kb / 60;
-      pushBonus(e.x, e.y, `+${kb}`, '#88ffcc');
-      spawnSparks(e.x, e.y, 12, { vMin: 2, vMax: 6, szMin: 0.7, color: e.type === 'b' ? [15, 25] : [35, 45] });
-      removeEnemyMesh(e);
-      enemies.splice(i, 1);
+      killEnemy(e, 'shot');
+      if (b.pierce > 0) { b.pierce--; continue; }        // PIERCING ROUNDS
       removeBulletMesh(b);
       return false;
     }
     return true;
   });
+  sweepDeadEnemies();
 
   const bankTarget = Math.max(-0.40, Math.min(0.40, P.vy * 0.052));
   P.bankAngle += (bankTarget - P.bankAngle) * Math.min(0.5, 0.10 * dt);
@@ -3945,23 +4320,21 @@ function update(dt) {
       const distFromCenter = Math.abs(P.y - cy);
       const halfGap = w.gap / 2;
       const margin = halfGap - distFromCenter; // distance from nearest edge
-      const magnet     = hasSkill('magnet');
-      const nearThresh  = magnet ? 0.45  : 0.30;
-      const tightThresh = magnet ? 0.225 : 0.15;
+      const [nearThresh, tightThresh] = [[0.30, 0.15], [0.45, 0.225], [0.54, 0.27]][rank('magnet')];
       if (margin < halfGap * nearThresh) {
         // Tight pass! +bonus
         const tight = margin < halfGap * tightThresh;
-        const bonus = tight ? 25 : 10;
-        score += bonus / 60;  // convert "score points" to seconds (~minor add)
+        const bonus = (tight ? 25 : 10) * (overdriveOn ? 2 : 1);
+        addScore(bonus / 60);  // convert "score points" to seconds (~minor add)
         nearMissCount++;
-        // COMBO MULTIPLIER skill: streak boosts near-miss XP up to 3x.
+        // Streak (always tracked; COMBO MULTIPLIER turns it into XP, OVERDRIVE into score)
+        comboCount++;
+        comboTimer = 300;                      // 5s decay window
         let comboMul = 1;
-        if (hasSkill('combo_multiplier')) {
-          comboCount++;
-          comboTimer = 300;                    // 5s decay window
-          comboMul = Math.min(3, 1 + (comboCount - 1) * 0.5);
-          if (comboCount >= 2) pushBonus(P.x, P.y - 38, `COMBO x${comboCount}`, '#ffaa66');
-        }
+        if (hasSkill('combo_multiplier')) comboMul = Math.min(3, 1 + (comboCount - 1) * 0.5);
+        if (comboCount >= 2 && (hasSkill('combo_multiplier') || hasSkill('overdrive')))
+          pushBonus(P.x, P.y - 38, `COMBO x${comboCount}`, '#ffaa66');
+        if (hasSynergy('slipstream')) pulseCooldown = Math.max(0, pulseCooldown - 60);
         addRunXP((tight ? 8 : 3) * comboMul);
         pushBonus(P.x, P.y - 22, `+${bonus} NEAR!`, '#ffee44');
         sfx.near(tight);
@@ -4020,32 +4393,45 @@ function update(dt) {
 
   // Pulse rings — 輪が掃過した敵を撃破
   for (const pr of pulseRings) {
+    const maxR = pr.maxR || PULSE_MAX_R;
     pr.prevR = pr.r;
-    const ringStep = ((PULSE_MAX_R - pr.r) * 0.10 + 2) * dt;
-    pr.r += ringStep;
-    enemies = enemies.filter(e => {
+    pr.r += ((maxR - pr.r) * 0.10 + 2) * dt;
+    for (const e of enemies) {
+      if (e.dead) continue;
       const dist = Math.hypot(pr.x - e.x, pr.y - e.y);
-      if (dist > pr.r + e.r || dist < pr.prevR - e.r) return true;
-      spawnSparks(e.x, e.y, 16, { vMin: 2, vMax: 7, szMax: 3.4, color: e.type === 'b' ? [15, 25] : [35, 45] });
-      // Kill bonus
-      killCount++;
-      sfx.kill();
-      addRunXP(5);
-      const kb = e.type === 'b' ? 15 : 20;
-      score += kb / 60;
-      pushBonus(e.x, e.y, `+${kb}`, e.type === 'b' ? '#ff8844' : '#ffaa55');
-      removeEnemyMesh(e);
-      return false;
-    });
+      if (dist > pr.r + e.r || dist < pr.prevR - e.r) continue;
+      killEnemy(e, 'pulse');
+    }
   }
+  sweepDeadEnemies();
   pulseRings = pulseRings.filter(pr => {
-    if (pr.r >= PULSE_MAX_R) {
+    if (pr.r >= (pr.maxR || PULSE_MAX_R)) {
       scene.remove(pr.mesh);  pr.mesh.geometry.dispose();  pr.mesh.material.dispose();
       scene.remove(pr.mesh2); pr.mesh2.geometry.dispose(); pr.mesh2.material.dispose();
       return false;
     }
     return true;
   });
+
+  // XP orbs: scroll with the world, MAGNET pulls them in
+  const pullR = [0, 90, 140][rank('magnet')];
+  for (const o of orbs) {
+    o.x -= spd * dt; o.t += 0.08 * dt;
+    const dx = P.x - o.x, dy = P.y - o.y, d = Math.hypot(dx, dy);
+    if (pullR && d < pullR) {
+      const k = Math.min(1, (3 + (1 - d / pullR) * 9) * dt / Math.max(d, 1));
+      o.x += dx * k; o.y += dy * k;
+    }
+    if (d < P.r + 9) {
+      o.got = true;
+      addRunXP(o.value);
+      addScore(2 / 60);
+      pushBonus(o.x, o.y - 10, `+${o.value} XP`, o.gold ? '#ffd84a' : '#7dffc0');
+      spawnSparks(o.x, o.y, o.gold ? 14 : 6, { vMin: 1, vMax: 4, szMax: 1.8, color: o.gold ? 0xffd84a : 0x7dffc0 });
+      sfx.orb(o.gold);
+    }
+  }
+  orbs = orbs.filter(o => { if (o.got || o.x < -20) { removeOrbMesh(o); return false; } return true; });
 
   // Music: danger "intensity" — how close the ship is to a wall lip just
   // ahead, or to any enemy. Drives the tension layer / hats / bass filter.
@@ -4058,6 +4444,36 @@ function update(dt) {
   }
   for (const e of enemies) danger = Math.max(danger, 1 - Math.hypot(e.x - P.x, e.y - P.y) / 150);
   Music.intensityTarget = Math.min(1, danger);
+
+  // TIME WARP / CHRONO BREAK: auto slow-motion right before an impact
+  const chrono = hasSkill('chrono');
+  if ((chrono || hasSkill('time_warp')) && warpCD <= 0 && P.inv <= 0 && danger > 0.82) {
+    warpCD = chrono ? 600 : [720, 720, 480][rank('time_warp')];
+    timeScale = Math.min(timeScale, 0.3);
+    if (chrono) P.inv = Math.max(P.inv, 30);
+    fxFlash(0x7aa8ff, 0.25); fx.aberr = Math.max(fx.aberr, 1);
+    pushBonus(P.x, P.y - 24, chrono ? 'CHRONO BREAK' : 'TIME WARP', '#9ec0ff');
+    sfx.warp();
+  }
+
+  // PHASE SHIFT: passing through a wall while ghosted is a bonus, not a death
+  if (P.ghostCD > 0) P.ghostCD -= dt;
+  if (P.ghost > 0) {
+    P.ghost -= dt;
+    if (hasSkill('phase_shift')) {
+      for (const w of walls) {
+        if (w.phased || !(P.x + P.r > w.x && P.x - P.r < w.x + w.w)) continue;
+        if (!(P.y - P.r < w.gapY || P.y + P.r > w.gapY + w.gap)) continue;
+        w.phased = w.passed = true;
+        addScore(40 / 60); addRunXP(10);
+        comboCount++; comboTimer = 300;
+        pushBonus(P.x, P.y - 22, '+40 PHASE', '#d08cff');
+        spawnSparks(P.x, P.y, 14, { vMin: 2, vMax: 6, color: 0xd08cff });
+        fxFlash(0xd08cff, 0.15);
+        sfx.near(true);
+      }
+    }
+  }
 
   if (P.inv > 0) { P.inv -= dt; return; }
   for (const w of walls)
@@ -4199,9 +4615,25 @@ function syncScene() {
     }
   }
 
+  // XP orbs (spin + bob)
+  for (const o of orbs) {
+    const m = getOrCreateOrb(o);
+    m.position.copy(W(o.x, o.y + Math.sin(o.t) * 2, 4)).add(sk);
+    m.rotation.set(o.t * 0.7, o.t, 0);
+  }
+
+  // Beams / lightning fade out
+  beams = beams.filter(b => {
+    b.life -= b.decay * dtScale;
+    if (b.life <= 0) { scene.remove(b.mesh); b.mesh.geometry.dispose(); b.mesh.material.dispose(); return false; }
+    b.mesh.material.opacity = b.op * b.life;
+    if (b.mesh.isMesh && !b.mesh.material.map) b.mesh.scale.y = 0.4 + b.life * 0.6;
+    return true;
+  });
+
   // Pulse rings
   for (const pr of pulseRings) {
-    const alpha = 1 - pr.r / PULSE_MAX_R;
+    const alpha = 1 - pr.r / (pr.maxR || PULSE_MAX_R);
     pr.mesh.scale.set(pr.r, pr.r, 1);
     pr.mesh.position.copy(W(pr.x ?? P.x, pr.y ?? P.y, 8));
     pr.mesh.material.opacity = alpha;
@@ -4323,9 +4755,17 @@ function fillResult() {
 const chipEls = new Map();
 function syncChips() {
   const want = [];
-  if (shieldCharges > 0) want.push(['shield', '#aaffcc', `◇ SHIELD ×${shieldCharges}`]);
-  if (hasSkill('phoenix') && !phoenixUsed) want.push(['phoenix', '#ffaa55', '▲ PHOENIX READY']);
-  if (comboCount >= 2) want.push(['combo', '#ffaa66', `◆ COMBO ×${Math.min(3, 1 + (comboCount - 1) * 0.5).toFixed(1)}`]);
+  const regenOn = hasSkill('regen_shield') && shieldCharges < Math.max(1, shieldMax);
+  if (shieldCharges > 0 || regenOn)
+    want.push(['shield', '#aaffcc', `◇ SHIELD ×${shieldCharges}` + (regenOn ? ` · ${Math.ceil((1200 - shieldRegen) / 60)}s` : '')]);
+  if ((hasSkill('phoenix') || hasSkill('last_stand')) && !phoenixUsed) want.push(['phoenix', '#ffaa55', '▲ REVIVE READY']);
+  if (lastStandT > 0) want.push(['laststand', '#ffd84a', `★ ×2 · ${Math.ceil(lastStandT / 60)}s`]);
+  if (hasSkill('time_warp') || hasSkill('chrono'))
+    want.push(['warp', '#9ec0ff', warpCD > 0 ? `⧗ WARP ${Math.ceil(warpCD / 60)}s` : '⧗ WARP READY']);
+  if (overdriveOn) want.push(['overdrive', '#ff9a3c', '⚡ OVERDRIVE ×1.5']);
+  if (comboCount >= 2 && (hasSkill('combo_multiplier') || hasSkill('overdrive')))
+    want.push(['combo', '#ffaa66', hasSkill('combo_multiplier')
+      ? `◆ COMBO ×${Math.min(3, 1 + (comboCount - 1) * 0.5).toFixed(1)}` : `◆ COMBO ${comboCount}`]);
   if (!pulseUsedThisRun && nopulseStreak > 5) want.push(['purist', '#b4ffc8', `PURIST ${Math.floor(nopulseStreak)}s`]);
   const keep = new Set(want.map(w => w[0]));
   for (const [id, el] of chipEls) if (!keep.has(id)) { el.remove(); chipEls.delete(id); }

@@ -4,7 +4,7 @@
 
 Three.js + WebGL で描画する一画面・タップで遊べるアーケードシューターです。ブラウザだけで動き、PWA としてホーム画面に追加すればオフラインでもプレイできます。フェーズに応じて重厚化する手続き合成 BGM 付き。
 
-[![Play](https://img.shields.io/badge/play-online-00e8ff?style=flat-square)](#) ![Version](https://img.shields.io/badge/version-1.3.0-aa44ff?style=flat-square)
+[![Play](https://img.shields.io/badge/play-online-00e8ff?style=flat-square)](#) ![Version](https://img.shields.io/badge/version-1.4.0-aa44ff?style=flat-square)
 
 ---
 
@@ -48,70 +48,84 @@ Three.js + WebGL で描画する一画面・タップで遊べるアーケード
 
 時間スコアと合算され、自己ベスト（秒）として記録されます。
 
-## ✨ XP & ショップ
+## ✨ XP & スキルツリー
 
-ランごとに XP が貯まり、タイトル画面の `SHOP` ボタンから**装備型スキル**を購入できます。
+ランごとに XP が貯まり、タイトル画面の `SHOP` でスキルを**解放 → ランクアップ → 装備**します。全 **25 スキル**、3 系統 × 3 ブランチ、各ブランチの最深部は **★ULTIMATE**。
 
-SHOP は ATTACK / DEFENSE / PASSIVE のタブ切替式で、各系統のスキルツリーを六角ノードと接続線のツリー図で表示します。ノードをタップすると右（縦画面では下）の詳細パネルに説明・前提・価格が出て、そこから UNLOCK / EQUIP / UNEQUIP します。上部の **LOADOUT** で装備中の 2 枠を常に確認できます。
-
-### XP 獲得レート
+### XP 獲得
 
 | ソース | XP |
 | --- | :---: |
 | 生存（時間経過） | +2 / 秒 |
-| PULSE / 前方弾による撃破 | +5 |
-| 壁スレスレ通過 | +3 |
-| 極スレスレ通過 (NEAR!) | +8 |
+| 敵撃破（PULSE / 弾 / 連鎖） | +5 |
+| 壁スレスレ通過 / 極スレスレ (NEAR!) | +3 / +8 |
+| **XP オーブ**（壁の隙間に出現。縁寄りは価値 2 倍） | +5 / +10 |
 | PHASE 4 初到達 | +60 |
 
-典型的なランで 100 〜 400 XP 獲得。死亡時に `localStorage` に保存されます。
+### 仕組み
+- **ランク** — 一部スキルは Lv2〜3 に強化可能（ノードの ●●○ が現在ランク）
+- **装備枠** — 初期 2 枠。XP で **3 枠 (1,200)** → **4 枠 (3,000)** に拡張
+- **シナジー** — 特定の 2 スキルを同時装備するとボーナス効果（LOADOUT に ⟡ 表示）
+- **リスペック** — 使った XP を全額返還して振り直し（装備枠は維持）
+- 装備はスタンドアロン：ツリーの前提は「解放」にだけ必要で、装備時に親スキルは不要
 
-### スキルツリー
-
-スキルは **3 つのチェーン（ATTACK / DEFENSE / PASSIVE）** に分かれており、ルートスキルを購入することで上位スキルが解放される構造です。
+### スキル一覧
 
 ```
-─── ATTACK ────────────────────────────────────
-  FORWARD SHOT (100 XP, root)
-       ├──→ RAPID PULSE (250 XP) ──→ AUTO-PULSE (500 XP)
-       ├──→ MEGA PULSE  (350 XP)
-       └──→ TRIPLE SHOT (400 XP)
-
-─── DEFENSE ───────────────────────────────────
-  SHIELD (150 XP, root)
-       ├──→ DOUBLE SHIELD (350 XP)
-       └──→ PHOENIX       (500 XP)
-
-─── PASSIVE ───────────────────────────────────
-  MAGNET (150 XP, root)
-       ├──→ XP BOOST          (350 XP)
-       ├──→ COMBO MULTIPLIER  (400 XP)
-       └──→ SMALLER HITBOX (400 XP) ──→ GHOST DASH (500 XP)
+─── ATTACK ───────────────────────────────────────────────────────────
+  FORWARD SHOT ─┬─ TRIPLE SHOT ── PIERCING ROUNDS ── ★RAILGUN
+                ├─ MEGA PULSE ─── OVERLOAD
+                └─ RAPID PULSE ── AUTO-PULSE ─────── ★STORM
+─── DEFENSE ──────────────────────────────────────────────────────────
+  SHIELD ───────┬─ DOUBLE SHIELD ── REGEN SHIELD ── ★AEGIS
+                ├─ PHOENIX ──────── LAST STAND
+                └─ TIME WARP ────── CHRONO BREAK
+─── PASSIVE ──────────────────────────────────────────────────────────
+  MAGNET ───────┬─ XP BOOST ─────── GOLDEN ORBS
+                ├─ COMBO MULTIPLIER ── OVERDRIVE
+                └─ SMALLER HITBOX ── GHOST DASH ── ★PHASE SHIFT
 ```
 
-| スキル | 種別 | 価格 | 前提 | 効果 |
-| --- | --- | :---: | --- | --- |
-| **FORWARD SHOT**     | 🟣 ATTACK  | 100 XP | — | タップで前方弾発射（CD 0.4 s） |
-| **RAPID PULSE**      | 🟣 ATTACK  | 250 XP | FORWARD SHOT | PULSE クールダウン -30 % |
-| **MEGA PULSE**       | 🟣 ATTACK  | 350 XP | FORWARD SHOT | PULSE 範囲 +30 % |
-| **TRIPLE SHOT**      | 🟣 ATTACK  | 400 XP | FORWARD SHOT | タップで 3 発スプレッド射撃 |
-| **AUTO-PULSE**       | 🟣 ATTACK  | 500 XP | RAPID PULSE  | PULSE CD 解除で自動発射 |
-| **SHIELD**           | 🟢 DEFENSE | 150 XP | — | 最初の 1 ヒットを吸収 + 周囲撃破 |
-| **DOUBLE SHIELD**    | 🟢 DEFENSE | 350 XP | SHIELD       | 開始時シールド ×2 |
-| **PHOENIX**          | 🟢 DEFENSE | 500 XP | SHIELD       | 1 度だけ死亡から復活、3 秒無敵 |
-| **MAGNET**           | 🔵 PASSIVE | 150 XP | — | NEAR-MISS 判定 +50 % |
-| **XP BOOST**         | 🔵 PASSIVE | 350 XP | MAGNET       | 獲得 XP +25 % |
-| **COMBO MULTIPLIER** | 🔵 PASSIVE | 400 XP | MAGNET       | NEAR 連続で XP 倍率 UP（最大 3x） |
-| **SMALLER HITBOX**   | 🔵 PASSIVE | 400 XP | MAGNET       | 当たり判定 -33 %（面積 -55 %） |
-| **GHOST DASH**       | 🔵 PASSIVE | 500 XP | SMALLER HITBOX | フラップ直後 0.15 秒間無敵 |
+| スキル | 価格 (ランク) | 効果 |
+| --- | --- | --- |
+| **FORWARD SHOT** | 100 / 250 / 500 | タップで前方弾。CD 0.40 → 0.32 → 0.25s |
+| **TRIPLE SHOT** | 400 | 3 発スプレッド |
+| **PIERCING ROUNDS** | 650 | 弾が高速化し 2 体まで貫通 |
+| **★RAILGUN** | 1,500 | 6 発ごとに画面端までの極太ビーム |
+| **MEGA PULSE** | 350 / 700 | PULSE 範囲 +30% / +60% |
+| **OVERLOAD** | 650 | PULSE 撃破ごとに CD 1 秒回復 |
+| **RAPID PULSE** | 250 / 600 | PULSE CD -30% / -45% |
+| **AUTO-PULSE** | 500 | CD 解除で自動発射 |
+| **★STORM** | 1,500 | 撃破時に稲妻が近くの敵へ連鎖（最大 2 体） |
+| **SHIELD** | 150 | 被弾を 1 回吸収 + 周囲撃破 |
+| **DOUBLE SHIELD** | 350 | シールド 2 枚 |
+| **REGEN SHIELD** | 750 | シールド 1 枚、失うと 20 秒で再生 |
+| **★AEGIS** | 1,500 | シールド 1 枚、破壊時に超巨大衝撃波 + 時間停止 |
+| **PHOENIX** | 500 | 1 度だけ復活、3 秒無敵 |
+| **LAST STAND** | 800 | 1 度だけ復活 + 10 秒間スコア / XP ×2 |
+| **TIME WARP** | 450 / 900 | 衝突直前に自動スローモー。CD 12s → 8s |
+| **CHRONO BREAK** | 1,000 | TIME WARP (CD 10s) + 発動中 0.5 秒無敵 |
+| **MAGNET** | 150 / 400 | NEAR 判定拡大 + XP オーブ吸引（範囲 90 → 140） |
+| **XP BOOST** | 350 / 700 / 1,200 | XP +25% / +40% / +60% |
+| **GOLDEN ORBS** | 700 | オーブ XP ×2、12% で金オーブ (+40) |
+| **COMBO MULTIPLIER** | 400 | NEAR 連続で XP 倍率（最大 3x） |
+| **OVERDRIVE** | 800 | NEAR 5 連続でスコア 1.5 倍 & NEAR ボーナス 2 倍 |
+| **SMALLER HITBOX** | 400 | 当たり判定 -33% |
+| **GHOST DASH** | 500 | フラップ直後 0.15 秒無敵（再発動まで少し間隔あり） |
+| **★PHASE SHIFT** | 1,500 | 無敵 0.3 秒、無敵中に壁をすり抜けると PHASE ボーナス +40 |
 
-フルアンロックまで合計 **4,400 XP**（13 スキル）。**装備枠は 2 つ**。組み合わせで戦略が大きく変わります：
-- `TRIPLE SHOT + AUTO-PULSE` — 攻撃特化、敵殲滅
-- `DOUBLE SHIELD + PHOENIX` — 実質 4 ライフ
-- `COMBO MULTIPLIER + XP BOOST` — XP 稼ぎ最大化
-- `GHOST DASH + SMALLER HITBOX` — 無敵フラップで擦り抜け（※同時装備不可、GHOST DASH の前提）
+### シナジー
 
-新スキルを追加するには `SKILL_DEFS` に `requires: ['parent_id']` 付きで 1 エントリ追加するだけです。
+| シナジー | 組み合わせ | 効果 |
+| --- | --- | --- |
+| **BARRIER PULSE** | RAPID PULSE + SHIELD | PULSE 発動時に 0.5 秒無敵 |
+| **SCAVENGER** | TRIPLE SHOT + MAGNET | 弾で倒した敵が XP オーブを落とす |
+| **SLIPSTREAM** | COMBO MULTIPLIER + GHOST DASH | NEAR のたびに PULSE CD 1 秒回復 |
+| **SALVAGE** | PHOENIX + XP BOOST | 復活時に +100 XP |
+| **FORTRESS** | AUTO-PULSE + DOUBLE SHIELD | シールド破壊で PULSE 即チャージ |
+| **BULLET TIME** | TIME WARP + FORWARD SHOT | スローモー中は射撃 CD なし |
+
+全解放 + 全ランク + 4 枠で合計約 **26,000 XP**。新スキルは `SKILL_DEFS` に `requires` 付きで 1 行追加すればツリーに自動配置されます（効果は `hasSkill()` / `rank()` で実装）。
 
 ## 🎨 SKIN（自機カスタマイズ）
 
@@ -127,10 +141,6 @@ SHOP は ATTACK / DEFENSE / PASSIVE のタブ切替式で、各系統のスキ�
 | **GOLD**    | `#ffdd44` |
 
 各スキンは船体・翼・コクピット・エンジン・炎・shipLight の全色を統一的に塗り替えます（PULSE / 前方弾はスキル効果なのでスキンとは独立）。新スキンを追加するには `SHIP_SKINS` 配列に 1 エントリ追加するだけです。
-
-### 新スキルを追加する
-
-`SKILL_DEFS` に1エントリ追加し、効果コードを `hasSkill('id')` ガードで実装すれば終わりです。詳細は `index.html` のコメント参照。
 
 ## 🎵 インタラクティブミュージック & サウンド
 
@@ -187,7 +197,9 @@ SHOP は ATTACK / DEFENSE / PASSIVE のタブ切替式で、各系統のスキ�
   - `hd_mute` — 音設定
   - `hd_xp` — 累積 XP
   - `hd_owned` — 所持スキル ID 配列
-  - `hd_equip` — 装備スキル ID 配列（最大 2 枠）
+  - `hd_equip` — 装備スキル ID 配列
+  - `hd_ranks` — スキルランク `{id: rank}`
+  - `hd_slots` — 装備枠数（2〜4）
   - `hd_skin` — 選択中の機体スキン ID
 
 シングルファイル構成（`index.html` に CSS / JS 全部入り）で、依存は CDN の Three.js と Google Fonts（Orbitron / Rajdhani）のみ。どちらも Service Worker がキャッシュするのでオフラインでも動きます。
@@ -264,6 +276,7 @@ SW キャッシュキーを上げることで、既存 PWA ユーザーに新版
 
 | Version | 内容 |
 | :---: | --- |
+| **1.4.0**  | スキルツリー拡張：25 スキル（★ULTIMATE 4 種）、ランク、装備枠拡張、シナジー 6 種、リスペック、XP オーブ。GHOST DASH の連打無敵を修正 |
 | **1.3.0**  | インタラクティブミュージック導入（セクション切替・ライザー・危険度/ヒート連動レイヤー・コード追従スティンガー・状態連動ミックス）、効果音を全面刷新 |
 | **1.2.0**  | SHOP をスキルツリー図 + LOADOUT + 詳細パネルに刷新、SKIN を 3D 格納庫プレビュー付きに、HOW TO PLAY を共通デザインに |
 | **1.1.0**  | ビジュアル大刷新：フォント刷新、DOM HUD、タイトル / リザルト / ポーズ画面、レンズFX、スローモー、奥行きグリッド、トレイル、シールド表示。横画面から SHOP / SKIN を開けるように。ポーズ機能追加 |
