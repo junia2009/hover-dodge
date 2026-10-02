@@ -4,7 +4,7 @@
 
 Three.js + WebGL で描画する一画面・タップで遊べるアーケードシューターです。ブラウザだけで動き、PWA としてホーム画面に追加すればオフラインでもプレイできます。フェーズに応じて重厚化する手続き合成 BGM 付き。
 
-[![Play](https://img.shields.io/badge/play-online-00e8ff?style=flat-square)](#) ![Version](https://img.shields.io/badge/version-1.4.0-aa44ff?style=flat-square)
+[![Play](https://img.shields.io/badge/play-online-00e8ff?style=flat-square)](#) ![Version](https://img.shields.io/badge/version-1.5.0-aa44ff?style=flat-square)
 
 ---
 
@@ -126,6 +126,34 @@ Three.js + WebGL で描画する一画面・タップで遊べるアーケード
 | **BULLET TIME** | TIME WARP + FORWARD SHOT | スローモー中は射撃 CD なし |
 
 全解放 + 全ランク + 4 枠で合計約 **26,000 XP**。新スキルは `SKILL_DEFS` に `requires` 付きで 1 行追加すればツリーに自動配置されます（効果は `hasSkill()` / `rank()` で実装）。
+
+## 🔮 SECRETS（隠し要素）
+
+このゲームには **9 個の秘密** が隠されています。スマホ / iPad のタッチ操作だけで見つけられます。
+
+- 見つけると「SECRET FOUND」の演出とともに報酬が永続解放され、タイトルに **SECRETS** メニューが現れます（報酬のオン / オフ、称号の選択）
+- プレイヤーに見えるのは **発見数（SECRETS n/9）だけ**。タイトル右下・縦画面・HOW TO PLAY に表示
+- 全部見つけると……？
+
+<details>
+<summary>⚠️ ネタバレ（開発者向け一覧）</summary>
+
+| # | 名前 | 見つけ方 | 報酬 |
+| :---: | --- | --- | --- |
+| 1 | SHATTERED LOGO | タイトルのロゴを素早く 10 回タップ | RETRO モード（緑モノクロ CRT） |
+| 2 | THE CODE | タイトルでスワイプ ↑↑↓↓←→←→（PC は矢印キー） | GLITCH スキン |
+| 3 | AWAKENING | タイトルの自機を 3 秒長押し | シップサイズ変更（以降は長押しで MINI / NORMAL / BIG を切替） |
+| 4 | SPIN CYCLE | 8 秒以内に端末を縦横 5 回回転 | MIRROR モード（左右反転） |
+| 5 | BEHIND THE SCENES | バージョン表記を素早く 7 回タップ | クレジット |
+| 6 | PACIFIST | PULSE も撃破もせずに PHASE 3 到達 | PACIFIST スキン + 称号 PEACEKEEPER |
+| 7 | SKY HIGH | 画面最上部に 3 秒張り付く | 称号 CEILING WALKER |
+| 8 | NIGHT OWL | 深夜 0 時台にプレイ開始 | MIDNIGHT テーマ（夜色 + lo-fi BGM）+ 称号 |
+| 9 | SAFETY FIRST | 一度も NEAR せず 60 秒生存 | HARDCORE モード（スキル無効・XP ×2） |
+| ★ | 全発見 | — | エンディング（クレジット）+ PRISM スキン + 称号 SECRET MASTER |
+
+保存キー: `hd_secrets`（発見済み ID）/ `hd_sec_opts`（モード・称号の設定）
+
+</details>
 
 ## 🎨 SKIN（自機カスタマイズ）
 
@@ -276,6 +304,7 @@ SW キャッシュキーを上げることで、既存 PWA ユーザーに新版
 
 | Version | 内容 |
 | :---: | --- |
+| **1.5.0**  | 隠し要素 SECRETS を 9 種追加（タッチ操作・プレイ内容で発見）、SECRETS メニュー、称号、隠しスキン 3 種、RETRO / MIRROR / MIDNIGHT / HARDCORE モード、エンディング |
 | **1.4.0**  | スキルツリー拡張：25 スキル（★ULTIMATE 4 種）、ランク、装備枠拡張、シナジー 6 種、リスペック、XP オーブ。GHOST DASH の連打無敵を修正 |
 | **1.3.0**  | インタラクティブミュージック導入（セクション切替・ライザー・危険度/ヒート連動レイヤー・コード追従スティンガー・状態連動ミックス）、効果音を全面刷新 |
 | **1.2.0**  | SHOP をスキルツリー図 + LOADOUT + 詳細パネルに刷新、SKIN を 3D 格納庫プレビュー付きに、HOW TO PLAY を共通デザインに |

@@ -955,6 +955,155 @@ button { font-family: var(--f-ui) }
   letter-spacing: 0;
 }
 
+/* ══ Secrets ═════════════════════════════════════════════════════════════ */
+/* hidden touch targets on the title */
+.t-logo { pointer-events: auto; cursor: default; -webkit-touch-callout: none; }
+.t-logo.poke { animation: logo-poke .18s ease-out; }
+@keyframes logo-poke { 50% { transform: scale(0.97) rotate(-0.6deg); } }
+.t-logo.shatter { animation: logo-shatter 1.6s cubic-bezier(.2,.8,.2,1); }
+@keyframes logo-shatter {
+  0%   { transform: none; filter: drop-shadow(0 0 10px #fff); }
+  12%  { transform: scale(1.35) skewX(-18deg); opacity: 1; filter: blur(2px) hue-rotate(90deg) drop-shadow(0 0 30px #fff); letter-spacing: calc(30 * var(--px)); }
+  35%  { transform: scale(1.8) translateY(calc(-20 * var(--px))); opacity: 0; filter: blur(14px); letter-spacing: calc(80 * var(--px)); }
+  60%  { transform: scale(0.6); opacity: 0; filter: blur(8px); }
+  100% { transform: none; opacity: 1; }
+}
+.t-foot .ver { pointer-events: auto; cursor: default; padding: calc(6 * var(--px)); margin: calc(-6 * var(--px)); }
+.t-foot .secret-count b { color: #d8b4ff; text-shadow: 0 0 calc(8 * var(--px)) rgba(200, 160, 255, 0.6); }
+.t-eyebrow.titled { color: var(--c-gold); text-shadow: 0 0 calc(8 * var(--px)) rgba(255, 216, 74, 0.6); }
+.t-modes {
+  margin-top: calc(8 * var(--px)); min-height: calc(10 * var(--px));
+  font: 700 calc(9 * var(--px))/1 var(--f-ui); letter-spacing: calc(3 * var(--px));
+  color: #ff8c9c;
+}
+.btn.secrets .tag { color: #d8b4ff; }
+.rot-version { cursor: default; -webkit-user-select: none; user-select: none; }
+.rot-secret {
+  z-index: 3;
+  font: 600 11px/1.5 var(--f-ui); letter-spacing: 1px;
+  color: #d8b4ff; text-shadow: 0 0 8px rgba(200, 160, 255, 0.7);
+  text-align: center; padding: 0 24px;
+  animation: rot-blink 1.4s steps(2) infinite;
+}
+body.retro #ui { filter: grayscale(1) sepia(1) hue-rotate(70deg) saturate(2.6) brightness(1.05); }
+
+/* SECRET FOUND toast (fixed, so it shows over portrait + modals too) */
+#secret-toast {
+  position: fixed; left: 50%; top: max(18px, env(safe-area-inset-top));
+  transform: translate(-50%, -140%);
+  z-index: 10003;
+  min-width: min(340px, 86vw);
+  padding: 12px 22px 14px;
+  text-align: center;
+  font-family: var(--f-ui);
+  background: linear-gradient(180deg, rgba(60, 30, 110, 0.95), rgba(20, 10, 40, 0.95));
+  box-shadow: 0 0 30px rgba(180, 120, 255, 0.55), inset 0 1px 0 rgba(230, 210, 255, 0.4);
+  clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+  pointer-events: none;
+  opacity: 0;
+}
+#secret-toast.show { animation: toast 3.5s cubic-bezier(.2,.8,.2,1) forwards; }
+@keyframes toast {
+  0%   { transform: translate(-50%, -140%); opacity: 0; }
+  10%  { transform: translate(-50%, 0) scale(1.06); opacity: 1; }
+  16%  { transform: translate(-50%, 0) scale(1); }
+  85%  { transform: translate(-50%, 0); opacity: 1; }
+  100% { transform: translate(-50%, -140%); opacity: 0; }
+}
+.st-k { font: 700 10px/1 var(--f-ui); letter-spacing: 4px; color: #d8b4ff; }
+.st-name { margin-top: 7px; font: 900 18px/1.1 var(--f-disp); letter-spacing: 3px; color: #fff; text-shadow: 0 0 14px #b98cff; }
+.st-rew { margin-top: 6px; font: 700 12px/1.3 var(--f-ui); letter-spacing: 1px; color: var(--c-gold); }
+
+/* SECRETS screen */
+#secrets-modal { --k: #b98cff; }
+.sec-body {
+  overflow-y: auto; -webkit-overflow-scrolling: touch;
+  padding: 16px 24px 20px;
+  display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(220px, 1fr); gap: 18px; align-content: start;
+}
+.sec-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; align-content: start; }
+.sec-card {
+  position: relative; min-height: 74px;
+  padding: 10px 10px 9px;
+  display: flex; flex-direction: column; gap: 5px; justify-content: flex-end;
+  background: rgba(255, 255, 255, 0.03);
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+}
+.sec-card .no { position: absolute; top: 8px; left: 10px; font: 500 9px/1 var(--f-disp); color: rgba(160, 180, 210, 0.35); }
+.sec-card b { font: 700 11px/1.2 var(--f-disp); letter-spacing: 1.5px; color: rgba(160, 180, 210, 0.35); }
+.sec-card span:last-child { font: 600 10px/1.3 var(--f-ui); color: rgba(160, 180, 210, 0.35); }
+.sec-card.found { background: linear-gradient(160deg, rgba(150, 100, 255, 0.22), rgba(255, 255, 255, 0.03)); }
+.sec-card.found b { color: #fff; text-shadow: 0 0 8px #b98cff; }
+.sec-card.found span:last-child { color: var(--c-gold); }
+.sec-card.found .no { color: #d8b4ff; }
+.sec-opts { display: grid; gap: 8px; align-content: start; }
+.tog {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 11px 14px; border: none;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--c-dim);
+  font: 700 12px/1 var(--f-ui) !important; letter-spacing: 3px;
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+}
+.tog small { font-size: 9px; letter-spacing: 1px; margin-left: 6px; opacity: .7; }
+.tog i { font: 700 10px/1 var(--f-disp); font-style: normal; letter-spacing: 1px; }
+.tog.on { color: #fff; background: rgba(150, 100, 255, 0.2); }
+.tog.on i { color: #d8b4ff; text-shadow: 0 0 6px #b98cff; }
+.tog.credits { color: var(--c-gold); }
+.seg { display: flex; align-items: center; gap: 6px; padding: 6px 0; }
+.seg.wrap { flex-wrap: wrap; }
+.seg > span { font: 700 10px/1 var(--f-ui); letter-spacing: 3px; color: var(--c-dim); margin-right: 4px; min-width: 70px; }
+.seg button {
+  border: none; padding: 7px 9px;
+  background: rgba(255, 255, 255, 0.05); color: var(--c-dim);
+  font: 700 10px/1 var(--f-disp) !important; letter-spacing: 1px;
+}
+.seg button.on { background: rgba(150, 100, 255, 0.3); color: #fff; }
+.sec-howto b { font-family: var(--f-disp); color: #d8b4ff; }
+@media (max-width: 640px) {
+  .sec-body { grid-template-columns: 1fr; padding: 14px; }
+  .sec-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-height: 460px) {
+  .sec-body { padding: 10px 16px; gap: 12px; }
+  .sec-card { min-height: 58px; padding: 8px; }
+}
+
+/* Credits / ending */
+#credits {
+  display: none;
+  position: fixed; inset: 0; z-index: 10002;
+  background: radial-gradient(ellipse at 50% 50%, rgba(24, 8, 50, 0.98), rgba(0, 0, 4, 1));
+  overflow: hidden;
+  font-family: var(--f-ui);
+  -webkit-user-select: none; user-select: none;
+}
+#credits.open { display: block; animation: m-fade .6s ease-out; }
+.cr-roll {
+  position: absolute; left: 0; right: 0; top: 100%;
+  text-align: center;
+}
+.cr-roll.roll { animation: cr-roll 26s linear forwards; }
+@keyframes cr-roll { from { transform: translateY(0); } to { transform: translateY(calc(-100% - 100vh)); } }
+.cr-end { font: 900 26px/1.2 var(--f-disp); letter-spacing: 6px; color: #fff; text-shadow: 0 0 20px #b98cff, 0 0 40px #b98cff; }
+.cr-thanks { margin: 14px 0 70px; font: 600 14px/1.6 var(--f-ui); letter-spacing: 2px; color: #d8b4ff; }
+.cr-logo {
+  margin-bottom: 70px;
+  font: 900 italic 48px/0.95 var(--f-disp); letter-spacing: 4px;
+  background: linear-gradient(180deg, #fff, var(--c-cyan) 60%, #7a5cff);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 0 14px rgba(0, 232, 255, 0.6));
+}
+.cr-k { font: 700 11px/1 var(--f-ui); letter-spacing: 5px; color: rgba(170, 200, 230, 0.6); }
+.cr-v { margin: 10px 0 46px; font: 700 20px/1.3 var(--f-disp); letter-spacing: 2px; color: #fff; }
+.cr-v small { font: 600 12px/1 var(--f-ui); letter-spacing: 2px; color: var(--c-dim); }
+.cr-reward { margin: 30px 0 60px; font: 700 14px/2 var(--f-disp); letter-spacing: 3px; color: var(--c-gold); text-shadow: 0 0 10px rgba(255, 216, 74, 0.6); }
+.cr-fin { margin-top: 40px; font: 900 18px/1 var(--f-disp); letter-spacing: 8px; color: var(--c-cyan); text-shadow: 0 0 14px var(--c-cyan); }
+.cr-skip {
+  position: absolute; right: max(16px, env(safe-area-inset-right)); bottom: max(14px, env(safe-area-inset-bottom));
+  font: 700 10px/1 var(--f-ui); letter-spacing: 3px; color: rgba(170, 200, 230, 0.5);
+}
+
 /* ══ Modal shell (SHOP / SKIN / HOW TO PLAY) ═════════════════════════════
    Full-viewport overlays shared by both orientations. Sizes are real px
    (these live outside the scaled #wrap) with tighter variants for short
@@ -1516,7 +1665,8 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
     </button>
   </div>
 
-  <p class="rot-version">SYS_REV  1.4.0</p>
+  <p class="rot-secret" id="rot-secret" hidden>&gt; SPIN CYCLE DETECTED — 目が回った？ MIRROR MODE 解放</p>
+  <p class="rot-version">SYS_REV  1.5.0 · SECRETS <span id="rot-secrets">0/9</span></p>
 </div>
 
 <div id="shop-modal" class="modal">
@@ -1637,6 +1787,12 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
     </section>
 
     <section class="howto-sec">
+      <h3>SECRETS</h3>
+      <p>このゲームには <b>9 個の秘密</b> が隠されている。タイトル画面、プレイ中、そしてあなたの手元…。全部見つけると何かが起きるかもしれない。</p>
+      <p class="sec-howto">発見済み <b id="howto-secrets">0 / 9</b></p>
+    </section>
+
+    <section class="howto-sec">
       <h3>コツ</h3>
       <ul>
         <li>壁の隙間ギリギリを狙うと NEAR ボーナスでスコアと XP が伸びる</li>
@@ -1647,6 +1803,31 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
     </section>
     </div>
   </div>
+</div>
+
+<div id="secrets-modal" class="modal">
+  <div class="m-panel">
+    <header class="m-head">
+      <div><div class="m-title">SECRETS</div><div class="m-sub" id="sec-count">0 / 9 FOUND</div></div>
+      <div class="m-spacer"></div>
+      <button class="m-close" id="secrets-close" type="button" aria-label="Close">×</button>
+    </header>
+    <div class="m-body sec-body">
+      <div class="sec-grid" id="sec-grid"></div>
+      <div class="sec-opts" id="sec-opts"></div>
+    </div>
+  </div>
+</div>
+
+<div id="secret-toast" aria-live="polite">
+  <div class="st-k">SECRET FOUND · <span id="st-n">1 / 9</span></div>
+  <div class="st-name" id="st-name">???</div>
+  <div class="st-rew" id="st-rew"></div>
+</div>
+
+<div id="credits">
+  <div class="cr-roll" id="cr-roll"></div>
+  <div class="cr-skip">TAP TO CLOSE</div>
 </div>
 
 <div id="wrap">
@@ -1691,16 +1872,19 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
         <h1 class="t-logo"><span>HOVER</span><span class="l2">DODGE</span></h1>
         <div class="t-tag">壁と敵をよけ続けろ</div>
         <button class="btn-primary t-start" id="start-btn" type="button">START<kbd>SPACE</kbd></button>
+        <div class="t-modes" id="t-modes"></div>
         <div class="t-menu">
           <button class="btn" id="t-howto-btn" type="button">HOW TO PLAY</button>
           <button class="btn" id="t-shop-btn" type="button">SHOP <span class="tag" id="t-xp">0 XP</span></button>
           <button class="btn" id="t-skin-btn" type="button">SKIN <span class="dot" id="t-skin-dot"></span></button>
+          <button class="btn secrets" id="t-secrets-btn" type="button" hidden>SECRETS <span class="tag" id="t-secrets-tag">0/9</span></button>
         </div>
       </div>
       <div class="t-foot">
         <span class="best">BEST<b id="t-best">—</b></span>
         <span>SOUND<b id="t-sound">ON</b> [M]</span>
-        <span>VER<b>1.4.0</b></span>
+        <span class="secret-count">SECRETS<b id="t-secrets">0/9</b></span>
+        <span class="ver" id="t-ver">VER<b>1.5.0</b></span>
       </div>
     </div>
 
@@ -1811,6 +1995,7 @@ const lensPass = new ShaderPass({
     uTime:      { value: 0 },
     uAberr:     { value: 0 },
     uFlash:     { value: 0 },
+    uRetro:     { value: 0 },
     uFlashCol:  { value: new THREE.Color(1, 1, 1) },
     uRes:       { value: new THREE.Vector2(VW, VH) },
   },
@@ -1819,7 +2004,7 @@ const lensPass = new ShaderPass({
     void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
   fragmentShader: /* glsl */`
     uniform sampler2D tDiffuse;
-    uniform float uTime, uAberr, uFlash;
+    uniform float uTime, uAberr, uFlash, uRetro;
     uniform vec3 uFlashCol;
     uniform vec2 uRes;
     varying vec2 vUv;
@@ -1827,11 +2012,21 @@ const lensPass = new ShaderPass({
     void main() {
       vec2 d = vUv - 0.5;
       float r2 = dot(d, d);
+      // RETRO: slight CRT barrel curvature
+      vec2 uv = 0.5 + d * (1.0 + uRetro * 0.09 * r2 * 4.0) / (1.0 + uRetro * 0.09);
       vec2 off = d * (0.0025 + uAberr * 0.02) * (0.4 + r2 * 3.0);
       vec3 col = vec3(
-        texture2D(tDiffuse, vUv + off).r,
-        texture2D(tDiffuse, vUv).g,
-        texture2D(tDiffuse, vUv - off).b);
+        texture2D(tDiffuse, uv + off).r,
+        texture2D(tDiffuse, uv).g,
+        texture2D(tDiffuse, uv - off).b);
+      if (uRetro > 0.0) {
+        // green-phosphor monochrome with heavy scanlines
+        float l = dot(col, vec3(0.299, 0.587, 0.114));
+        vec3 g = vec3(0.3, 1.0, 0.5) * pow(l, 0.8) * 1.35;
+        g *= 0.62 + 0.38 * sin(uv.y * uRes.y * 1.5708);
+        col = mix(col, g, uRetro);
+        if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) col = vec3(0.0);
+      }
       col *= 0.965 + 0.035 * sin(vUv.y * uRes.y * 1.5708);
       col += (hash(vUv * uRes + fract(uTime) * 91.0) - 0.5) * 0.03;
       col *= mix(1.0, 0.38, smoothstep(0.12, 0.62, r2 * 1.6));
@@ -2027,7 +2222,60 @@ const SHIP_SKINS = [
     flame:   0xffee88,
     light:   0xffcc44,
   },
+  // ── Secret skins (listed only once their secret is found) ──
+  {
+    id: 'glitch', name: 'GLITCH', accent: '#ff2bd6', secret: 'swipe', anim: 'glitch',
+    hull:    { color: 0x00e8ff, emissive: 0x880066, specular: 0xffffff },
+    wing:    { color: 0xff2bd6, emissive: 0x330044 },
+    cockpit: { color: 0xeaffff, emissive: 0x220022, specular: 0xffffff },
+    engine:  0x66ff99,
+    flame:   0xff44dd,
+    light:   0xff44dd,
+  },
+  {
+    id: 'pacifist', name: 'PACIFIST', accent: '#f4f6ff', secret: 'pacifist',
+    hull:    { color: 0xf2f4ff, emissive: 0x556070, specular: 0xffffff },
+    wing:    { color: 0xd8deea, emissive: 0x30343c },
+    cockpit: { color: 0xbfe8ff, emissive: 0x102030, specular: 0xffffff },
+    engine:  0xddeeff,
+    flame:   0xf0f6ff,
+    light:   0xeef4ff,
+  },
+  {
+    id: 'prism', name: 'PRISM', accent: '#b98cff', secret: 'complete', anim: 'prism',
+    hull:    { color: 0xff66cc, emissive: 0x552255, specular: 0xffffff },
+    wing:    { color: 0x66ccff, emissive: 0x223355 },
+    cockpit: { color: 0xffffff, emissive: 0x222222, specular: 0xffffff },
+    engine:  0xffffff,
+    flame:   0xffffff,
+    light:   0xffffff,
+  },
 ];
+
+// Animated paint for GLITCH (random flicker) and PRISM (rainbow cycle).
+const _skinCol = new THREE.Color();
+function animateSkin(t) {
+  const s = SHIP_SKINS.find(x => x.id === currentSkinId);
+  if (!s || !s.anim) return;
+  const set = (h, sat, l) => _skinCol.setHSL(((h % 1) + 1) % 1, sat, l);
+  if (s.anim === 'prism') {
+    const h = t * 0.004;
+    shipParts.hull.material.color.copy(set(h, 0.9, 0.6));
+    shipParts.hull.material.emissive.copy(set(h, 0.9, 0.18));
+    for (const w of shipParts.wings) w.material.color.copy(set(h + 0.33, 0.9, 0.55));
+    shipParts.engine.material.color.copy(set(h + 0.5, 1, 0.7));
+    shipParts.flame.material.color.copy(set(h + 0.6, 1, 0.75));
+    shipLight.color.copy(set(h, 1, 0.6));
+  } else if (Math.random() < 0.18) {
+    // GLITCH: snap between neon palette entries, occasionally blowing out to white
+    const pal = [0x00e8ff, 0xff2bd6, 0x66ff99, 0xffffff, 0x7a5cff];
+    const pick = () => pal[(Math.random() * pal.length) | 0];
+    shipParts.hull.material.color.setHex(pick());
+    for (const w of shipParts.wings) w.material.color.setHex(pick());
+    shipParts.flame.material.color.setHex(pick());
+    shipLight.color.setHex(pick());
+  }
+}
 
 function applySkin(id) {
   const s = SHIP_SKINS.find(x => x.id === id) || SHIP_SKINS[0];
@@ -2491,7 +2739,8 @@ function onTap(el, fn) {
   el.addEventListener('touchstart', e => { e.preventDefault(); e.stopPropagation(); fn(e); }, { passive: false });
 }
 const anyModalOpen = () =>
-  [shopModal, skinModal, howtoModal].some(m => m && m.classList.contains('open'));
+  [shopModal, skinModal, howtoModal, document.getElementById('secrets-modal'), document.getElementById('credits')]
+    .some(m => m && m.classList.contains('open'));
 
 function toggleMute() {
   audioMuted = !audioMuted;
@@ -2938,7 +3187,7 @@ function renderSkinUI() {
   const cur = SHIP_SKINS.find(x => x.id === currentSkinId) || SHIP_SKINS[0];
   paintSkinStage(cur);
   skinGrid.innerHTML = '';
-  for (const s of SHIP_SKINS) {
+  for (const s of SHIP_SKINS.filter(skinUnlocked)) {
     const card = document.createElement('button');
     card.type = 'button';
     card.className = 'skin-card' + (s.id === currentSkinId ? ' selected' : '');
@@ -3470,6 +3719,7 @@ const Music = {
     for (const k in AU.L) AU.L[k].gain.setTargetAtTime(this.levelTarget(k), t, k === 'arp' || k === 'tens' ? 0.12 : 0.6);
     if (!this.dying) {
       let cut = 20000;
+      if (this.lofi) cut = 3800;
       if (this.muffled) cut = 650;
       if (this.timeScale < 0.999) cut = Math.min(cut, 220 + 19800 * this.timeScale * this.timeScale);
       AU.musicFilter.frequency.setTargetAtTime(cut, t, 0.06);
@@ -3615,6 +3865,15 @@ const sfx = {
 };
 // UI sounds (menus, shop, skin)
 const ui = {
+  // SECRET FOUND: sparkling ascending arpeggio + reverse-cymbal swell
+  secret() {
+    if (!sfx.ok()) return;
+    const t = sfx.now();
+    noiseHit({ t, dur: 0.45, vol: 0.1, out: AU.sfxBus, type: 'highpass', f: 6000, swell: true, rev: 0.4 });
+    for (const [i, m] of [76, 79, 83, 88, 91, 95].entries())
+      voice({ type: 'triangle', f: mtof(m), t: t + 0.45 + i * 0.06, dur: 0.6, vol: 0.06, out: AU.sfxBus, rev: 0.5, dly: 0.25 });
+    voice({ type: 'sine', f: mtof(64), t: t + 0.45, dur: 1.4, vol: 0.12, out: AU.sfxBus, rev: 0.5 });
+  },
   select()  { if (sfx.ok()) voice({ type: 'sine', f: 1760, t: sfx.now(), dur: 0.05, vol: 0.05, out: AU.sfxBus }); },
   open()    { if (sfx.ok()) { const t = sfx.now(); voice({ type: 'triangle', f: mtof(76), t, dur: 0.12, vol: 0.06, out: AU.sfxBus });
                                voice({ type: 'triangle', f: mtof(81), t: t + 0.06, dur: 0.2, vol: 0.06, out: AU.sfxBus, rev: 0.2 }); } },
@@ -3798,7 +4057,9 @@ function saveProgression() {
   localStorage.setItem('hd_slots', String(equipSlots));
 }
 const skillDef = id => SKILL_DEFS.find(s => s.id === id);
-function hasSkill(id) { return equippedSkills.includes(id); }
+// HARDCORE (secret mode): skills are switched off for the run, XP doubled
+let hardcoreRun = false;
+function hasSkill(id) { return !hardcoreRun && equippedSkills.includes(id); }
 function ownedRank(id) { return ownedSkills.includes(id) ? (skillRanks[id] || 1) : 0; }
 function rank(id) { return hasSkill(id) ? ownedRank(id) : 0; }
 function maxRank(sk) { return sk.ranks ? sk.ranks.length : 1; }
@@ -3809,7 +4070,7 @@ function hasSynergy(sid) {
 let xpMult = 1;               // run-time multiplier (LAST STAND)
 function addRunXP(n) {
   const boost = [1, 1.25, 1.4, 1.6][rank('xp_boost')];
-  runXP += n * boost * xpMult;
+  runXP += n * boost * xpMult * (hardcoreRun ? 2 : 1);
 }
 function isUnlockable(sk) {
   return !sk.requires || sk.requires.every(req => ownedSkills.includes(req));
@@ -4018,6 +4279,7 @@ function clearWorld() {
 
 function startGame() {
   loadProgression();           // refresh equipped skills from shop
+  hardcoreRun = !!secOpts.hardcore;
   gstate = 'play'; score = frame = 0; spd = 3;
   P.x = 150; P.y = VH/2; P.vx = P.vy = 0; P.bankAngle = 0; P.inv = 90;
   P.r = hasSkill('smaller_hitbox') ? 4 : 6;
@@ -4050,6 +4312,7 @@ function startGame() {
   sfx.launch();
   Music.startRun();
   riserFor = -1;
+  secretRunStart();
 }
 
 function gotoMenu() {
@@ -4057,6 +4320,7 @@ function gotoMenu() {
   bonusPopups = [];
   gstate = 'menu';
   timeScale = 1;
+  hardcoreRun = false;
   Music.toMenu();
   refreshTitleInfo();
 }
@@ -4271,6 +4535,7 @@ function update(dt) {
   P.vy += GRAVITY * dt;
   if (P.vy > 14) P.vy = 14;
   P.y = Math.max(P.r, Math.min(VH - P.r, P.y + P.vy * dt));
+  secretTick(dt);
 
   // Bullets (FORWARD SHOT skill).
   // Swept collision: the bullet moves up to 11*dt px/frame which can exceed
@@ -4500,7 +4765,8 @@ function syncScene() {
   let sx, sy;
   const preview = gstate === 'menu' && skinPreview;
   hangar.visible = preview;
-  shipGroup.scale.setScalar(preview ? 2.6 : 0.85);
+  shipGroup.scale.setScalar(preview ? 2.6 : 0.85 * shipSizeMul);
+  animateSkin(tick);
   if (preview) {
     // SKIN hangar: big, slowly turning ship on a platform, left of the panel
     sx = VW * 0.27; sy = VH * 0.42 + Math.sin(tick * 0.04) * 4;
@@ -4526,8 +4792,16 @@ function syncScene() {
     shipGroup.rotation.z = Math.cos(tick * 0.035) * 0.16;
     shipGroup.rotation.x = Math.sin(tick * 0.03) * 0.35;
     shipGroup.rotation.y = 0;
+    // secret: holding the ship charges it up (shake + glow)
+    const hold = shipHoldProgress();
+    menuShipX = sx; menuShipY = sy;
+    if (hold > 0) {
+      shipGroup.position.x += (Math.random() - 0.5) * hold * 6;
+      shipGroup.position.y += (Math.random() - 0.5) * hold * 6;
+      fx.aberr = Math.max(fx.aberr, hold * 0.8);
+    }
     shipLight.position.copy(W(sx, sy, 25));
-    shipLight.intensity = 5 + Math.sin(tick * 0.065) * 3.5;  // 呼吸グロー
+    shipLight.intensity = 5 + Math.sin(tick * 0.065) * 3.5 + hold * 14;  // 呼吸グロー
   } else {
     sx = P.x; sy = P.y + hover;
     // Dead: the ship is gone (exploded). Invulnerable: blink.
@@ -4576,7 +4850,7 @@ function syncScene() {
     shieldGlow.material.opacity = 0.22 + Math.sin(tick * 0.1) * 0.08 + (shieldCharges > 1 ? 0.12 : 0);
   }
 
-  wallBodyMat.color.setHex(PHASE_TINT[curPhase] ?? 0xffffff);
+  wallBodyMat.color.setHex((secOpts.midnight ? PHASE_TINT_NIGHT : PHASE_TINT)[curPhase] ?? 0xffffff);
 
   // Walls
   for (const w of walls) {
@@ -4733,6 +5007,19 @@ function refreshTitleInfo() {
   setText(document.getElementById('t-sound'), audioMuted ? 'OFF' : 'ON');
   const skin = SHIP_SKINS.find(x => x.id === currentSkinId) || SHIP_SKINS[0];
   document.getElementById('t-skin-dot').style.setProperty('--skin', skin.accent);
+  // Secrets: only the count is public; the SECRETS menu appears after the first find
+  const cnt = `${secretsFound.length}/${SECRET_DEFS.length}`;
+  setText(document.getElementById('t-secrets'), cnt);
+  setText(document.getElementById('t-secrets-tag'), cnt);
+  setText(document.getElementById('rot-secrets'), cnt);
+  setText(document.getElementById('howto-secrets'), cnt.replace('/', ' / '));
+  document.getElementById('t-secrets-btn').hidden = secretsFound.length === 0;
+  const eyebrow = document.querySelector('.t-eyebrow');
+  setText(eyebrow, secOpts.title || 'NEON EVASION ARCADE');
+  eyebrow.classList.toggle('titled', !!secOpts.title);
+  const modes = [secOpts.hardcore && '☠ HARDCORE', secOpts.mirror && 'MIRROR', secOpts.retro && 'RETRO',
+                 secOpts.midnight && 'MIDNIGHT', secOpts.size !== 'normal' && secOpts.size.toUpperCase() + ' SHIP'].filter(Boolean);
+  setText(document.getElementById('t-modes'), modes.join(' · '));
 }
 
 // Result screen values are written once at death; the score counts up when
@@ -4755,6 +5042,7 @@ function fillResult() {
 const chipEls = new Map();
 function syncChips() {
   const want = [];
+  if (hardcoreRun) want.push(['hardcore', '#ff5a6e', '☠ HARDCORE · XP ×2']);
   const regenOn = hasSkill('regen_shield') && shieldCharges < Math.max(1, shieldMax);
   if (shieldCharges > 0 || regenOn)
     want.push(['shield', '#aaffcc', `◇ SHIELD ×${shieldCharges}` + (regenOn ? ` · ${Math.ceil((1200 - shieldRegen) / 60)}s` : '')]);
@@ -4787,6 +5075,7 @@ function syncUI(now) {
   // "dying" = dead but the slow-mo explosion is still playing: HUD fades out,
   // result screen not yet shown.
   const st = (gstate === 'dead' && deadCooldown > 0) ? 'dying' : gstate;
+  checkEnding(st);
   if (st !== uiState) {
     uiState = st;
     uiEl.dataset.state = st;
@@ -4842,11 +5131,334 @@ function drawHUD() {
     HX.shadowColor = bp.color; HX.shadowBlur = 10;
     HX.fillStyle = bp.color;
     HX.font = `700 ${Math.round(15 * pop)}px Rajdhani, 'Hiragino Sans', sans-serif`;
-    HX.fillText(bp.text, bp.x, bp.y - age * 30);
+    HX.fillText(bp.text, secOpts.mirror ? VW - bp.x : bp.x, bp.y - age * 30);
   }
   HX.globalAlpha = 1; HX.shadowBlur = 0;
   HX.textBaseline = 'alphabetic';
 }
+
+// ── Secrets ───────────────────────────────────────────────────────────────────
+// Hidden touch gestures / play feats that unlock cosmetic modes, skins and
+// titles. Only the *count* is ever shown to players (SECRETS n/9); the
+// SECRETS screen lists what has been found and lets each reward be toggled.
+const SECRET_DEFS = [
+  { id: 'logo',     name: 'SHATTERED LOGO',    reward: 'RETRO モード解放' },
+  { id: 'swipe',    name: 'THE CODE',          reward: 'GLITCH スキン解放' },
+  { id: 'ship',     name: 'AWAKENING',         reward: 'シップサイズ変更を解放' },
+  { id: 'rotate',   name: 'SPIN CYCLE',        reward: 'MIRROR モード解放' },
+  { id: 'version',  name: 'BEHIND THE SCENES', reward: 'クレジットを解放' },
+  { id: 'pacifist', name: 'PACIFIST',          reward: 'PACIFIST スキン + 称号' },
+  { id: 'ceiling',  name: 'SKY HIGH',          reward: '称号 CEILING WALKER' },
+  { id: 'midnight', name: 'NIGHT OWL',         reward: 'MIDNIGHT テーマ + 称号' },
+  { id: 'hardcore', name: 'SAFETY FIRST',      reward: 'HARDCORE モード解放' },
+];
+const SECRET_TITLES = [
+  { id: 'ceiling',  title: 'CEILING WALKER' },
+  { id: 'pacifist', title: 'PEACEKEEPER' },
+  { id: 'midnight', title: 'NIGHT OWL' },
+  { id: 'complete', title: 'SECRET MASTER' },
+];
+const SHIP_SIZES = { normal: 1, mini: 0.6, big: 1.45 };
+
+let secretsFound = [];
+try { secretsFound = (JSON.parse(localStorage.getItem('hd_secrets') || '[]') || []).filter(id => SECRET_DEFS.some(d => d.id === id)); }
+catch (e) { secretsFound = []; }
+let secOpts = { retro: false, mirror: false, size: 'normal', midnight: false, hardcore: false, title: '' };
+try { Object.assign(secOpts, JSON.parse(localStorage.getItem('hd_sec_opts') || '{}') || {}); } catch (e) {}
+
+const hasSecret = id => id === 'complete' ? secretsComplete() : secretsFound.includes(id);
+function secretsComplete() { return SECRET_DEFS.every(d => secretsFound.includes(d.id)); }
+function saveSecrets() {
+  localStorage.setItem('hd_secrets', JSON.stringify(secretsFound));
+  localStorage.setItem('hd_sec_opts', JSON.stringify(secOpts));
+}
+const skinUnlocked = s => !s.secret || hasSecret(s.secret);
+
+// ── Applying the rewards ──
+const PHASE_TINT_NIGHT = [0xa8b8ff, 0xb4a8ff, 0xc8a0ff, 0xe0a0ff];
+let shipSizeMul = 1;
+function applySecretOpts() {
+  lensPass.uniforms.uRetro.value = secOpts.retro ? 1 : 0;
+  document.body.classList.toggle('retro', !!secOpts.retro);
+  renderer.domElement.style.transform = secOpts.mirror ? 'scaleX(-1)' : '';
+  shipSizeMul = SHIP_SIZES[secOpts.size] || 1;
+  const n = !!secOpts.midnight;
+  floorGrid.material.color.setHex(n ? 0x2a4cff : 0xb02cff);
+  ceilGrid.material.color.setHex(n ? 0x6a3cff : 0x1a8cff);
+  horizonGlow.material.color.setHex(n ? 0x1a2cff : 0x7a2cff);
+  scene.background.setHex(n ? 0x010106 : 0x03020c);
+  scene.fog.color.setHex(n ? 0x010106 : 0x03020c);
+  for (const neb of nebulae) {
+    if (neb.userData.op == null) neb.userData.op = neb.material.opacity;
+    neb.material.opacity = neb.userData.op * (n ? 0.45 : 1);
+  }
+  Music.lofi = n;
+  refreshTitleInfo();
+}
+
+// ── Unlock + toast ──
+let endingPending = false;
+const toastQueue = [];
+let toastBusy = false;
+function unlockSecret(id) {
+  if (secretsFound.includes(id)) return false;
+  const def = SECRET_DEFS.find(d => d.id === id);
+  if (!def) return false;
+  secretsFound.push(id);
+  // Switch the cosmetic reward on straight away so the player sees it
+  if (id === 'logo') secOpts.retro = true;
+  if (id === 'rotate') secOpts.mirror = true;
+  if (id === 'midnight') secOpts.midnight = true;
+  if (id === 'swipe') setSkin('glitch');
+  if (id === 'pacifist' && !secOpts.title) secOpts.title = 'PEACEKEEPER';
+  if (id === 'ceiling' && !secOpts.title) secOpts.title = 'CEILING WALKER';
+  if (secretsComplete()) { secOpts.title = 'SECRET MASTER'; endingPending = true; }
+  saveSecrets();
+  applySecretOpts();
+  toastQueue.push(def);
+  pumpToast();
+  return true;
+}
+function pumpToast() {
+  if (toastBusy || !toastQueue.length) return;
+  toastBusy = true;
+  const def = toastQueue.shift();
+  setText(document.getElementById('st-n'), `${secretsFound.length} / ${SECRET_DEFS.length}`);
+  setText(document.getElementById('st-name'), def.name);
+  setText(document.getElementById('st-rew'), def.reward);
+  const el = document.getElementById('secret-toast');
+  restartAnim(el, 'show');
+  ui.secret();
+  vibrate([30, 40, 30, 40, 80]);
+  fxFlash(0xd8b4ff, 0.3);
+  setTimeout(() => { el.classList.remove('show'); toastBusy = false; pumpToast(); }, 3600);
+}
+function setSkin(id) {
+  currentSkinId = id;
+  localStorage.setItem('hd_skin', id);
+  applySkin(id);
+  refreshSkinSwatchPreview();
+}
+
+// ── Detector: tap the title logo 10 times ──
+const titleLogo = document.querySelector('.t-logo');
+let logoTaps = 0, logoT = 0;
+onTap(titleLogo, () => {
+  if (gstate !== 'menu') return;
+  const now = performance.now();
+  logoTaps = now - logoT < 1200 ? logoTaps + 1 : 1;
+  logoT = now;
+  restartAnim(titleLogo, 'poke');
+  ui.select();
+  if (logoTaps >= 10) {
+    logoTaps = 0;
+    restartAnim(titleLogo, 'shatter');
+    spawnSparks(VW / 2, VH * 0.3, 60, { vMin: 2, vMax: 12, szMin: 1, szMax: 4, color: [185, 200, 280, 300] });
+    shakeX = 10; shakeY = 8; fx.aberr = 1.4;
+    sfx.death();
+    setTimeout(() => {
+      if (!unlockSecret('logo')) { secOpts.retro = !secOpts.retro; saveSecrets(); applySecretOpts(); }
+    }, 700);
+  }
+});
+
+// ── Detector: swipe ↑↑↓↓←→←→ on the title (arrow keys work too) ──
+const CODE = ['U', 'U', 'D', 'D', 'L', 'R', 'L', 'R'];
+let codeBuf = [], swipeStart = null;
+function pushCodeDir(d) {
+  // Rolling window of the last 8 swipes — no time limit (an exact 8-step
+  // match can't happen by accident, and humans pause between swipes).
+  codeBuf.push(d);
+  if (codeBuf.length > CODE.length) codeBuf.shift();
+  if (codeBuf.length === CODE.length && codeBuf.every((x, i) => x === CODE[i])) {
+    codeBuf = [];
+    spawnSparks(VW * 0.17, VH * 0.55, 30, { vMin: 2, vMax: 8, color: [190, 300, 140] });
+    fx.aberr = 1.6;
+    if (!unlockSecret('swipe')) setSkin(currentSkinId === 'glitch' ? 'cyan' : 'glitch');
+  }
+}
+const codeReady = () => gstate === 'menu' && !anyModalOpen() && !_shopMQ.matches;
+addEventListener('pointerdown', e => { if (codeReady()) swipeStart = { x: e.clientX, y: e.clientY }; }, true);
+addEventListener('pointerup', e => {
+  if (!swipeStart || !codeReady()) { swipeStart = null; return; }
+  const dx = e.clientX - swipeStart.x, dy = e.clientY - swipeStart.y;
+  swipeStart = null;
+  if (Math.max(Math.abs(dx), Math.abs(dy)) < 30) return;
+  pushCodeDir(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'R' : 'L') : (dy > 0 ? 'D' : 'U'));
+}, true);
+addEventListener('keydown', e => {
+  if (!codeReady()) return;
+  const d = { ArrowUp: 'U', ArrowDown: 'D', ArrowLeft: 'L', ArrowRight: 'R' }[e.code];
+  if (d) pushCodeDir(d);
+});
+
+// ── Detector: hold the title ship for 3 seconds ──
+let menuShipX = 0, menuShipY = 0, shipHoldT = 0, shipHoldXY = null;
+renderer.domElement.addEventListener('pointerdown', e => {
+  if (gstate !== 'menu' || skinPreview) return;
+  const r = renderer.domElement.getBoundingClientRect();
+  const cx = (e.clientX - r.left) / r.width * VW, cy = (e.clientY - r.top) / r.height * VH;
+  const x = secOpts.mirror ? VW - cx : cx;
+  if (Math.hypot(x - menuShipX, cy - menuShipY) < 55) { shipHoldT = performance.now(); shipHoldXY = [e.clientX, e.clientY]; }
+});
+const endShipHold = () => { shipHoldT = 0; };
+addEventListener('pointerup', endShipHold);
+addEventListener('pointercancel', endShipHold);
+addEventListener('pointermove', e => {
+  if (shipHoldT && Math.hypot(e.clientX - shipHoldXY[0], e.clientY - shipHoldXY[1]) > 25) shipHoldT = 0;
+});
+// Called from syncScene while on the title: charge-up feedback + trigger
+function shipHoldProgress() {
+  if (!shipHoldT || gstate !== 'menu') return 0;
+  const p = (performance.now() - shipHoldT) / 3000;
+  if (p >= 1) {
+    shipHoldT = 0;
+    spawnSparks(menuShipX, menuShipY, 40, { vMin: 2, vMax: 9, color: 0xffffff });
+    fxFlash(0xffffff, 0.5); fx.aberr = 1.2;
+    sfx.phoenix();
+    if (!unlockSecret('ship')) {
+      // already found: each hold cycles normal → mini → big
+      const order = ['normal', 'mini', 'big'];
+      secOpts.size = order[(order.indexOf(secOpts.size) + 1) % 3];
+      saveSecrets(); applySecretOpts();
+    } else { secOpts.size = 'big'; saveSecrets(); applySecretOpts(); }
+    return 0;
+  }
+  return p;
+}
+
+// ── Detector: spin the device (5 orientation flips within 8 s) ──
+let spinTimes = [];
+function onOrientationFlip() {
+  const now = performance.now();
+  spinTimes = spinTimes.filter(t => now - t < 8000);
+  spinTimes.push(now);
+  if (spinTimes.length >= 5) {
+    spinTimes = [];
+    if (unlockSecret('rotate')) {
+      const el = document.getElementById('rot-secret');
+      if (el) { el.hidden = false; setTimeout(() => { el.hidden = true; }, 9000); }
+    }
+  }
+}
+if (_shopMQ.addEventListener) _shopMQ.addEventListener('change', onOrientationFlip);
+else if (_shopMQ.addListener) _shopMQ.addListener(onOrientationFlip);
+
+// ── Detector: tap the version label 7 times (title footer or portrait) ──
+let verTaps = 0, verT = 0;
+function onVersionTap() {
+  const now = performance.now();
+  verTaps = now - verT < 1000 ? verTaps + 1 : 1;
+  verT = now;
+  ui.select();
+  if (verTaps >= 7) {
+    verTaps = 0;
+    unlockSecret('version');
+    if (!endingPending) setTimeout(() => showCredits(false), 600);
+  }
+}
+onTap(document.getElementById('t-ver'), onVersionTap);
+onTap(document.querySelector('.rot-version'), onVersionTap);
+
+// ── Gameplay feats (called every frame from update while playing) ──
+let ceilT = 0;
+function secretTick(dt) {
+  // "hugging the ceiling" = staying in the top band while flapping (the ship bobs a little)
+  if (P.y <= 24) { ceilT += dt; if (ceilT >= 180) unlockSecret('ceiling'); }
+  else ceilT = 0;
+  if (curPhase >= 2 && !pulseUsedThisRun && killCount === 0) unlockSecret('pacifist');
+  if (frame >= 3600 && nearMissCount === 0) unlockSecret('hardcore');
+}
+function secretRunStart() {
+  ceilT = 0;
+  if (new Date().getHours() === 0) unlockSecret('midnight');
+}
+
+// ── SECRETS screen ──
+const secretsModal = document.getElementById('secrets-modal');
+function renderSecretsUI() {
+  const n = secretsFound.length, total = SECRET_DEFS.length;
+  setText(document.getElementById('sec-count'), `${n} / ${total} FOUND`);
+  document.getElementById('sec-grid').innerHTML = SECRET_DEFS.map((d, i) => hasSecret(d.id)
+    ? `<div class="sec-card found"><span class="no">${String(i + 1).padStart(2, '0')}</span><b>${d.name}</b><span>${d.reward}</span></div>`
+    : `<div class="sec-card"><span class="no">${String(i + 1).padStart(2, '0')}</span><b>???</b><span>未発見</span></div>`).join('');
+  const opts = [];
+  const tog = (key, label, sid) => hasSecret(sid) && opts.push(
+    `<button class="tog${secOpts[key] ? ' on' : ''}" type="button" data-tog="${key}"><span>${label}</span><i>${secOpts[key] ? 'ON' : 'OFF'}</i></button>`);
+  tog('retro', 'RETRO', 'logo');
+  tog('mirror', 'MIRROR', 'rotate');
+  tog('midnight', 'MIDNIGHT', 'midnight');
+  tog('hardcore', 'HARDCORE <small>スキル無効・XP×2</small>', 'hardcore');
+  if (hasSecret('ship')) opts.push(`<div class="seg"><span>SHIP SIZE</span>${['mini', 'normal', 'big'].map(z =>
+    `<button type="button" class="${secOpts.size === z ? 'on' : ''}" data-size="${z}">${z.toUpperCase()}</button>`).join('')}</div>`);
+  const titles = SECRET_TITLES.filter(t => hasSecret(t.id));
+  if (titles.length) opts.push(`<div class="seg wrap"><span>称号</span>${[{ title: '' }, ...titles].map(t =>
+    `<button type="button" class="${secOpts.title === t.title ? 'on' : ''}" data-title="${t.title}">${t.title || 'なし'}</button>`).join('')}</div>`);
+  if (hasSecret('version')) opts.push('<button class="tog credits" type="button" data-credits="1"><span>CREDITS</span><i>▶</i></button>');
+  const box = document.getElementById('sec-opts');
+  box.innerHTML = opts.length ? opts.join('') : '<div class="syn-hint">見つけた秘密のご褒美はここで切り替えられる</div>';
+  for (const b of box.querySelectorAll('[data-tog]')) b.addEventListener('click', () => {
+    secOpts[b.dataset.tog] = !secOpts[b.dataset.tog]; saveSecrets(); applySecretOpts(); ui.equip(); renderSecretsUI();
+  });
+  for (const b of box.querySelectorAll('[data-size]')) b.addEventListener('click', () => {
+    secOpts.size = b.dataset.size; saveSecrets(); applySecretOpts(); ui.select(); renderSecretsUI();
+  });
+  for (const b of box.querySelectorAll('[data-title]')) b.addEventListener('click', () => {
+    secOpts.title = b.dataset.title; saveSecrets(); applySecretOpts(); ui.select(); renderSecretsUI();
+  });
+  const cr = box.querySelector('[data-credits]');
+  if (cr) cr.addEventListener('click', () => { closeSecrets(); showCredits(false); });
+}
+function openSecrets()  { ui.open(); renderSecretsUI(); secretsModal.classList.add('open'); }
+function closeSecrets() { ui.back(); secretsModal.classList.remove('open'); refreshTitleInfo(); }
+onTap(document.getElementById('t-secrets-btn'), openSecrets);
+onTap(document.getElementById('secrets-close'), closeSecrets);
+addEventListener('keydown', e => {
+  if (e.code === 'Escape' && secretsModal.classList.contains('open')) { e.preventDefault(); closeSecrets(); }
+});
+
+// ── Credits / ending ──
+const creditsEl = document.getElementById('credits');
+let creditsOpen = false;
+function showCredits(ending) {
+  if (creditsOpen) return;
+  creditsOpen = true;
+  const roll = document.getElementById('cr-roll');
+  const L = (k, v) => `<div class="cr-k">${k}</div><div class="cr-v">${v}</div>`;
+  roll.innerHTML =
+    (ending ? `<div class="cr-end">ALL SECRETS FOUND</div><div class="cr-thanks">すべての秘密を見つけてくれて、ありがとう。</div>` : '') +
+    `<div class="cr-logo">HOVER<br>DODGE</div>` +
+    L('PRODUCED & DIRECTED BY', 'RYOHEI TAKAUCHI') +
+    L('GAME DESIGN', 'RYOHEI TAKAUCHI') +
+    L('DEVELOPMENT', 'RYOHEI TAKAUCHI<br><small>with Claude Code</small>') +
+    L('MUSIC & SOUND', 'Interactive WebAudio Synthesis') +
+    L('VISUALS', 'Three.js · WebGL · Bloom') +
+    L('TYPEFACES', 'Orbitron · Rajdhani') +
+    L('SPECIAL THANKS', 'YOU') +
+    (ending ? `<div class="cr-reward">◆ PRISM SKIN UNLOCKED<br>◆ TITLE: SECRET MASTER</div>` : '') +
+    `<div class="cr-fin">THANK YOU FOR PLAYING</div>`;
+  restartAnim(roll, 'roll');
+  creditsEl.classList.add('open');
+  if (ending) { sfx.record(); fxFlash(0xffffff, 0.6); }
+}
+function closeCredits() {
+  if (!creditsOpen) return;
+  creditsOpen = false;
+  creditsEl.classList.remove('open');
+  ui.back();
+  refreshTitleInfo();
+}
+onTap(creditsEl, closeCredits);
+document.getElementById('cr-roll').addEventListener('animationend', closeCredits);
+// The ending plays once the player is back on a calm screen (title / result)
+function checkEnding(st) {
+  if (endingPending && (st === 'menu' || st === 'dead') && !creditsOpen && !toastBusy) {
+    endingPending = false;
+    setTimeout(() => showCredits(true), 800);
+  }
+}
+
+applySecretOpts();
 
 // ── Loop ──────────────────────────────────────────────────────────────────────
 const FRAME_MS = 1000 / 60;
