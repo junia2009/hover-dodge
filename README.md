@@ -4,7 +4,7 @@
 
 Three.js + WebGL で描画する一画面・タップで遊べるアーケードシューターです。ブラウザだけで動き、PWA としてホーム画面に追加すればオフラインでもプレイできます。フェーズに応じて重厚化する手続き合成 BGM 付き。
 
-[![Play](https://img.shields.io/badge/play-online-00e8ff?style=flat-square)](#) ![Version](https://img.shields.io/badge/version-1.5.0-aa44ff?style=flat-square)
+[![Play](https://img.shields.io/badge/play-online-00e8ff?style=flat-square)](#) ![Version](https://img.shields.io/badge/version-1.5.1-aa44ff?style=flat-square)
 
 ---
 
@@ -66,7 +66,6 @@ Three.js + WebGL で描画する一画面・タップで遊べるアーケード
 - **ランク** — 一部スキルは Lv2〜3 に強化可能（ノードの ●●○ が現在ランク）
 - **装備枠** — 初期 2 枠。XP で **3 枠 (1,200)** → **4 枠 (3,000)** に拡張
 - **シナジー** — 特定の 2 スキルを同時装備するとボーナス効果（LOADOUT に ⟡ 表示）
-- **リスペック** — 使った XP を全額返還して振り直し（装備枠は維持）
 - 装備はスタンドアロン：ツリーの前提は「解放」にだけ必要で、装備時に親スキルは不要
 
 ### スキル一覧
@@ -304,6 +303,7 @@ SW キャッシュキーを上げることで、既存 PWA ユーザーに新版
 
 | Version | 内容 |
 | :---: | --- |
+| **1.5.1**  | ショップのリスペック（スキル振り直し）機能を削除 |
 | **1.5.0**  | 隠し要素 SECRETS を 9 種追加（タッチ操作・プレイ内容で発見）、SECRETS メニュー、称号、隠しスキン 3 種、RETRO / MIRROR / MIDNIGHT / HARDCORE モード、エンディング |
 | **1.4.0**  | スキルツリー拡張：25 スキル（★ULTIMATE 4 種）、ランク、装備枠拡張、シナジー 6 種、リスペック、XP オーブ。GHOST DASH の連打無敵を修正 |
 | **1.3.0**  | インタラクティブミュージック導入（セクション切替・ライザー・危険度/ヒート連動レイヤー・コード追従スティンガー・状態連動ミックス）、効果音を全面刷新 |
