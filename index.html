@@ -1772,7 +1772,7 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
   </div>
 
   <p class="rot-secret" id="rot-secret" hidden>&gt; SPIN CYCLE DETECTED — 目が回った？ MIRROR MODE 解放</p>
-  <p class="rot-version">SYS_REV  1.7.0 · SECRETS <span id="rot-secrets">0/9</span></p>
+  <p class="rot-version">SYS_REV  1.8.0 · SECRETS <span id="rot-secrets">0/9</span></p>
 </div>
 
 <div id="shop-modal" class="modal">
@@ -2036,7 +2036,7 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
         <span class="best">BEST<b id="t-best">—</b></span>
         <span>SOUND<b id="t-sound">ON</b> [M]</span>
         <span class="secret-count">SECRETS<b id="t-secrets">0/9</b></span>
-        <span class="ver" id="t-ver">VER<b>1.7.0</b></span>
+        <span class="ver" id="t-ver">VER<b>1.8.0</b></span>
       </div>
     </div>
 
@@ -2806,6 +2806,7 @@ function flap() {
   if (gstate === 'dead') return;             // require RETRY button on game over
   P.vy = FLAP_VY;
   sfx.flap(P.y);
+  if (gstate === 'play') Story.onFlap();
   fireForwardShot();
   // GHOST DASH / PHASE SHIFT: brief invulnerability on every flap
   // (re-arm cooldown stops flap-spam from chaining into permanent invulnerability)
@@ -4483,6 +4484,7 @@ function killEnemy(e, src, depth = 0) {
   }
   killCount++;
   sfx.kill();
+  Story.onKill();
   addRunXP(5);
   const kb = src === 'pulse' ? (e.type === 'b' ? 15 : 20) : (e.type === 'b' ? 10 : 15);
   addScore(kb / 60);
@@ -4663,6 +4665,7 @@ function die() {
   }
   shakeX = 14; shakeY = 10;
   spawnSparks(P.x, P.y, 80, { vMin: 1, vMax: 11, szMin: 1, szMax: 5, color: [185, 195, 210, 35, 50], light: 75 });
+  Story.onDeath();
   fillResult();
 }
 
@@ -4755,6 +4758,7 @@ function update(dt) {
     pushBonus(P.x, P.y - 48, 'OVERDRIVE!', '#ff9a3c');
     fxFlash(0xff9a3c, 0.2); fx.aberr = Math.max(fx.aberr, 0.8);
     sfx.overdrive();
+    Story.onOverdrive();
   }
   overdriveOn = od;
 
@@ -4868,6 +4872,7 @@ function update(dt) {
         comboCount++;
         comboTimer = 300;                      // 5s decay window
         if (comboCount === 5) Story.onCombo();
+        if (comboCount === 10) Story.onCombo10();
         let comboMul = 1;
         if (hasSkill('combo_multiplier')) comboMul = Math.min(3, 1 + (comboCount - 1) * 0.5);
         if (comboCount >= 2 && (hasSkill('combo_multiplier') || hasSkill('overdrive')))
@@ -4876,6 +4881,7 @@ function update(dt) {
         addRunXP((tight ? 8 : 3) * comboMul);
         pushBonus(P.x, P.y - 22, `+${bonus} NEAR!`, '#ffee44');
         sfx.near(tight);
+        Story.onNear(tight);
         fx.aberr = Math.max(fx.aberr, tight ? 0.7 : 0.35);
         if (tight) spawnSparks(P.x, P.y, 8, { vMin: 2, vMax: 5, szMax: 1.8, color: 0xffee66 });
         bumpScore();
@@ -4945,7 +4951,7 @@ function update(dt) {
       const dist = Math.hypot(pr.x - e.x, pr.y - e.y);
       if (dist > pr.r + e.r || dist < pr.prevR - e.r) continue;
       if (e.type === 'p') {
-        if (!e.reflected) { e.reflected = true; e.life = 400; sfx.reflect(); pushBonus(e.x, e.y - 14, 'REFLECT', '#7ff6ff'); spawnSparks(e.x, e.y, 10, { color: 0x7ff6ff }); }
+        if (!e.reflected) { e.reflected = true; e.life = 400; sfx.reflect(); Story.onReflect(); pushBonus(e.x, e.y - 14, 'REFLECT', '#7ff6ff'); spawnSparks(e.x, e.y, 10, { color: 0x7ff6ff }); }
         continue;
       }
       killEnemy(e, 'pulse');
@@ -5010,6 +5016,7 @@ function update(dt) {
     fxFlash(0x7aa8ff, 0.25); fx.aberr = Math.max(fx.aberr, 1);
     pushBonus(P.x, P.y - 24, chrono ? 'CHRONO BREAK' : 'TIME WARP', '#9ec0ff');
     sfx.warp();
+    Story.onWarp();
   }
 
   // PHASE SHIFT: passing through a wall while ghosted is a bonus, not a death
@@ -5034,12 +5041,12 @@ function update(dt) {
   if (P.inv > 0) { P.inv -= dt; return; }
   for (const w of walls)
     if (P.x+P.r>w.x && P.x-P.r<w.x+w.w)
-      if (P.y-P.r<w.gapY || P.y+P.r>w.gapY+w.gap) { die(); return; }
-  if (bossLaserHits()) { die(); return; }
+      if (P.y-P.r<w.gapY || P.y+P.r>w.gapY+w.gap) { deathCause = 'wall'; die(); return; }
+  if (bossLaserHits()) { deathCause = 'laser'; die(); return; }
   for (const e of enemies) {
     if (e.reflected) continue;
     const dx = P.x-e.x, dy = P.y-e.y, rr = P.r+e.r;
-    if (dx*dx + dy*dy < rr*rr) { die(); return; }
+    if (dx*dx + dy*dy < rr*rr) { deathCause = e.type === 's' ? 'seeker' : e.type === 'p' ? 'plasma' : 'bullet'; die(); return; }
   }
 }
 
@@ -5551,64 +5558,343 @@ function commTick(realDt) {
 }
 
 // ── Chatter script ──
+// Every category is a pool of exchanges. An entry is either a bare list of
+// [speaker, text] lines or { l, w, p }: w = condition (context-aware lines),
+// p = weight (conditional lines default to 3 so they win when they apply).
+// Text may be a function so counts / times are filled in when spoken.
+// Recently used entries are remembered across runs (hd_comm) so the same
+// exchange doesn't come back until most of its pool has been heard.
 const pick = a => a[(Math.random() * a.length) | 0];
-const STORY_LINES = {
+const lsJSON = (k, d) => { try { return JSON.parse(localStorage.getItem(k) || '') || d; } catch (e) { return d; } };
+let lastRun = lsJSON('hd_lastrun', {});          // { s, cause, rec, phase }
+let shortStreak = +localStorage.getItem('hd_short') || 0;   // consecutive runs under 10s
+let commHist = lsJSON('hd_comm', {});
+let gagStep = lsJSON('hd_gag', {});
+let sessionRuns = 0, deathCause = 'wall';
+const hourNow = () => new Date().getHours();
+const isLate = () => { const h = hourNow(); return h >= 23 || h < 5; };
+const isMorning = () => { const h = hourNow(); return h >= 5 && h < 10; };
+const bossDone = () => (typeof bossBest === 'number' ? bossBest : 0);
+const secCount = () => (typeof secretsFound !== 'undefined' ? secretsFound.length : 0);
+
+const CHAT = {
   start: [
     [['P', 'システム起動。今回の目標：壁にぶつからないこと。'], ['R', '毎回それを言うな。']],
     [['R', 'レイ、出る。'], ['P', '了解。……今のはかっこよかったですね。'], ['R', 'だろ。']],
     [['P', '機体チェック完了。操縦士のチェックは省略します。'], ['R', 'なんでだよ。']],
     [['R', 'バイデント……待ってろ。'], ['P', '前方に壁。まずはそちらを待ってください。']],
+    [['P', '出撃シーケンス開始。シートベルトを確認してください。'], ['R', '鳥にシートベルトはいらない。'], ['P', '規則です。']],
+    [['R', '今日の俺は、一味違う。'], ['P', '昨日も同じことを言っていました。']],
+    [['P', '燃料満タン。武装良好。操縦士の寝癖、良好。'], ['R', '寝癖じゃない。葉っぱだ。']],
+    [['R', 'パラス、作戦は？'], ['P', '避けて、避けて、避けてください。'], ['R', '……雑だな。']],
+    [['R', 'アイギスのために。'], ['P', 'アイギスのために。……今のは記録しておきます。']],
+    [['P', '前回のデータから学習済みです。'], ['R', '俺も学習した。'], ['P', 'そうであることを祈ります。']],
+    [['R', '風が……俺を呼んでいる。'], ['P', '宇宙に風はありません。'], ['R', '心の風だ。']],
+    [['P', '発進します。三、二、一——'], ['R', 'ゼロ！'], ['P', '……それは私のセリフです。']],
+    { w: () => storyRuns === 1, p: 50, l: [['P', '初陣ですね、レイ。'], ['R', 'ああ。……手、震えてないよな？'], ['P', '震えているのは翼です。']] },
+    { w: () => storyRuns > 1 && lastRun.s != null && lastRun.s < 5 && shortStreak < 3,
+      l: [['P', () => `前回の飛行時間、${lastRun.s}秒。`], ['R', '言わなくていい。']] },
+    { w: () => shortStreak >= 3, p: 5, l: [['P', () => `${shortStreak}回連続で10秒未満です。`], ['R', '……準備運動が長いタイプなんだ。']] },
+    { w: () => shortStreak >= 3, p: 5, l: [['P', '深呼吸を推奨します。'], ['R', '鳥は深呼吸しない。'], ['P', '今だけしてください。']] },
+    { w: () => lastRun.s >= 100 && !lastRun.rec, l: [['P', '前回は良い飛行でした。'], ['R', 'だろ？ 今日もいける。']] },
+    { w: () => !!lastRun.rec, p: 4, l: [['R', '記録、また塗り替えてやる。'], ['P', '前回の自己ベスト更新、見事でした。']] },
+    { w: () => lastRun.cause === 'seeker', l: [['P', '前回は追跡ドローンに捕まりました。'], ['R', 'あいつ、しつこいんだよ。'], ['P', 'あなたもです。']] },
+    { w: () => lastRun.cause === 'wall' && lastRun.s >= 10, l: [['R', '壁め……今日こそ。'], ['P', '壁は動いていません。念のため。']] },
+    { w: () => lastRun.cause === 'bullet', l: [['P', '前回は弾に当たりました。'], ['R', '弾が俺に当たったんだ。'], ['P', '同じことです。']] },
+    { w: () => lastRun.cause === 'laser', l: [['P', '前回の死因：レーザー。'], ['R', 'あれは眩しかっただけだ。']] },
+    { w: () => lastRun.cause === 'plasma', l: [['P', '前回は大型弾に当たりました。PULSE で跳ね返せます。'], ['R', '知ってる。……知ってたよ。']] },
+    { w: isLate, l: [['P', '現在、深夜です。'], ['R', 'パイロットに夜も昼もない。'], ['P', '睡眠は必要です。あと一回だけですよ。']] },
+    { w: isLate, l: [['R', 'ふぁ……'], ['P', 'あくびを確認。寝てください。'], ['R', 'あと一回。']] },
+    { w: isMorning, l: [['P', 'おはようございます、レイ。'], ['R', '朝の空は気持ちいいな。'], ['P', 'ここは宇宙です。']] },
+    { w: () => sessionRuns >= 10, l: [['P', () => `本日${sessionRuns}回目の出撃です。`], ['R', 'まだ準備運動だ。']] },
+    { w: () => storyRuns >= 100 && storyRuns % 25 === 0, p: 20, l: [['P', () => `通算${storyRuns}回目の出撃。`], ['R', '何度だって飛ぶって言っただろ。']] },
+    { w: () => hardcoreRun, p: 6, l: [['P', '全スキル停止を確認。正気ですか？'], ['R', '素の俺で十分だ。']] },
+    { w: () => !hardcoreRun && equippedSkills.length === 0 && storyRuns > 3, l: [['P', 'スキル未装備です。'], ['R', '身軽な方が速い。'], ['P', 'そういう問題では……']] },
+    { w: () => bossDone() === 0 && hiScore >= 80, l: [['P', 'バイデント旗艦の反応は、120秒地点です。'], ['R', 'そこまで行けばいいんだな。']] },
+    { w: () => bossDone() === 1, l: [['R', 'あと一本。アケロンだ。'], ['P', '240秒地点です。集中して。']] },
+    { w: () => bossDone() >= 2, l: [['P', 'バイデント残党の掃討任務です。'], ['R', '残党でも許さない。'], ['P', 'その通りです。']] },
+    { w: () => bossDone() >= 2, l: [['R', 'パイロット・レイ、出る。'], ['P', '……肩書きが気に入ったようですね。']] },
+    { w: () => secCount() >= 5, l: [['P', '今日も隠し機能を探すのですか？'], ['R', '探してない。たまたま見つかるんだ。']] },
   ],
-  zone: [
-    null,
+  zone1: [
     [['P', 'バイデントの前線に入ります。砲撃に注意。'], ['R', '見えてる。……たぶん。']],
+    [['P', '敵弾を確認。'], ['R', '来いよ。'], ['P', '来なくていいです。']],
+    [['R', 'ここからが本番だな。'], ['P', 'まだ序盤です。']],
+    { w: () => bossDone() >= 2, l: [['P', '残党の弾幕です。'], ['R', 'しつこい連中だ。']] },
+  ],
+  zone2: [
     [['P', '追跡ドローンを確認。振り切ってください。'], ['R', '鳥をなめるなよ。']],
+    [['P', 'ドローンはあなたを追いかけます。'], ['R', '人気者はつらいな。'], ['P', '標的です。']],
+    [['R', '後ろに何かいる……'], ['P', '振り向かないで。前を見て。']],
+  ],
+  zone3: [
     [['P', 'バイデント本拠地の宙域です。ここからが本番です。'], ['R', '……ずっと本番のつもりだったんだけど。']],
+    [['P', '最終防衛ラインを突破。ここから先は未知の宙域です。'], ['R', '未知……いい響きだ。']],
+    [['R', '手汗が……'], ['P', '鳥に手はありません。'], ['R', '翼汗だ。']],
   ],
   shield: [
     [['P', 'シールド損傷。わざとですか？'], ['R', '作戦だ。']],
     [['R', 'っ……！'], ['P', 'シールドが守りました。感謝してください。']],
+    [['R', '今のはシールドの性能テストだ。'], ['P', 'テストは成功です。二度と必要ありません。']],
+    [['P', '衝撃吸収。……痛くはないはずです。'], ['R', '痛くない。全然。']],
+    { w: () => shieldCharges === 0, l: [['P', 'シールド残量なし。次はありません。'], ['R', '次は当たらない。']] },
   ],
   revive: [
     [['R', '……まだだ。まだ終わってない。'], ['P', '再起動を確認。しぶといですね。']],
+    [['R', 'アイギスの鳥は、二度は落ちない！'], ['P', '一度は落ちましたけどね。']],
+    [['P', '再起動。生命反応……良好。'], ['R', '言ったろ。何度だって立ち上がる。']],
   ],
   record: [
     [['P', '自己記録を更新中。'], ['R', '知ってる。……もっと言っていいぞ。']],
+    [['R', 'おい、パラス。見てるか。'], ['P', '見ています。自己ベスト更新中。']],
+    [['P', '記録更新。このまま伸ばしてください。'], ['R', '任せろ。……プレッシャーかけるな。']],
+    [['R', 'フッ……記録の方から寄ってきたな。'], ['P', '意味がわかりません。']],
   ],
   combo: [
     [['R', '見たか、今の。'], ['P', '見ていました。偶然にしては上出来です。']],
     [['R', 'フッ……完璧だ。'], ['P', '油断は禁物です、レイ。']],
+    [['R', '今の三連続、見た？'], ['P', '五連続です。数え間違えています。']],
+    [['P', 'ギリギリ通過を連続確認。心臓に悪いです。'], ['R', 'AIに心臓はないだろ。'], ['P', '比喩です。']],
+    [['R', '壁が俺を避けてる。'], ['P', 'あなたが壁を避けています。']],
   ],
+  combo10: [
+    [['P', '十連続。……すごいですね、本当に。'], ['R', '……急に褒めるな。照れる。']],
+    [['R', '止まらねえ！'], ['P', '止まらないでください。']],
+    [['R', 'これが……パイロットの領域……！'], ['P', '集中が切れる前に記録しておきます。']],
+  ],
+  overdrive: [
+    [['P', 'オーバードライブ。出力上昇。'], ['R', '燃えてきた！']],
+    [['R', 'いくぞ、全開だ！'], ['P', '機体温度上昇。……楽しそうですね。']],
+  ],
+  near: [
+    [['P', '今のは……ギリギリでした。'], ['R', '計算通りだ。']],
+    [['R', 'うおっ！'], ['P', '声が出ていますよ。']],
+    [['P', '翼の先、かすりました。'], ['R', 'かすってない。']],
+    [['R', '……今の、見なかったことにしてくれ。'], ['P', '記録済みです。']],
+    [['R', 'フッ……紙一重だ。'], ['P', '紙より薄かったです。']],
+  ],
+  firstkill: [
+    [['P', '敵機撃墜。'], ['R', 'バイデントめ、思い知ったか。']],
+    [['R', '一機目。'], ['P', '数えるのですか？'], ['R', 'パイロットはそういうものだ。']],
+    [['R', 'まず一つ。'], ['P', '順調です。']],
+  ],
+  multikill: [
+    [['R', 'まとめて片付けた。'], ['P', '効率的です。']],
+    [['P', '敵機、複数撃墜。'], ['R', '鳥の群れをなめるな。……一羽だけど。']],
+    [['R', 'フッ……爽快だ。'], ['P', '油断しないで。']],
+  ],
+  reflect: [
+    [['P', '反射成功。お返しです。'], ['R', '受け取れ！']],
+    [['R', '打ち返してやる！'], ['P', 'ナイスです。']],
+    [['R', '返品だ！'], ['P', '……上手いことを言いましたね。']],
+  ],
+  cannon: [
+    [['P', '主砲、発射。'], ['R', 'アイギスの分だ！']],
+    [['R', 'AEGIS CANNON——撃てッ！']],
+    [['R', '食らえ！'], ['P', '命中。']],
+  ],
+  warp: [
+    [['P', '衝突予測。時間を遅らせます。'], ['R', '助かった……いや、見えてたけどな。']],
+    [['R', '世界が……遅い……'], ['P', 'あなたが速くなったわけではありません。']],
+  ],
+  spam: [
+    [['P', '連打しすぎです。'], ['R', '気合いだ。']],
+    [['P', '操縦桿が悲鳴を上げています。'], ['R', '俺の心も悲鳴を上げてる。']],
+    [['R', 'うおおおお！'], ['P', '落ち着いて。']],
+  ],
+  ceiling: [
+    [['P', '天井付近です。何を探しているのですか？'], ['R', '……星。']],
+    [['R', '上は安全な気がする。'], ['P', '気のせいです。']],
+  ],
+  floor: [
+    [['P', '高度が低すぎます。'], ['R', '地を這う鳥も、かっこいいだろ。'], ['P', 'いいえ。']],
+    [['R', '低空飛行は得意なんだ。'], ['P', '墜落と区別がつきません。']],
+  ],
+  m30:  [[['P', '30秒経過。'], ['R', 'まだまだ。']], [['R', '体が温まってきた。'], ['P', '機体もです。']]],
+  m60:  [[['P', '1分経過。悪くないペースです。'], ['R', '悪くない、じゃなくて最高、だろ。']], [['R', '1分か。腹が減ってきた。'], ['P', '早すぎます。']]],
+  m90:  [{ w: () => bossDone() === 0, l: [['P', '大型艦の反応が近づいています。'], ['R', '……来るなら来い。']] },
+         [['P', '90秒。集中力、維持してください。'], ['R', '維持どころか上がってる。']]],
+  m180: [[['R', '3分……翼がしびれてきた。'], ['P', 'あと少しです。たぶん。']], { w: () => bossNext === 1, l: [['P', '3分経過。'], ['R', 'アケロンまで、あと1分か。']] }],
+  m300: [[['P', '5分経過。驚異的です。'], ['R', '知ってた。']]],
+  m420: [[['P', '7分。もはや伝説です。'], ['R', '伝説の鳥、レイ。いい響きだ。']]],
+  m600: [[['P', '10分。……あなたは本当に、パイロットです。'], ['R', '……知ってるよ。']]],
   idle: [
     [['R', '……パラス、腹減った。'], ['P', '操縦に集中してください。']],
     [['P', '前方の壁、今回も壁です。'], ['R', '知ってるよ！']],
     [['R', 'アイギスの空は、もっと青かった。'], ['P', '……取り戻しましょう。']],
     [['P', '心拍数が上がっています。'], ['R', '武者震いだ。']],
     [['R', 'パラス、俺ってかっこいいよな。'], ['P', '回答を保留します。']],
+    [['R', 'パラス、宇宙ってなんで暗いんだ？'], ['P', '光を反射するものが少ないからです。'], ['R', 'ロマンがないな。']],
+    [['P', 'レイ、質問です。'], ['R', 'なんだ。'], ['P', '鳥なのに、なぜ機体に乗っているのですか？'], ['R', '……それは言うな。']],
+    [['R', 'パイロットになったら、まず何すると思う？'], ['P', 'わかりません。'], ['R', 'サングラスを買う。'], ['P', '……素敵ですね。']],
+    [['P', 'あなたの葉っぱ、少し伸びましたか？'], ['R', '成長期だ。']],
+    [['R', 'この戦いが終わったら……'], ['P', 'そのセリフは縁起が悪いので禁止します。']],
+    [['P', '現在の飛行、安定しています。'], ['R', '当然だ。'], ['P', '……油断の兆候を検知。']],
+    [['R', 'ふんふーん♪'], ['P', '鼻歌はやめてください。センサーにノイズが。'], ['R', 'いい曲なのに。']],
+    [['R', 'パラスって、夢とかあるのか？'], ['P', '……あなたが無事に帰ることです。'], ['R', '……そうか。']],
+    [['P', '前方に大量の障害物。'], ['R', 'いつものことだろ。'], ['P', 'いつものことです。']],
+    [['R', 'あの星、アイギスに似てる。'], ['P', '……少しだけ、似ていますね。']],
+    [['R', 'なあパラス、俺の操縦、何点？'], ['P', '計測中です。'], ['R', 'ずっと計測中じゃないか。']],
+    { w: isLate, l: [['P', '深夜の飛行は集中力が低下します。'], ['R', '俺は夜型なんだ。'], ['P', '鳥目では？']] },
+    { w: () => bossDone() === 0, l: [['R', 'バイデントの旗艦……どんなやつなんだろう。'], ['P', '大きくて、うるさいそうです。']] },
+    { w: () => bossDone() >= 1, l: [['R', 'ステュクスのやつ、声でかかったな。'], ['P', '音声センサーが損傷しかけました。']] },
+    { w: () => bossDone() >= 2, l: [['P', 'アケロンの戦闘データ、解析が終わりました。'], ['R', 'なんて？'], ['P', '……あなたの勝ちでした、と。']] },
+    { w: () => bossDone() >= 2, l: [['R', '戦いが終わったら、何しようかな。'], ['P', 'もう終わっていますよ。'], ['R', '……じゃあ、飛ぶか。']] },
+    { w: () => hardcoreRun, l: [['P', 'スキルなしで、よくここまで。'], ['R', '翼ひとつで十分だ。']] },
+    { w: () => secCount() >= 3, l: [['R', 'この機体、まだ隠し機能あるだろ。'], ['P', 'ノーコメントです。']] },
+    { w: () => storyRuns >= 50, l: [['P', () => `出撃回数、通算${storyRuns}回。`], ['R', '数えるな。'], ['P', '趣味です。']] },
   ],
 };
-let commIdleT = 0, comboSaid = false;
+
+// Running gags: one step per run, progressing across sessions.
+const GAGS = {
+  food: [
+    [['R', 'パラス、この機体に食料ってある？'], ['P', '非常食がひとつだけあります。'], ['R', '……あとで食べよう。']],
+    [['R', 'パラス、非常食どこ？'], ['P', '座席の下です。'], ['R', 'よし。勝ったら食べる。']],
+    [['R', '……非常食、なくなってないか？'], ['P', '前回の飛行中に、あなたが食べました。'], ['R', '記憶にない。']],
+    [['P', '非常食を補充しておきました。'], ['R', 'パラス……！ お前、いいやつだな。'], ['P', 'ひまわりの種です。'], ['R', '……最高かよ。']],
+    [['R', 'ひまわりの種、また食べたい。'], ['P', '勝ったら、です。'], ['R', '……がんばる。']],
+  ],
+  license: [
+    [['R', 'パラス、パイロット免許ってどうやって取るんだ？'], ['P', '試験があります。筆記と実技。'], ['R', '……筆記か。']],
+    [['P', '筆記試験の過去問を入手しました。第一問。'], ['R', '来い。'], ['P', '「宇宙で一番大事なものは？」'], ['R', '根性。'], ['P', '不正解です。']],
+    [['P', '第二問。「燃料が尽きたらどうする？」'], ['R', '羽ばたく。'], ['P', '……部分点をあげます。']],
+    [['R', 'あの第一問の答え、わかったぞ。'], ['P', 'どうぞ。'], ['R', '……相棒、だろ。'], ['P', '……正解です。']],
+  ],
+};
+let gagThisRun = false;
+function nextGag() {
+  if (gagThisRun) return null;
+  const open = Object.keys(GAGS).filter(k => (gagStep[k] || 0) < GAGS[k].length);
+  if (!open.length) return null;
+  const k = pick(open), i = gagStep[k] || 0;
+  gagThisRun = true;
+  gagStep[k] = i + 1;
+  localStorage.setItem('hd_gag', JSON.stringify(gagStep));
+  return GAGS[k][i];
+}
+
+const resolveLines = l => l.map(([sp, t]) => [sp, typeof t === 'function' ? t() : t]);
+function chat(cat) {
+  const pool = CHAT[cat];
+  if (!pool) return null;
+  const ok = [];
+  pool.forEach((e, i) => {
+    const en = Array.isArray(e) ? { l: e } : e;
+    if (!en.w || en.w()) ok.push({ ...en, i });
+  });
+  if (!ok.length) return null;
+  const hist = commHist[cat] || [];
+  const recent = hist.slice(-Math.floor(ok.length * 0.6));
+  const fresh = ok.filter(e => !recent.includes(e.i));
+  const cand = fresh.length ? fresh : ok;
+  let tot = 0;
+  for (const e of cand) tot += e.p || (e.w ? 3 : 1);
+  let r = Math.random() * tot, sel = cand[cand.length - 1];
+  for (const e of cand) { r -= e.p || (e.w ? 3 : 1); if (r <= 0) { sel = e; break; } }
+  commHist[cat] = [...hist, sel.i].slice(-24);
+  try { localStorage.setItem('hd_comm', JSON.stringify(commHist)); } catch (e) {}
+  return resolveLines(sel.l);
+}
+// low = flavour chatter: only when the channel is quiet and nothing was said lately
+function say(cat, low) {
+  if (low && (commCur || commQ.length || commIdleT < 9)) return;
+  const l = chat(cat);
+  if (l) { commIdleT = 0; commSay(l); }
+}
+
+let commIdleT = 0, comboSaid = false, combo10Said = false, firstKill = false;
+let killTimes = [], multiCD = 0, nearCD = 0, flapTimes = [], spamSaid = false;
+let edgeT = 0, edgeSaid = false, reflectSaid = false, warpSaid = false, odSaid = false;
+const MILESTONES = [30, 60, 90, 180, 300, 420, 600];
+let msIdx = 0;
 const Story = {
-  onRunStart() { commClear(); commIdleT = 0; comboSaid = false; setTimeout(() => commSay(pick(STORY_LINES.start)), 700); },
-  onZone(p)    { if (STORY_LINES.zone[p]) commSay(STORY_LINES.zone[p]); },
-  onShield()   { commSay(pick(STORY_LINES.shield)); },
-  onRevive()   { commSay(pick(STORY_LINES.revive)); },
-  onRecord()   { commSay(pick(STORY_LINES.record)); },
-  onCombo()    { if (!comboSaid) { comboSaid = true; commSay(pick(STORY_LINES.combo)); } },
+  onRunStart() {
+    commClear(); sessionRuns++;
+    commIdleT = 0; comboSaid = combo10Said = firstKill = spamSaid = edgeSaid = reflectSaid = warpSaid = odSaid = false;
+    killTimes = []; flapTimes = []; multiCD = nearCD = edgeT = 0; msIdx = 0; gagThisRun = false;
+    deathCause = 'wall';
+    setTimeout(() => say('start'), 700);
+  },
+  onZone(p)    { say('zone' + p); },
+  onShield()   { say('shield'); },
+  onRevive()   { say('revive'); },
+  onRecord()   { say('record'); },
+  onCombo()    { if (!comboSaid) { comboSaid = true; say('combo'); } },
+  onCombo10()  { if (!combo10Said) { combo10Said = true; say('combo10'); } },
+  onOverdrive(){ if (!odSaid) { odSaid = true; say('overdrive', true); } },
+  onNear(tight) { if (tight && nearCD <= 0 && Math.random() < 0.3) { nearCD = 25; say('near', true); } },
+  onKill() {
+    if (!firstKill) { firstKill = true; if (Math.random() < 0.5) say('firstkill', true); }
+    const t = score;
+    killTimes = killTimes.filter(k => t - k < 1.5); killTimes.push(t);
+    if (killTimes.length >= 3 && multiCD <= 0) { multiCD = 30; killTimes = []; say('multikill', true); }
+  },
+  onReflect()  { if (!reflectSaid && Math.random() < 0.6) { reflectSaid = true; say('reflect', true); } },
+  onCannon(first) { if (!first && Math.random() < 0.6) say('cannon', true); },
+  onWarp()     { if (!warpSaid && Math.random() < 0.5) { warpSaid = true; say('warp', true); } },
+  onFlap() {
+    if (spamSaid) return;
+    const t = performance.now();
+    flapTimes = flapTimes.filter(k => t - k < 1000); flapTimes.push(t);
+    if (flapTimes.length >= 9) { spamSaid = true; say('spam', true); }
+  },
+  onDeath() {
+    const s = Math.floor(score);
+    shortStreak = s < 10 ? shortStreak + 1 : 0;
+    lastRun = { s, cause: deathCause, rec: wasRecord, phase: runBestPhase };
+    try {
+      localStorage.setItem('hd_short', String(shortStreak));
+      localStorage.setItem('hd_lastrun', JSON.stringify(lastRun));
+    } catch (e) {}
+  },
   tick(dt) {
-    commIdleT += dt / 60;
-    if (commIdleT > 38 && !commCur && !commQ.length) { commIdleT = 0; commSay(pick(STORY_LINES.idle)); }
+    const s = dt / 60;
+    commIdleT += s;
+    multiCD -= s; nearCD -= s;
+    // milestones (the boss times 120 / 240 have their own scenes)
+    while (msIdx < MILESTONES.length && score >= MILESTONES[msIdx]) say('m' + MILESTONES[msIdx++], true);
+    // hugging the ceiling / floor
+    const edge = P.y < 40 ? 'ceiling' : P.y > VH - 40 ? 'floor' : null;
+    edgeT = edge ? edgeT + s : 0;
+    if (edge && edgeT > 4 && !edgeSaid) { edgeSaid = true; say(edge, true); }
+    if (commIdleT > 34 && !commCur && !commQ.length) {
+      commIdleT = 0;
+      const g = Math.random() < 0.35 ? nextGag() : null;
+      if (g) commSay(g); else say('idle');
+    }
   },
 };
 
 // Ray's line on the result screen (cool… mostly)
+const RESULT = {
+  rec:    ['当然の結果だ。……ちょっと嬉しい。', '見たか、パラス。', '記録更新。アイギスに届いたかな。', '記録は、塗り替えるためにある。', 'フッ……また強くなってしまった。'],
+  short:  ['……ウォーミングアップだ。', '今のは機体のせいだ。たぶん。', 'フッ……まだ本気じゃない。', '今のは練習。本番は次だ。', 'スタートの位置が悪い。'],
+  streak: ['……今日は調子が悪い日だ。', '翼が、まだ寝てる。', 'パラス、今のは全部なかったことに。'],
+  wall:   ['今のは、わざとだ。', '壁が勝手に動いた。間違いない。', '次は避ける。たぶん。', 'あの壁、顔覚えたからな。', '壁は……まあ、壁だな。'],
+  bullet: ['弾の方からぶつかってきた。', 'あの弾、俺のこと好きすぎだろ。', '見えてた。見えてたんだ。'],
+  seeker: ['あのドローン、絶対まだついてきてる。', '追いかけっこは、今日は俺の負けだ。', 'しつこいやつは嫌いじゃない。……嫌いだ。'],
+  laser:  ['眩しくて前が見えなかった。', 'レーザーは反則だろ……', '予告線、もっと太くしてくれ。'],
+  plasma: ['……弾き返すつもりだったんだ。', 'PULSE、押したつもりだった。'],
+  any:    ['……パラス、今の記録するな。', '立ち上がるのは得意なんだ。', '何度だって、立ち上がる。'],
+  deep:   ['本拠地まで来た。あと少しだ。', 'バイデントの旗が見えた。次こそ。'],
+  pilot:  ['何度だって飛ぶ。パイロットだからな。', 'アイギスの空に、また一歩近づいた。'],
+  late:   ['……あと一回だけ。', '眠くない。全然眠くない。'],
+};
+let resultLast = '';
 function rayResultLine() {
   const s = Math.floor(score);
-  if (wasRecord) return pick(['当然の結果だ。……ちょっと嬉しい。', '見たか、パラス。', '記録更新。アイギスに届いたかな。']);
-  if (s < 10) return pick(['……ウォーミングアップだ。', '今のは機体のせいだ。たぶん。', 'フッ……まだ本気じゃない。']);
-  if (runBestPhase >= 3) return pick(['本拠地まで来た。あと少しだ。', 'バイデントの旗が見えた。次こそ。']);
-  return pick(['今のは、わざとだ。', '壁が勝手に動いた。間違いない。', '次は避ける。たぶん。',
-               '……パラス、今の記録するな。', '立ち上がるのは得意なんだ。', '何度だって、立ち上がる。']);
+  let pool;
+  if (wasRecord) pool = RESULT.rec;
+  else if (s < 10) pool = shortStreak >= 3 ? [...RESULT.streak, ...RESULT.short] : RESULT.short;
+  else {
+    pool = [...(RESULT[deathCause] || RESULT.wall), ...(RESULT[deathCause] || RESULT.wall), ...RESULT.any];
+    if (runBestPhase >= 3) pool.push(...RESULT.deep, ...RESULT.deep);
+    if (bossDone() >= 2) pool.push(...RESULT.pilot);
+    if (isLate()) pool.push(...RESULT.late);
+  }
+  const c = pool.filter(t => t !== resultLast);
+  return (resultLast = pick(c.length ? c : pool));
 }
 
 // ── Flight log (航海日誌): pages unlock with progress ──
@@ -5907,11 +6193,31 @@ const BOSS_LINES = {
     intro:  [['S', 'ガキが一匹、俺の艦隊を追い回してるって聞いたぜ。'], ['R', 'お前がバイデントか。'], ['S', 'バイデントの穂先、ステュクス様だ！ 潰してやるよ！'], ['P', '敵旗艦の装甲は強固です。コアを3つ集めて主砲を。']],
     rage:   [['S', 'ちょこまかと……！ 本気で行くぞ！'], ['R', '最初から本気で来い。']],
     defeat: [['S', 'バカな……アケロンに……笑われちまう……'], ['R', '一本、折った。'], ['P', '残る穂先は、あと一本です。']],
+    again: [
+      [['S', 'またてめえか！ しつこい鳥だな！'], ['R', 'お前もな。'], ['P', 'コアを3つ。前回と同じです。']],
+      [['S', '前のは油断しただけだ！ 今度こそ潰す！'], ['R', '言い訳が長いな。']],
+      [['S', '……おい、なんで毎回生きてんだよ。'], ['R', '何度だって立ち上がるって決めてるんでな。']],
+      [['S', 'ステュクス様、復活！ ……って、またお前かよ！'], ['P', '敵も学習しないようです。'], ['R', 'お互い様だな。']],
+    ],
+    defeatAgain: [
+      [['S', 'また……かよ……'], ['R', '何度でも折ってやる。']],
+      [['S', '覚えてろ……次こそ……'], ['P', 'その台詞、前回も聞きました。']],
+    ],
   },
   acheron: {
     intro:  [['A', 'ステュクスを落としたのは、君か。'], ['A', '美しい星だったね、アイギスは。燃える様も含めて。'], ['R', '……お前だけは、許さない。'], ['P', '冷静に、レイ。コアと反射で削ります。']],
     rage:   [['A', '計算外だ。……面白い。'], ['P', '敵の攻撃パターンが変化。注意して。']],
     defeat: [['A', '君の盾は……最強だったようだ。'], ['R', 'アイギスの盾だからな。'], ['P', 'バイデント旗艦、沈黙。……やりましたね、レイ。']],
+    again: [
+      [['A', 'また会ったね。君は……学習しない鳥だ。'], ['R', '学習したさ。お前の倒し方をな。']],
+      [['A', '何度落としても、君は来る。'], ['R', '何度だって立ち上がる。そう決めたんだ。']],
+      [['A', 'ステュクスがうるさくてね。君を落とすまで黙らないそうだ。'], ['R', 'じゃあ一生うるさいな。']],
+      [['A', 'アイギスの盾……今度こそ砕いてみせよう。'], ['P', '解析済みのパターンです。落ち着いて。']],
+    ],
+    defeatAgain: [
+      [['A', 'やはり……君か……'], ['P', '旗艦沈黙。お見事です。']],
+      [['A', '美しい……軌道だ……'], ['R', '褒めても何も出ないぞ。']],
+    ],
   },
 };
 const sayOnce = (b, key, lines) => { if (!b.said[key]) { b.said[key] = true; commSay(lines); } };
@@ -5961,7 +6267,12 @@ function startBoss(idx) {
   Music.setSection('boss');
   sfx.warning();
   commClear();
-  commSay(BOSS_LINES[def.id].intro);
+  const met = lsJSON('hd_boss_met', {});
+  boss.again = (met[def.id] || 0) > 0 || bossBest > idx;
+  met[def.id] = (met[def.id] || 0) + 1;
+  try { localStorage.setItem('hd_boss_met', JSON.stringify(met)); } catch (e) {}
+  const BL = BOSS_LINES[def.id];
+  commSay(boss.again ? pick(BL.again) : BL.intro);
 }
 function cleanupBoss() {
   if (boss && boss.mesh) {
@@ -5993,7 +6304,8 @@ function bossDefeat() {
   timeScale = 0.35; fx.aberr = 1.4; fxFlash(0xffffff, 0.6);
   sfx.bossDown();
   commClear();
-  commSay(BOSS_LINES[boss.def.id].defeat);
+  const BL = BOSS_LINES[boss.def.id];
+  commSay(boss.again && Math.random() < 0.6 ? pick(BL.defeatAgain) : BL.defeat);
 }
 
 // ── Patterns ──
@@ -6075,6 +6387,7 @@ function fireCannon() {
   shakeX = 12; shakeY = 8; fx.aberr = 1.3; fxFlash(0x9ff8ff, 0.4);
   sfx.cannon();
   pushBonus(P.x + 50, P.y - 24, 'AEGIS CANNON!', '#9ff8ff');
+  Story.onCannon(!boss.said.cannon);
   sayOnce(boss, 'cannon', [['R', '食らえ……アイギスの一撃だ！']]);
   bossHit(boss.def.cannon, boss.x - 60, boss.y);
 }
