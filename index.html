@@ -957,6 +957,26 @@ button { font-family: var(--f-ui) }
 }
 
 /* ══ Story ═══════════════════════════════════════════════════════════════ */
+/* boss HP bar (top centre, replaces the phase meter during a fight) */
+.hud-phase.hide { opacity: 0; }
+.boss-bar {
+  position: absolute; left: 50%; top: calc(10 * var(--px)); transform: translateX(-50%);
+  width: calc(320 * var(--px)); text-align: center;
+  opacity: 0; transition: opacity .4s; pointer-events: none;
+  --bc: #ff3048;
+}
+.boss-bar.on { opacity: 1; }
+.bb-top b { font: 900 calc(13 * var(--px))/1 var(--f-disp); letter-spacing: calc(4 * var(--px)); color: #fff; text-shadow: 0 0 calc(10 * var(--px)) var(--bc); }
+.bb-top span { margin-left: calc(8 * var(--px)); font: 700 calc(9 * var(--px))/1 var(--f-ui); letter-spacing: calc(2 * var(--px)); color: var(--bc); }
+.bb-hp { margin-top: calc(6 * var(--px)); height: calc(7 * var(--px)); background: rgba(255, 255, 255, 0.08); clip-path: polygon(calc(4 * var(--px)) 0, 100% 0, calc(100% - calc(4 * var(--px))) 100%, 0 100%); }
+.bb-hp i { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, var(--bc), #fff 160%); box-shadow: 0 0 calc(10 * var(--px)) var(--bc); transition: width .25s; }
+.boss-bar.rage .bb-hp i { animation: rage .5s steps(2) infinite; }
+@keyframes rage { 50% { filter: brightness(1.8); } }
+.bb-cannon { margin-top: calc(5 * var(--px)); font: 700 calc(8 * var(--px))/1 var(--f-disp); letter-spacing: calc(2 * var(--px)); color: #7ff6ff; }
+.bb-cannon span { margin-left: calc(4 * var(--px)); letter-spacing: calc(3 * var(--px)); font-size: calc(10 * var(--px)); text-shadow: 0 0 calc(6 * var(--px)) #7ff6ff; }
+.comm.styx .comm-name { color: #ff6a7c; }
+.comm.acheron .comm-name { color: #c2a6ff; }
+
 /* in-play comm (bottom centre, inside the scaled #ui) */
 .comm {
   position: absolute; left: 50%; bottom: calc(12 * var(--px));
@@ -1752,7 +1772,7 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
   </div>
 
   <p class="rot-secret" id="rot-secret" hidden>&gt; SPIN CYCLE DETECTED — 目が回った？ MIRROR MODE 解放</p>
-  <p class="rot-version">SYS_REV  1.6.0 · SECRETS <span id="rot-secrets">0/9</span></p>
+  <p class="rot-version">SYS_REV  1.7.0 · SECRETS <span id="rot-secrets">0/9</span></p>
 </div>
 
 <div id="shop-modal" class="modal">
@@ -1817,6 +1837,17 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
       <h3>STORY</h3>
       <p>最強の盾の名を冠した星〈アイギス〉は、宇宙海賊団〈バイデント〉に焼き尽くされた。パイロットに憧れていた小さな鳥 <b>レイ</b> は、古い機体と AI の <b>パラス</b> とともに飛び立つ。海賊団を壊滅させるまで、何度だって立ち上がる。</p>
       <p>記録を伸ばすと <b>LOG（航海日誌）</b> のページが増えていく。</p>
+    </section>
+
+    <section class="howto-sec">
+      <h3>BOSS</h3>
+      <p>飛行 120 秒で <b>STYX</b>、240 秒で <b>ACHERON</b> ——海賊団バイデントの二本の穂先が現れる。</p>
+      <ul>
+        <li><b>エネルギーコア</b>（水色の結晶）を 3 つ集めると主砲 <b>AEGIS CANNON</b> が自動発射</li>
+        <li>ピンクの <b>大型弾</b> は PULSE で跳ね返せる。当てると大ダメージ</li>
+        <li>射撃スキルの弾もボスに当たる</li>
+        <li>点滅する帯は <b>レーザーの予告</b>。光る前に帯の外へ</li>
+      </ul>
     </section>
 
     <section class="howto-sec">
@@ -1969,6 +2000,11 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
         <span class="xp">XP<b id="hud-xp">+0</b></span>
         <span class="muted" id="hud-muted" hidden>[M] MUTED</span>
       </div>
+      <div class="boss-bar" id="boss-bar">
+        <div class="bb-top"><b id="bb-name">STYX</b><span id="bb-title"></span></div>
+        <div class="bb-hp"><i id="bb-fill"></i></div>
+        <div class="bb-cannon">AEGIS CANNON <span id="bb-pips">◇◇◇</span></div>
+      </div>
       <div class="comm" id="comm"><div class="comm-face" id="comm-face"></div><div class="comm-body"><div class="comm-name" id="comm-name"></div><div class="comm-text" id="comm-text"></div></div></div>
       <div class="hud-banner" id="hud-banner">
         <div class="b-kicker">ENTERING</div>
@@ -2000,7 +2036,7 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
         <span class="best">BEST<b id="t-best">—</b></span>
         <span>SOUND<b id="t-sound">ON</b> [M]</span>
         <span class="secret-count">SECRETS<b id="t-secrets">0/9</b></span>
-        <span class="ver" id="t-ver">VER<b>1.6.0</b></span>
+        <span class="ver" id="t-ver">VER<b>1.7.0</b></span>
       </div>
     </div>
 
@@ -2636,7 +2672,19 @@ const enemyMeshMap = new Map();
 function getOrCreateEnemy(e) {
   if (enemyMeshMap.has(e)) return enemyMeshMap.get(e);
   const grp = new THREE.Group();
-  if (e.type === 'b') {
+  if (e.type === 'p') {
+    // Boss plasma (PULSE-reflectable): big magenta orb, turns cyan once reflected
+    const core = new THREE.Mesh(new THREE.SphereGeometry(10, 20, 16), new THREE.MeshBasicMaterial({ color: 0xff4fd8 }));
+    core.name = 'pcore';
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(15, 1.2, 6, 40), new THREE.MeshBasicMaterial({ color: 0xffb0f0 }));
+    ring.name = 'pring';
+    grp.add(core, ring);
+    grp.add(glowSprite(0xff4fd8, 80, 0.8));
+    grp.scale.setScalar(1.25);
+    scene.add(grp);
+    enemyMeshMap.set(e, grp);
+    return grp;
+  } else if (e.type === 'b') {
     // Plasma orb
     grp.add(new THREE.Mesh(
       new THREE.SphereGeometry(5, 18, 18),
@@ -2699,10 +2747,11 @@ const ORB_GEOM = new THREE.OctahedronGeometry(4.5, 0);
 function getOrCreateOrb(o) {
   let m = orbMeshMap.get(o);
   if (m) return m;
-  const col = o.gold ? 0xffd84a : 0x5dffb0;
+  const col = o.core ? 0x7ff6ff : o.gold ? 0xffd84a : 0x5dffb0;
   m = new THREE.Mesh(ORB_GEOM, new THREE.MeshBasicMaterial({ color: col }));
   if (o.gold) m.scale.setScalar(1.4);
-  m.add(glowSprite(col, o.gold ? 34 : 24, 0.75));
+  if (o.core) { m.scale.setScalar(2); m.add(new THREE.Mesh(new THREE.TorusGeometry(7, 0.5, 6, 32), new THREE.MeshBasicMaterial({ color: 0xffffff }))); }
+  m.add(glowSprite(col, o.core ? 30 : o.gold ? 34 : 24, 0.75));
   scene.add(m);
   orbMeshMap.set(o, m);
   return m;
@@ -2753,7 +2802,7 @@ const FLAP_VY   = -5.2;  // upward impulse (canvas y-down, so negative = up)
 let   spaceDown = false;
 
 function flap() {
-  if (gstate === 'menu' || gstate === 'story') return;   // require start button on title
+  if (gstate === 'menu' || gstate === 'story' || gstate === 'cut') return;   // no flapping on title / cutscenes
   if (gstate === 'dead') return;             // require RETRY button on game over
   P.vy = FLAP_VY;
   sfx.flap(P.y);
@@ -2783,6 +2832,7 @@ function fireForwardShot() {
 // RAILGUN: an instant full-length beam along the ship's row
 function fireRailgun() {
   for (const e of enemies) if (!e.dead && e.x > P.x && Math.abs(e.y - P.y) < 20) killEnemy(e, 'shot');
+  if (boss && Math.abs(P.y - boss.y) < 85) bossHit(boss.def.rail, boss.x - 100, P.y);
   const len = VW + 40 - P.x;
   for (const [h, col, op] of [[16, 0x2ad8ff, 0.55], [5, 0xffffff, 1]]) {
     const m = new THREE.Mesh(new THREE.PlaneGeometry(len, h), new THREE.MeshBasicMaterial({
@@ -2871,6 +2921,11 @@ function toggleMute() {
 renderer.domElement.addEventListener('click', flap);
 renderer.domElement.addEventListener('touchstart', e => { e.preventDefault(); flap(); }, { passive: false });
 addEventListener('keydown', e => {
+  if (Epilogue.active) {
+    if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); if (!e.repeat) Epilogue.advance(); }
+    if (e.code === 'Escape') { e.preventDefault(); Epilogue.finish(); }
+    return;
+  }
   if (Prologue.active) {                   // prologue: Space/Enter advance, ESC skips
     if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); if (!e.repeat) Prologue.advance(); }
     if (e.code === 'Escape') { e.preventDefault(); Prologue.finish(); }
@@ -3543,6 +3598,9 @@ const SECTIONS = {
   p4:   { bpm: 126, style: 4, chords: [CH(45,0,3,7), CH(41,0,4,7), CH(38,0,3,7), CH(40,0,4,7,10)],
           lv: { pad: .20, bass: .60, kick: .90, snare: .60, hat: .48, lead: .40, arp: 0 },
           motif: [2,null,1,2,null,3,2,null, 1,null,0,1,null,2,4,null] },
+  boss: { bpm: 138, style: 4, chords: [CH(45,0,3,7), CH(46,0,4,7), CH(38,0,3,7), CH(40,0,4,7,10)],
+          lv: { pad: .22, bass: .66, kick: .95, snare: .62, hat: .5, lead: .45, arp: .25 },
+          motif: [0,0,null,2,null,1,0,null, 3,null,2,1,null,2,4,3] },
 };
 // Bass rhythm per style: step → [interval, length in 16ths]
 const BASS = [
@@ -3970,6 +4028,56 @@ const sfx = {
     else voice({ type: 'triangle', f: 900, f2: 1500, t, dur: 0.09, vol: 0.04, out: AU.sfxBus });
     noiseHit({ t, dur: 0.06, vol: 0.03, out: AU.sfxBus, type: 'bandpass', f: 2500, q: 2 });
   },
+  // ── boss SFX ──
+  warning() {
+    if (!this.ok()) return;
+    const t = this.now();
+    for (let i = 0; i < 3; i++) {
+      voice({ type: 'square', f: 880, t: t + i * 0.42, dur: 0.18, vol: 0.06, out: AU.sfxBus, lp: 2500 });
+      voice({ type: 'square', f: 660, t: t + i * 0.42 + 0.2, dur: 0.18, vol: 0.06, out: AU.sfxBus, lp: 2500 });
+    }
+    voice({ type: 'sawtooth', f: 55, f2: 40, t, dur: 1.6, vol: 0.2, out: AU.sfxBus, lp: 300 });
+  },
+  bossFire(big) {
+    if (!this.ok()) return;
+    const t = this.now();
+    voice({ type: 'sawtooth', f: big ? 300 : 700, f2: big ? 90 : 240, t, dur: big ? 0.4 : 0.15, vol: big ? 0.09 : 0.05, out: AU.sfxBus, lp: 2500, pan: 0.6 });
+  },
+  laser() {
+    if (!this.ok()) return;
+    const t = this.now();
+    noiseHit({ t, dur: 0.6, vol: 0.18, out: AU.sfxBus, type: 'bandpass', f: 1800, f2: 600, q: 3, rev: 0.2 });
+    voice({ type: 'sawtooth', f: 110, t, dur: 0.6, vol: 0.12, out: AU.sfxBus, lp: 900 });
+  },
+  reflect() {
+    if (!this.ok()) return;
+    const t = this.now();
+    voice({ type: 'triangle', f: 600, f2: 2400, t, dur: 0.18, vol: 0.08, out: AU.sfxBus, rev: 0.2 });
+    voice({ type: 'sine', f: mtof(Music.started ? Music.tone(2, 36) : 88), t: t + 0.05, dur: 0.4, vol: 0.06, out: AU.sfxBus, rev: 0.4 });
+  },
+  reflectHit() {
+    if (!this.ok()) return;
+    const t = this.now();
+    noiseHit({ t, dur: 0.5, vol: 0.3, out: AU.sfxBus, type: 'lowpass', f: 4000, f2: 200 });
+    voice({ type: 'sine', f: 120, f2: 40, t, dur: 0.5, vol: 0.4, out: AU.sfxBus });
+  },
+  cannon() {
+    if (!this.ok()) return;
+    const t = this.now();
+    noiseHit({ t, dur: 0.25, vol: 0.2, out: AU.sfxBus, type: 'bandpass', f: 400, f2: 5000, q: 2, swell: true });
+    voice({ type: 'sawtooth', f: 1800, f2: 120, t: t + 0.22, dur: 0.9, vol: 0.12, out: AU.sfxBus, lp: 7000, lp2: 500, rev: 0.4 });
+    voice({ type: 'sine', f: 90, f2: 28, t: t + 0.22, dur: 1.1, vol: 0.55, out: AU.sfxBus });
+    noiseHit({ t: t + 0.22, dur: 1.0, vol: 0.35, out: AU.sfxBus, type: 'lowpass', f: 6000, f2: 120, rev: 0.4 });
+    Music.pulseDuck();
+  },
+  bossDown() {
+    if (!this.ok()) return;
+    const t = this.now();
+    for (let i = 0; i < 5; i++) noiseHit({ t: t + i * 0.35, dur: 0.9, vol: 0.4, out: AU.sfxBus, type: 'lowpass', f: 3000, f2: 80, rev: 0.4 });
+    voice({ type: 'sine', f: 70, f2: 20, t, dur: 2.5, vol: 0.5, out: AU.sfxBus });
+    for (const [i, m] of [69, 73, 76, 81].entries())
+      voice({ type: 'triangle', f: mtof(m), t: t + 2 + i * 0.12, dur: 1.4, vol: 0.07, out: AU.sfxBus, rev: 0.5 });
+  },
   // comedic head bonk (prologue)
   bonk() {
     if (!this.ok()) return;
@@ -4369,6 +4477,10 @@ function dropOrb(x, y, value, gold = false) {
 function killEnemy(e, src, depth = 0) {
   if (e.dead) return;
   e.dead = true;
+  if (e.boss) {           // boss projectiles: just pop, no XP / score / chains
+    spawnSparks(e.x, e.y, 6, { vMin: 1, vMax: 4, szMax: 1.8, color: [0, 20] });
+    return;
+  }
   killCount++;
   sfx.kill();
   addRunXP(5);
@@ -4420,6 +4532,7 @@ function clearWorld() {
   }
   pulseRings = []; pulseCooldown = 0;
   shakeX = 0; shakeY = 0;
+  cleanupBoss();
 }
 
 function startGame() {
@@ -4461,6 +4574,7 @@ function startGame() {
   secretRunStart();
   storyRunBegin();
   Story.onRunStart();
+  bossNext = 0;
 }
 
 function gotoMenu() {
@@ -4654,7 +4768,7 @@ function update(dt) {
       addRunXP(60);
       pushBonus(P.x, P.y - 28, '+60 XP', '#ffee66');
     }
-    Music.setSection('p' + (curPhase + 1));
+    if (!boss) Music.setSection('p' + (curPhase + 1));
     lastPhase = curPhase;
   }
   const cfg = phaseCfg(score);
@@ -4689,7 +4803,8 @@ function update(dt) {
   if (P.vy > 14) P.vy = 14;
   P.y = Math.max(P.r, Math.min(VH - P.r, P.y + P.vy * dt));
   secretTick(dt);
-  Story.tick(dt);
+  if (!boss) Story.tick(dt);
+  bossTick(dt);
 
   // Bullets (FORWARD SHOT skill).
   // Swept collision: the bullet moves up to 11*dt px/frame which can exceed
@@ -4705,8 +4820,11 @@ function update(dt) {
   }
   bullets = bullets.filter(b => {
     if (b.x > VW + 20 || b.y < -20 || b.y > VH + 20) { removeBulletMesh(b); return false; }
+    if (boss && boss.state === 'fight' && b.x > boss.x - 170 && Math.abs(b.y - boss.y) < 80) {
+      bossHit(boss.def.bullet, b.x, b.y); removeBulletMesh(b); return false;
+    }
     for (const e of enemies) {
-      if (e.dead) continue;
+      if (e.dead || e.type === 'p') continue;
       const dy = b.y - e.y;
       const rr = 4 + e.r;
       if (Math.abs(dy) >= rr) continue;                  // segment can't reach this y
@@ -4728,7 +4846,7 @@ function update(dt) {
 
   // Walls
   const spacing = wallSpacing(score);
-  if (!walls.length || walls[walls.length-1].x < VW-spacing) addWall();
+  if (!boss && (!walls.length || walls[walls.length-1].x < VW-spacing)) addWall();
   for (const w of walls) {
     w.x -= spd * dt;
     w.pulse += 0.042 * dt;
@@ -4773,7 +4891,9 @@ function update(dt) {
   // Enemies — timer-based spawn (dt-stable). Phase 0 (walls-only) keeps
   // the timer parked at a small value so the first enemy lands shortly
   // after entering phase 1, instead of inheriting a giant phase-0 interval.
-  if (cfg.spawnBase < 9999) {
+  if (boss) {
+    enemySpawnTimer = 90;                 // the flagship provides the enemies
+  } else if (cfg.spawnBase < 9999) {
     const eInterval = Math.max(60, cfg.spawnBase - score*0.6);
     enemySpawnTimer -= dt;
     if (enemySpawnTimer <= 0) {
@@ -4802,6 +4922,10 @@ function update(dt) {
       e.vy = Math.sin(e.facing) * seekerSpd;
       e.pulse += 0.08 * dt;
     }
+    if (e.type === 'p' && e.reflected && boss) {
+      const a = Math.atan2(boss.y - e.y, boss.x - 80 - e.x);
+      e.vx = Math.cos(a) * 9; e.vy = Math.sin(a) * 9;
+    }
     e.x += e.vx * dt;
     e.y += e.vy * dt;
   }
@@ -4820,6 +4944,10 @@ function update(dt) {
       if (e.dead) continue;
       const dist = Math.hypot(pr.x - e.x, pr.y - e.y);
       if (dist > pr.r + e.r || dist < pr.prevR - e.r) continue;
+      if (e.type === 'p') {
+        if (!e.reflected) { e.reflected = true; e.life = 400; sfx.reflect(); pushBonus(e.x, e.y - 14, 'REFLECT', '#7ff6ff'); spawnSparks(e.x, e.y, 10, { color: 0x7ff6ff }); }
+        continue;
+      }
       killEnemy(e, 'pulse');
     }
   }
@@ -4836,11 +4964,19 @@ function update(dt) {
   // XP orbs: scroll with the world, MAGNET pulls them in
   const pullR = [0, 90, 140][rank('magnet')];
   for (const o of orbs) {
-    o.x -= spd * dt; o.t += 0.08 * dt;
+    o.x += (o.core ? o.vx : -spd) * dt; o.t += 0.08 * dt;
     const dx = P.x - o.x, dy = P.y - o.y, d = Math.hypot(dx, dy);
     if (pullR && d < pullR) {
       const k = Math.min(1, (3 + (1 - d / pullR) * 9) * dt / Math.max(d, 1));
       o.x += dx * k; o.y += dy * k;
+    }
+    if (o.core && d < P.r + 14) {
+      o.got = true;
+      if (boss && boss.state === 'fight') boss.charge = Math.min(3, boss.charge + 1);
+      pushBonus(o.x, o.y - 12, `CORE ${boss ? boss.charge : 0}/3`, '#7ff6ff');
+      spawnSparks(o.x, o.y, 12, { vMin: 1, vMax: 5, color: 0x7ff6ff });
+      sfx.orb(true);
+      continue;
     }
     if (d < P.r + 9) {
       o.got = true;
@@ -4899,7 +5035,9 @@ function update(dt) {
   for (const w of walls)
     if (P.x+P.r>w.x && P.x-P.r<w.x+w.w)
       if (P.y-P.r<w.gapY || P.y+P.r>w.gapY+w.gap) { die(); return; }
+  if (bossLaserHits()) { die(); return; }
   for (const e of enemies) {
+    if (e.reflected) continue;
     const dx = P.x-e.x, dy = P.y-e.y, rr = P.r+e.r;
     if (dx*dx + dy*dy < rr*rr) { die(); return; }
   }
@@ -5033,7 +5171,12 @@ function syncScene() {
   for (const e of enemies) {
     const grp = getOrCreateEnemy(e);
     grp.position.copy(W(e.x, e.y, 0)).add(sk);
-    if (e.type === 'b') {
+    if (e.type === 'p') {
+      const ring = grp.getObjectByName('pring'), core = grp.getObjectByName('pcore');
+      ring.rotation.set(e.spin * 0.6, e.spin, 0);
+      if (e.reflected && !e._recol) { e._recol = true; core.material.color.setHex(0x7ff6ff); ring.material.color.setHex(0xd0fbff); grp.children[2].material.color.setHex(0x00e8ff); }
+      grp.scale.setScalar(1.25 + Math.sin(e.spin * 2) * 0.08);
+    } else if (e.type === 'b') {
       const r1 = grp.getObjectByName('r1');
       const r2 = grp.getObjectByName('r2');
       if (r1) r1.rotation.z = e.spin;
@@ -5043,6 +5186,8 @@ function syncScene() {
       grp.rotation.z = -e.facing;
     }
   }
+
+  syncBoss(sk);
 
   // XP orbs (spin + bob)
   for (const o of orbs) {
@@ -5490,6 +5635,10 @@ const LOGS = [
     text: '150秒。昔の俺なら考えられない数字だ。\nパラスが「成長しましたね」と言った。初めて褒められた気がする。\n録音しておけばよかった。' },
   { id: 'flagship', title: '二つの穂先', hint: '200 秒生き残る', ok: () => hiScore >= 200,
     text: '前方に巨大な反応。バイデントの旗艦だ。\n二本の槍の、片方の穂先。\n待ってろ。アイギスの借りは、ここで返す。' },
+  { id: 'styx', title: '第一の穂先', hint: 'ステュクスを撃破', ok: () => bossBest >= 1,
+    text: 'ステュクスを落とした。でかい図体で、でかい声で、最後まで仲間の名前を呼んでいた。\nアケロン。もう一本の穂先。あいつがアイギスを焼く作戦を立てたらしい。\nパラスが「今のは良い操縦でした」と言った。二回目だ。数えてる。' },
+  { id: 'ending', title: 'パイロット', hint: 'アケロンを撃破', ok: () => bossBest >= 2,
+    text: 'バイデントは終わった。アイギスの空は、もう戻らない。\nでも丘の上で見上げていたあの星の海を、俺は今、自分の翼で飛んでいる。\nパラスが言った。「あなたはパイロットです、レイ」。……知ってるよ。ずっと前から決めてたんだ。' },
   { id: 'secrets', title: '隠し機能', hint: 'SECRETS を5つ発見', ok: () => secretsFound.length >= 5,
     text: 'この機体、隠し機能が多すぎる。ロゴを叩くと画面が緑になるし、逆さに回すと世界が反転する。\nパラスに聞いたら「設計者の趣味です」とだけ返ってきた。\nアイギスの技術者、たぶん俺と気が合う。' },
 ];
@@ -5723,6 +5872,402 @@ function requestStart() {
   else startGame();
 }
 
+// ══ Boss battles ══════════════════════════════════════════════════════════════
+// BIDENT's two prongs: STYX (brute) at 120 s of flight, ACHERON (strategist)
+// at 240 s. Walls and regular enemies pause while a flagship holds the right
+// side of the screen. Anyone can win: collect energy cores (3 = AEGIS CANNON
+// auto-fires) and PULSE-reflect the big plasma orbs; shot skills chip in.
+const BOSS_AT = [120, 240];                       // seconds of flight
+const BOSS_DEFS = [
+  { id: 'styx', name: 'STYX', title: 'バイデント 第一の穂先', color: 0xff3048, css: '#ff3048', hull: 0x2a0a12,
+    cannon: 20, reflect: 9, bullet: 0.6, rail: 3, xp: 150,
+    cycle: ['cores', 'fan', 'plasma', 'laser', 'cores', 'fan', 'laser', 'plasma'], every: 100, rageEvery: 75 },
+  { id: 'acheron', name: 'ACHERON', title: 'バイデント 第二の穂先', color: 0x9a6cff, css: '#9a6cff', hull: 0x160c2a,
+    cannon: 14, reflect: 7, bullet: 0.45, rail: 2.5, xp: 300,
+    cycle: ['cores', 'gates', 'plasma', 'sweep', 'cores', 'mines', 'laser', 'gates'], every: 105, rageEvery: 80 },
+];
+let boss = null;                 // active fight
+let bossNext = 0;                // next boss index this run
+let bossLasers = [];
+let bossBest = +localStorage.getItem('hd_boss') || 0;   // most bosses ever defeated (story progress)
+const BOSS_X = VW - 110;         // flagship centre (canvas x)
+
+// Portraits for the comm
+const STYX_FACE = `<svg viewBox="0 0 64 64" aria-hidden="true"><rect x="6" y="6" width="52" height="52" rx="6" fill="#1a0408" stroke="#ff3048" stroke-width="2"/>
+  <path d="M14 46c2-14 8-24 18-24s16 10 18 24z" fill="#3a0c14"/><path d="M18 26l6-12 4 10 4-12 4 12 4-10 6 12z" fill="#ff3048"/>
+  <rect x="20" y="32" width="24" height="6" rx="2" fill="#ff7a8a"/><path d="M26 46h12" stroke="#ff3048" stroke-width="2"/></svg>`;
+const ACHERON_FACE = `<svg viewBox="0 0 64 64" aria-hidden="true"><rect x="6" y="6" width="52" height="52" rx="6" fill="#0c0618" stroke="#9a6cff" stroke-width="2"/>
+  <path d="M16 48c0-16 7-26 16-26s16 10 16 26z" fill="#22123e"/><circle cx="32" cy="22" r="9" fill="none" stroke="#9a6cff" stroke-width="2"/>
+  <path d="M24 34h6M34 34h6" stroke="#d2b8ff" stroke-width="2.5"/><path d="M28 43q4 2 8 0" stroke="#9a6cff" stroke-width="1.5" fill="none"/></svg>`;
+SPEAKERS.S = { name: 'STYX', face: STYX_FACE, cls: 'styx' };
+SPEAKERS.A = { name: 'ACHERON', face: ACHERON_FACE, cls: 'acheron' };
+
+const BOSS_LINES = {
+  styx: {
+    intro:  [['S', 'ガキが一匹、俺の艦隊を追い回してるって聞いたぜ。'], ['R', 'お前がバイデントか。'], ['S', 'バイデントの穂先、ステュクス様だ！ 潰してやるよ！'], ['P', '敵旗艦の装甲は強固です。コアを3つ集めて主砲を。']],
+    rage:   [['S', 'ちょこまかと……！ 本気で行くぞ！'], ['R', '最初から本気で来い。']],
+    defeat: [['S', 'バカな……アケロンに……笑われちまう……'], ['R', '一本、折った。'], ['P', '残る穂先は、あと一本です。']],
+  },
+  acheron: {
+    intro:  [['A', 'ステュクスを落としたのは、君か。'], ['A', '美しい星だったね、アイギスは。燃える様も含めて。'], ['R', '……お前だけは、許さない。'], ['P', '冷静に、レイ。コアと反射で削ります。']],
+    rage:   [['A', '計算外だ。……面白い。'], ['P', '敵の攻撃パターンが変化。注意して。']],
+    defeat: [['A', '君の盾は……最強だったようだ。'], ['R', 'アイギスの盾だからな。'], ['P', 'バイデント旗艦、沈黙。……やりましたね、レイ。']],
+  },
+};
+const sayOnce = (b, key, lines) => { if (!b.said[key]) { b.said[key] = true; commSay(lines); } };
+
+// ── Flagship model ──
+function buildBossShip(def, second) {
+  const g = new THREE.Group();
+  const hullMat = new THREE.MeshPhongMaterial({ color: def.hull, emissive: 0x000000, shininess: 50, specular: 0x664455 });
+  const sh = new THREE.Shape();
+  if (!second) {   // STYX: heavy arrowhead
+    sh.moveTo(-80, 0); sh.lineTo(-20, 55); sh.lineTo(90, 75); sh.lineTo(120, 30); sh.lineTo(120, -30); sh.lineTo(90, -75); sh.lineTo(-20, -55);
+  } else {         // ACHERON: long blade with swept fins
+    sh.moveTo(-100, 0); sh.lineTo(-10, 28); sh.lineTo(40, 85); sh.lineTo(70, 30); sh.lineTo(125, 22); sh.lineTo(125, -22); sh.lineTo(70, -30); sh.lineTo(40, -85); sh.lineTo(-10, -28);
+  }
+  sh.closePath();
+  const body = new THREE.Mesh(new THREE.ExtrudeGeometry(sh, { depth: 34, bevelEnabled: true, bevelSize: 4, bevelThickness: 4, bevelSegments: 2 }), hullMat);
+  body.position.z = -17; g.add(body);
+  // the bident: two prongs on a shaft
+  const prongMat = new THREE.MeshPhongMaterial({ color: 0x2a1a24, emissive: def.color, emissiveIntensity: 0.35, shininess: 90 });
+  const shaft = new THREE.Mesh(new THREE.BoxGeometry(70, 8, 8), prongMat); shaft.position.set(-100, 0, 4); g.add(shaft);
+  const bar = new THREE.Mesh(new THREE.BoxGeometry(8, 86, 8), prongMat); bar.position.set(-132, 0, 4); g.add(bar);
+  for (const sy of [1, -1]) {
+    const prong = new THREE.Mesh(new THREE.ConeGeometry(8, 70, 4), prongMat);
+    prong.rotation.z = Math.PI / 2; prong.position.set(-168, sy * 40, 4); g.add(prong);
+    const tip = glowSprite(def.color, 60, 0.9); tip.position.set(-204, sy * 40, 8); g.add(tip);
+  }
+  const core = new THREE.Mesh(new THREE.SphereGeometry(17, 24, 16), new THREE.MeshBasicMaterial({ color: def.color }));
+  core.position.set(-10, 0, 22); core.name = 'core'; g.add(core);
+  const coreGlow = glowSprite(def.color, 170, 0.65); coreGlow.position.copy(core.position); coreGlow.name = 'coreGlow'; g.add(coreGlow);
+  if (second) {
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(30, 2.4, 8, 48), new THREE.MeshBasicMaterial({ color: def.color }));
+    ring.position.copy(core.position); ring.name = 'ring'; g.add(ring);
+  }
+  for (const sy of [1, -1]) { const eng = glowSprite(def.color, 90, 0.7); eng.position.set(128, sy * 22, 0); g.add(eng); }
+  g.userData.hullMat = hullMat;
+  scene.add(g);
+  return g;
+}
+
+// ── Lifecycle ──
+function startBoss(idx) {
+  const def = BOSS_DEFS[idx];
+  boss = { idx, def, hp: 100, state: 'intro', t: 0, x: VW + 260, y: VH / 2, patT: 60, pi: 0,
+           rage: false, charge: 0, flash: 0, said: {}, mesh: buildBossShip(def, idx === 1) };
+  bossLasers = [];
+  showBossBanner(def);
+  Music.setSection('boss');
+  sfx.warning();
+  commClear();
+  commSay(BOSS_LINES[def.id].intro);
+}
+function cleanupBoss() {
+  if (boss && boss.mesh) {
+    scene.remove(boss.mesh);
+    boss.mesh.traverse(o => { if (o.material) o.material.dispose(); if (o.geometry && !o.isSprite) o.geometry.dispose(); });
+  }
+  for (const L of bossLasers) removeLaserMesh(L);
+  bossLasers = [];
+  boss = null;
+}
+function bossHit(dmg, x, y) {
+  if (!boss || boss.state !== 'fight') return;
+  boss.hp = Math.max(0, boss.hp - dmg);
+  boss.flash = 1;
+  spawnSparks(x ?? boss.x - 60, y ?? boss.y, Math.min(24, 4 + dmg * 1.5), { vMin: 2, vMax: 8, color: [0, 15, 40] });
+  if (!boss.rage && boss.hp <= 50) {
+    boss.rage = true;
+    commSay(BOSS_LINES[boss.def.id].rage);
+    fxFlash(boss.def.color, 0.25);
+  }
+  if (boss.hp <= 0) bossDefeat();
+}
+function bossDefeat() {
+  boss.state = 'dying'; boss.t = 0;
+  for (const e of enemies) if (e.boss) killEnemy(e, 'boss');
+  sweepDeadEnemies();
+  for (const L of bossLasers) removeLaserMesh(L);
+  bossLasers = [];
+  timeScale = 0.35; fx.aberr = 1.4; fxFlash(0xffffff, 0.6);
+  sfx.bossDown();
+  commClear();
+  commSay(BOSS_LINES[boss.def.id].defeat);
+}
+
+// ── Patterns ──
+const tipY = s => boss.y + s * 40;
+const TIP_X = () => boss.x - 200;
+function bossShot(x, y, ang, speed, type = 'b') {
+  enemies.push({ x, y, vx: Math.cos(ang) * speed, vy: Math.sin(ang) * speed, r: type === 'p' ? 11 : 5,
+                 type, spin: 0, life: 700, boss: true });
+}
+function addLaser(y, h, warn, delay = 0) {
+  bossLasers.push({ y: Math.max(h / 2, Math.min(VH - h / 2, y)), h, warn, delay, fire: 34, t: 0 });
+}
+const PATTERNS = {
+  cores() {
+    const n = boss.rage ? 2 : 2;
+    for (let i = 0; i < n; i++) {
+      const y = 60 + Math.random() * (VH - 120);
+      orbs.push({ x: boss.x - 150, y, value: 0, core: true, t: Math.random() * 6, vx: -3.2 - Math.random() * 0.6 });
+    }
+    sayOnce(boss, 'core', [['P', 'エネルギーコアです。3つ集めれば主砲〈AEGIS CANNON〉を撃てます。']]);
+  },
+  fan() {
+    const n = boss.rage ? 11 : 7, sp = boss.rage ? 5.2 : 4.4;
+    for (const s of [1, -1]) {
+      const x = TIP_X(), y = tipY(s), base = Math.atan2(P.y - y, P.x - x);
+      for (let i = 0; i < n; i++) bossShot(x, y, base + (i / (n - 1) - 0.5) * 0.9, sp);
+    }
+    sfx.bossFire();
+  },
+  plasma() {
+    const s = Math.random() < 0.5 ? 1 : -1, x = TIP_X(), y = tipY(s);
+    bossShot(x, y, Math.atan2(P.y - y, P.x - x), boss.rage ? 3.4 : 2.8, 'p');
+    sfx.bossFire(true);
+    sayOnce(boss, 'plasma', [['P', '大型弾。PULSE で跳ね返せます。']]);
+  },
+  laser() {
+    const warn = boss.rage ? 58 : 72, h = 50;
+    if (!boss.rage) addLaser(P.y + (Math.random() - 0.5) * 40, h, warn);
+    else {
+      // two bands with a guaranteed safe lane between them
+      const safe = 70 + Math.random() * (VH - 140);
+      addLaser(safe - 95, h * 1.3, warn); addLaser(safe + 95, h * 1.3, warn);
+    }
+  },
+  sweep() {
+    const dir = Math.random() < 0.5 ? 1 : -1, n = 4, h = 56;
+    for (let i = 0; i < n; i++) {
+      const y = dir > 0 ? 40 + i * 100 : VH - 40 - i * 100;
+      addLaser(y, h, boss.rage ? 50 : 62, i * (boss.rage ? 22 : 28));
+    }
+  },
+  gates() {
+    addWall(boss.x - 230);
+    if (boss.rage) addWall(boss.x - 230 + wallSpacing(score));
+  },
+  mines() {
+    const n = boss.rage ? 3 : 2;
+    for (let i = 0; i < n; i++) {
+      const s = i % 2 ? 1 : -1;
+      enemies.push({ x: TIP_X(), y: tipY(s), vx: -3, vy: 0, r: 5, type: 's', pulse: 0, facing: Math.PI, spin: 0, life: 420, boss: true });
+    }
+    sfx.bossFire();
+  },
+};
+
+// AEGIS CANNON: fires automatically once 3 cores are collected
+function fireCannon() {
+  boss.charge = 0;
+  const x0 = P.x + 16, x1 = boss.x - 40, len = x1 - x0;
+  for (const [h, col, op] of [[30, 0x00e8ff, 0.5], [12, 0xfff3c0, 1]]) {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(len, h), new THREE.MeshBasicMaterial({
+      color: col, transparent: true, opacity: op, blending: THREE.AdditiveBlending, depthWrite: false }));
+    m.position.copy(W(x0 + len / 2, (P.y + boss.y) / 2, 9));
+    m.rotation.z = -Math.atan2(boss.y - P.y, len);
+    m.scale.x = Math.hypot(len, boss.y - P.y) / len;
+    scene.add(m);
+    beams.push({ mesh: m, life: 1, decay: 0.035, op });
+  }
+  shakeX = 12; shakeY = 8; fx.aberr = 1.3; fxFlash(0x9ff8ff, 0.4);
+  sfx.cannon();
+  pushBonus(P.x + 50, P.y - 24, 'AEGIS CANNON!', '#9ff8ff');
+  sayOnce(boss, 'cannon', [['R', '食らえ……アイギスの一撃だ！']]);
+  bossHit(boss.def.cannon, boss.x - 60, boss.y);
+}
+
+// ── Per-frame (called from update while playing) ──
+function bossTick(dt) {
+  const runT = frame / 60;
+  if (!boss && bossNext < BOSS_AT.length && runT >= BOSS_AT[bossNext]) { startBoss(bossNext); bossNext++; }
+  if (!boss) return;
+  boss.t += dt;
+  boss.flash = Math.max(0, boss.flash - dt * 0.08);
+  const bob = Math.sin(boss.t * 0.025) * (boss.rage ? 46 : 32);
+  if (boss.state === 'intro') {
+    boss.x += (BOSS_X - boss.x) * Math.min(1, 0.03 * dt);
+    boss.y = VH / 2 + bob;
+    if (boss.t > 210) { boss.state = 'fight'; boss.patT = 40; }
+    return;
+  }
+  if (boss.state === 'dying') {
+    boss.y += 0.6 * dt; boss.x += 0.4 * dt;
+    if (Math.floor(boss.t / 6) !== Math.floor((boss.t - dt) / 6)) {
+      spawnSparks(boss.x - 120 + Math.random() * 240, boss.y - 70 + Math.random() * 140, 18, { vMin: 2, vMax: 10, szMax: 4, color: [0, 20, 40, 50] });
+      shakeX = Math.max(shakeX, 6); sfx.kill();
+    }
+    if (boss.t > 170) finishBoss();
+    return;
+  }
+  boss.y = VH / 2 + bob;
+  // pattern scheduler
+  boss.patT -= dt;
+  if (boss.patT <= 0) {
+    const name = boss.def.cycle[boss.pi++ % boss.def.cycle.length];
+    PATTERNS[name]();
+    boss.patT = boss.rage ? boss.def.rageEvery : boss.def.every;
+  }
+  // lasers: telegraph → fire
+  for (const L of bossLasers) {
+    if (L.delay > 0) { L.delay -= dt; continue; }
+    L.t += dt;
+    if (L.t > L.warn && !L.fired) { L.fired = true; sfx.laser(); shakeX = Math.max(shakeX, 3); }
+  }
+  bossLasers = bossLasers.filter(L => { if (L.t > L.warn + L.fire) { removeLaserMesh(L); return false; } return true; });
+  // reflected plasma reaching the flagship
+  for (const e of enemies) {
+    if (e.type === 'p' && e.reflected && !e.dead && e.x > boss.x - 160) {
+      e.dead = true;
+      bossHit(boss.def.reflect, e.x, e.y);
+      pushBonus(e.x - 20, e.y - 16, 'REFLECT!', '#7ff6ff');
+      sfx.reflectHit();
+    }
+  }
+  if (boss.charge >= 3) fireCannon();
+}
+function finishBoss() {
+  const def = boss.def, idx = boss.idx;
+  addRunXP(def.xp); addScore(def.xp / 60);
+  pushBonus(P.x, P.y - 30, `+${def.xp} XP`, '#ffd84a');
+  pushBonus(P.x, P.y - 50, `${def.name} DEFEATED`, def.css);
+  timeScale = 1;
+  if (idx + 1 > bossBest) { bossBest = idx + 1; localStorage.setItem('hd_boss', String(bossBest)); }
+  cleanupBoss();
+  Music.setSection('p' + (curPhase + 1));
+  if (idx === BOSS_DEFS.length - 1) Epilogue.play();
+}
+// laser hit test (called from the collision section)
+function bossLaserHits() {
+  for (const L of bossLasers) {
+    if (!L.fired || L.delay > 0) continue;
+    if (Math.abs(P.y - L.y) < L.h / 2 + P.r - 2) return true;
+  }
+  return false;
+}
+
+// ── Visuals (called from syncScene) ──
+function removeLaserMesh(L) {
+  if (!L.mesh) return;
+  scene.remove(L.mesh);
+  L.mesh.traverse(o => { if (o.material) o.material.dispose(); if (o.geometry) o.geometry.dispose(); });
+  L.mesh = null;
+}
+function syncBoss(sk) {
+  if (!boss) return;
+  const m = boss.mesh;
+  m.position.copy(W(boss.x, boss.y, -6)).add(sk);
+  m.rotation.z = Math.sin(boss.t * 0.02) * 0.05 + (boss.state === 'dying' ? boss.t * 0.003 : 0);
+  m.rotation.y = Math.sin(boss.t * 0.013) * 0.15;
+  const pulse = 0.5 + Math.sin(boss.t * (boss.rage ? 0.25 : 0.1)) * 0.5;
+  m.userData.hullMat.emissive.setRGB(boss.flash * 0.9 + (boss.rage ? pulse * 0.18 : 0), boss.flash * 0.9, boss.flash * 0.9);
+  const glow = m.getObjectByName('coreGlow'); if (glow) glow.material.opacity = 0.4 + pulse * 0.4;
+  const ring = m.getObjectByName('ring'); if (ring) ring.rotation.set(boss.t * 0.02, boss.t * 0.03, 0);
+  for (const L of bossLasers) {
+    if (!L.mesh) {
+      const grp = new THREE.Group();
+      const band = new THREE.Mesh(new THREE.PlaneGeometry(VW + 60, L.h), new THREE.MeshBasicMaterial({
+        color: boss.def.color, transparent: true, opacity: 0.12, blending: THREE.AdditiveBlending, depthWrite: false }));
+      const core = new THREE.Mesh(new THREE.PlaneGeometry(VW + 60, L.h * 0.3), new THREE.MeshBasicMaterial({
+        color: 0xffffff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }));
+      grp.add(band, core);
+      scene.add(grp);
+      L.mesh = grp; L.band = band; L.core = core;
+    }
+    L.mesh.position.copy(W(VW / 2 - 40, L.y, 6));
+    if (L.delay > 0) { L.mesh.visible = false; continue; }
+    L.mesh.visible = true;
+    if (!L.fired) {   // telegraph: thin blinking band
+      const blink = Math.floor(L.t / 5) % 2 ? 0.28 : 0.1;
+      L.band.material.opacity = blink; L.band.scale.y = 0.25 + 0.75 * (L.t / L.warn);
+      L.core.material.opacity = 0;
+    } else {
+      const k = 1 - (L.t - L.warn) / L.fire;
+      L.band.material.opacity = 0.7 * k + 0.2; L.band.scale.y = 1;
+      L.core.material.opacity = k; L.core.scale.y = 0.6 + Math.random() * 0.5;
+    }
+  }
+}
+
+// ── HUD: boss bar + warning banner ──
+const bossBarEl = document.getElementById('boss-bar');
+function syncBossHUD() {
+  const on = !!boss && boss.state !== 'dying' && gstate === 'play';
+  bossBarEl.classList.toggle('on', on);
+  hudPhaseEl.classList.toggle('hide', on);
+  if (!on) return;
+  bossBarEl.style.setProperty('--bc', boss.def.css);
+  setText(document.getElementById('bb-name'), boss.def.name);
+  setText(document.getElementById('bb-title'), boss.def.title);
+  document.getElementById('bb-fill').style.width = boss.hp.toFixed(1) + '%';
+  bossBarEl.classList.toggle('rage', boss.rage);
+  setText(document.getElementById('bb-pips'), '◆'.repeat(boss.charge) + '◇'.repeat(3 - boss.charge));
+}
+function showBossBanner(def) {
+  hudBanner.style.setProperty('--phase-c', def.css);
+  setText(hudBanner.querySelector('.b-kicker'), '⚠ WARNING ⚠');
+  setText(document.getElementById('banner-title'), def.name);
+  setText(document.getElementById('banner-sub'), def.title);
+  restartAnim(hudBanner, 'show');
+  setTimeout(() => setText(hudBanner.querySelector('.b-kicker'), 'ENTERING'), 2400);
+}
+
+// ── Epilogue (after ACHERON): story overlay on the frozen game, then credits, then fly on ──
+const Epilogue = (() => {
+  const el = document.getElementById('story');
+  const elName = document.getElementById('story-name'), elText = document.getElementById('story-text'), elFace = document.getElementById('story-face');
+  const LINES = ['バイデントは、二本の穂先を失った。', 'P:海賊団の残党は、散り散りに逃げていきます。',
+    'R:アイギスの空は、戻らない。……でも。', 'R:俺は、パイロットになった。',
+    'P:はい。少し抜けていますが、優秀なパイロットです。', 'R:一言多い。'];
+  let active = false, i = 0, shown = 0;
+  function show() {
+    const raw = LINES[i];
+    let who = null, text = raw;
+    if (/^[RP]:/.test(raw)) { who = SPEAKERS[raw[0]]; text = raw.slice(2); }
+    el.classList.toggle('talk', !!who); el.classList.remove('sfx');
+    elFace.innerHTML = who ? who.face : '';
+    setText(elName, who ? who.name : '');
+    elText._full = text; shown = 0; elText.textContent = '';
+  }
+  function advance() {
+    if (!active) return;
+    if (shown < elText._full.length) { shown = elText._full.length; elText.textContent = elText._full; return; }
+    ui.select();
+    if (++i >= LINES.length) return finish();
+    show();
+  }
+  function finish() {
+    active = false;
+    el.classList.remove('on');
+    showCredits('story', () => {
+      // …and the run goes on
+      gstate = 'play';
+      P.inv = Math.max(P.inv, 150);
+      commSay([['P', 'まだ飛べますか？'], ['R', '当たり前だ。何度だって飛ぶ。']]);
+    });
+  }
+  function play() {
+    active = true; i = 0;
+    gstate = 'cut';
+    commClear();
+    el.style.setProperty('--fade', '0');
+    el.classList.add('on');
+    show();
+  }
+  function update(realDt) {
+    if (!active) return;
+    if (shown < elText._full.length) {
+      shown = Math.min(elText._full.length, shown + realDt / 60 * 26);
+      elText.textContent = elText._full.slice(0, Math.floor(shown));
+    }
+  }
+  onTap(el, advance);
+  onTap(document.getElementById('story-skip'), () => { if (active) { ui.back(); finish(); } });
+  return { play, advance, finish, update, get active() { return active; } };
+})();
+
 // ── Secrets ───────────────────────────────────────────────────────────────────
 // Hidden touch gestures / play feats that unlock cosmetic modes, skins and
 // titles. Only the *count* is ever shown to players (SECRETS n/9); the
@@ -5743,6 +6288,7 @@ const SECRET_TITLES = [
   { id: 'pacifist', title: 'PEACEKEEPER' },
   { id: 'midnight', title: 'NIGHT OWL' },
   { id: 'complete', title: 'SECRET MASTER' },
+  { id: 'story',    title: 'AEGIS PILOT' },
 ];
 const SHIP_SIZES = { normal: 1, mini: 0.6, big: 1.45 };
 
@@ -5752,7 +6298,7 @@ catch (e) { secretsFound = []; }
 let secOpts = { retro: false, mirror: false, size: 'normal', midnight: false, hardcore: false, title: '' };
 try { Object.assign(secOpts, JSON.parse(localStorage.getItem('hd_sec_opts') || '{}') || {}); } catch (e) {}
 
-const hasSecret = id => id === 'complete' ? secretsComplete() : secretsFound.includes(id);
+const hasSecret = id => id === 'complete' ? secretsComplete() : id === 'story' ? bossBest >= 2 : secretsFound.includes(id);
 function secretsComplete() { return SECRET_DEFS.every(d => secretsFound.includes(d.id)); }
 function saveSecrets() {
   localStorage.setItem('hd_secrets', JSON.stringify(secretsFound));
@@ -6006,13 +6552,17 @@ addEventListener('keydown', e => {
 // ── Credits / ending ──
 const creditsEl = document.getElementById('credits');
 let creditsOpen = false;
-function showCredits(ending) {
+let creditsOnClose = null;
+function showCredits(ending, onClose = null) {
   if (creditsOpen) return;
   creditsOpen = true;
+  creditsOnClose = onClose;
+  const story = ending === 'story';
   const roll = document.getElementById('cr-roll');
   const L = (k, v) => `<div class="cr-k">${k}</div><div class="cr-v">${v}</div>`;
   roll.innerHTML =
-    (ending ? `<div class="cr-end">ALL SECRETS FOUND</div><div class="cr-thanks">すべての秘密を見つけてくれて、ありがとう。</div>` : '') +
+    (story ? `<div class="cr-end">BIDENT FALLS</div><div class="cr-thanks">アイギスの空に、静かな夜が戻った。</div>`
+     : ending ? `<div class="cr-end">ALL SECRETS FOUND</div><div class="cr-thanks">すべての秘密を見つけてくれて、ありがとう。</div>` : '') +
     `<div class="cr-logo">HOVER<br>DODGE</div>` +
     L('PRODUCED & DIRECTED BY', 'RYOHEI TAKAUCHI') +
     L('GAME DESIGN', 'RYOHEI TAKAUCHI') +
@@ -6021,7 +6571,8 @@ function showCredits(ending) {
     L('VISUALS', 'Three.js · WebGL · Bloom') +
     L('TYPEFACES', 'Orbitron · Rajdhani') +
     L('SPECIAL THANKS', 'YOU') +
-    (ending ? `<div class="cr-reward">◆ PRISM SKIN UNLOCKED<br>◆ TITLE: SECRET MASTER</div>` : '') +
+    (story ? `<div class="cr-reward">◆ TITLE: AEGIS PILOT</div>`
+     : ending ? `<div class="cr-reward">◆ PRISM SKIN UNLOCKED<br>◆ TITLE: SECRET MASTER</div>` : '') +
     `<div class="cr-fin">THANK YOU FOR PLAYING</div>`;
   restartAnim(roll, 'roll');
   creditsEl.classList.add('open');
@@ -6033,6 +6584,8 @@ function closeCredits() {
   creditsEl.classList.remove('open');
   ui.back();
   refreshTitleInfo();
+  const cb = creditsOnClose; creditsOnClose = null;
+  if (cb) cb();
 }
 onTap(creditsEl, closeCredits);
 document.getElementById('cr-roll').addEventListener('animationend', closeCredits);
@@ -6064,6 +6617,8 @@ function loop(now) {
   if (gstate !== 'paused') update(dtScale);
   syncScene();
   if (Prologue.active) Prologue.update(realDt);
+  Epilogue.update(realDt);
+  syncBossHUD();
   commTick(realDt);
   fx.aberr *= Math.pow(0.9, realDt);
   fx.flash *= Math.pow(0.86, realDt);
