@@ -1048,6 +1048,8 @@ button { font-family: var(--f-ui) }
   --fade: 0;
 }
 #story.on { display: block; }
+#story .story-box { transition: opacity .4s; }
+#story.cine .story-box { opacity: 0; pointer-events: none; }
 #story::before { content: ''; position: absolute; inset: 0; background: #000; opacity: var(--fade); pointer-events: none; }
 .story-skip {
   position: absolute; top: max(14px, env(safe-area-inset-top)); right: max(14px, env(safe-area-inset-right));
@@ -1782,7 +1784,7 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
   </div>
 
   <p class="rot-secret" id="rot-secret" hidden>&gt; SPIN CYCLE DETECTED — 目が回った？ MIRROR MODE 解放</p>
-  <p class="rot-version">SYS_REV  1.8.1 · SECRETS <span id="rot-secrets">0/9</span></p>
+  <p class="rot-version">SYS_REV  1.8.2 · SECRETS <span id="rot-secrets">0/9</span></p>
 </div>
 
 <div id="shop-modal" class="modal">
@@ -2046,7 +2048,7 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
         <span class="best">BEST<b id="t-best">—</b></span>
         <span>SOUND<b id="t-sound">ON</b> [M]</span>
         <span class="secret-count">SECRETS<b id="t-secrets">0/9</b></span>
-        <span class="ver" id="t-ver">VER<b>1.8.1</b></span>
+        <span class="ver" id="t-ver">VER<b>1.8.2</b></span>
       </div>
     </div>
 
@@ -4098,6 +4100,28 @@ const sfx = {
     noiseHit({ t, dur: 0.08, vol: 0.2, out: AU.sfxBus, type: 'lowpass', f: 1200 });
     for (const [i, m] of [88, 91, 88].entries()) voice({ type: 'sine', f: mtof(m), t: t + 0.3 + i * 0.09, dur: 0.12, vol: 0.04, out: AU.sfxBus, rev: 0.3 });
   },
+  // prologue: old thrusters coughing to life
+  ignite() {
+    if (!this.ok()) return;
+    const t = this.now();
+    noiseHit({ t, dur: 1.4, vol: 0.22, out: AU.sfxBus, type: 'lowpass', f: 180, f2: 900, swell: true });
+    voice({ type: 'sawtooth', f: 40, f2: 70, t, dur: 1.4, vol: 0.08, out: AU.sfxBus, lp: 260, lp2: 700 });
+    for (const d of [0, 0.18, 0.31]) noiseHit({ t: t + d, dur: 0.07, vol: 0.12, out: AU.sfxBus, type: 'bandpass', f: 500 });
+  },
+  // prologue: the ship tears off the hill into the sky
+  liftoff() {
+    if (!this.ok()) return;
+    const t = this.now();
+    noiseHit({ t, dur: 2.2, vol: 0.3, out: AU.sfxBus, type: 'bandpass', f: 200, f2: 4000, q: 0.8, rev: 0.3 });
+    voice({ type: 'sawtooth', f: 55, f2: 660, t, dur: 1.8, vol: 0.09, out: AU.sfxBus, lp: 400, lp2: 6000 });
+    voice({ type: 'sine', f: 70, f2: 35, t, dur: 0.8, vol: 0.45, out: AU.sfxBus });
+  },
+  // a far-away glint as the ship vanishes among the stars
+  glint() {
+    if (!this.ok()) return;
+    const t = this.now();
+    for (const [i, m] of [88, 95, 100].entries()) voice({ type: 'sine', f: mtof(m), t: t + i * 0.07, dur: 0.5, vol: 0.05, out: AU.sfxBus, rev: 0.6 });
+  },
   launch() {
     if (!this.ok()) return;
     const t = this.now();
@@ -6049,16 +6073,36 @@ const Prologue = (() => {
   oldShip.position.set(SHIP_X, groundY(SHIP_X, SHIP_Z) + 5, SHIP_Z);
   oldShip.rotation.set(0.12, 0.35, 0.16);
   oldShip.visible = false; S.add(oldShip);
+  const shipMats = [];                               // [material, weathered hex, name, mesh] to restore on replay
+  oldShip.traverse(o => { if (o.name === 'engine' || o.name === 'flame') shipMats.push([o.material, o.material.color.getHex(), o.name, o]); });
+  const thrust = glowSprite(0x33ddff, 26, 0);         // engine glow, in ship space (behind the nozzle)
+  thrust.position.set(-20, 0, 2.5); oldShip.add(thrust);
+  const IGNITE_LINE = 5;                              // 'P:推進器、点火。'
+  // take-off trail: a pool of fading glow puffs
+  const trail = [];
+  for (let i = 0; i < 40; i++) { const g = glowSprite(0x66e6ff, 30, 0); g.visible = false; S.add(g); trail.push({ g, life: 0 }); }
+  let trailI = 0;
+  const glint = glowSprite(0xffffff, 10, 0); S.add(glint);
+  const shipVel = new THREE.Vector3(), nozzle = new THREE.Vector3();
 
   const PANELS = [
     { mood: 'night', lines: ['星の海に浮かぶ、最強の盾の名を冠した美しい星——アイギス。', '小さな鳥のレイは、いつか宇宙を飛ぶパイロットになると決めていた。'] },
     { mood: 'attack', lines: ['ある夜、空が赤く裂けた。', '宇宙海賊団〈バイデント〉。', '二本の槍の旗のもと、アイギスは一夜にして焼き尽くされた。'] },
     { mood: 'ruins', lines: ['瓦礫の中で、レイは一機の古い機体を見つけた。', 'P:……起動。操縦士を確認。ずいぶん小さいですね。', 'R:うるさい。'] },
-    { mood: 'launch', lines: ['R:行くぞ、パラス。', 'R:海賊団を壊滅させるまで——何度だって立ち上がる。', '!ゴンッ', 'R:……今のは、なしで。', 'P:記録しました。'] },
+    { mood: 'launch', lines: ['R:行くぞ、パラス。', 'R:海賊団を壊滅させるまで——何度だって立ち上がる。', '!ゴンッ', 'R:……今のは、なしで。', 'P:記録しました。', 'P:推進器、点火。', 'R:……レイ、出る！'] },
   ];
   const el = document.getElementById('story');
   const elName = document.getElementById('story-name'), elText = document.getElementById('story-text'), elFace = document.getElementById('story-face');
   let active = false, pi = 0, li = 0, shown = 0, t = 0, fade = 0, onDone = null, shake = 0;
+  let ignited = false, cine = false, ct = 0, liftSaid = false, glintSaid = false, flashed = false;
+  function setIgnition(on) {
+    ignited = on;
+    for (const [m, hex, name, o] of shipMats) {
+      m.color.setHex(on ? (name === 'flame' ? 0x7ff6ff : 0x44aaff) : hex);
+      if (name === 'flame') { o.visible = on; o.scale.set(1, 1, 1); }
+    }
+    thrust.material.opacity = 0; thrust.scale.setScalar(26);
+  }
   const camTarget = new THREE.Vector3(), camPos = new THREE.Vector3();
 
   function setMood(m) {
@@ -6086,20 +6130,31 @@ const Prologue = (() => {
     elText._full = text; shown = 0; elText.textContent = '';
   }
   function advance() {
-    if (!active) return;
+    if (!active || cine) return;
     if (shown < elText._full.length) { shown = elText._full.length; elText.textContent = elText._full; return; }
     ui.select();
     li++;
     if (li >= PANELS[pi].lines.length) {
       li = 0; pi++;
-      if (pi >= PANELS.length) return finish();
+      if (pi >= PANELS.length) { pi--; li = PANELS[pi].lines.length - 1; return liftoff(); }
       fade = 1; setMood(PANELS[pi].mood); t = 0;
+    }
+    if (PANELS[pi].mood === 'launch' && li === IGNITE_LINE && !ignited) {
+      setIgnition(true); sfx.ignite(); shake = 0.8; fxFlash(0x7ff6ff, 0.25);
     }
     showLine();
   }
+  // after the last line: no text, the ship takes off and vanishes into the stars
+  function liftoff() {
+    cine = true; ct = 0; liftSaid = glintSaid = flashed = false;
+    el.classList.add('cine');
+    shipVel.set(0, 0, 0);
+    if (Music.started) Music.riser(1.6);
+  }
   function finish() {
-    active = false;
-    el.classList.remove('on');
+    active = false; cine = false;
+    el.classList.remove('on', 'cine');
+    for (const p of trail) { p.life = 0; p.g.visible = false; }
     renderPass.scene = scene; renderPass.camera = camera;
     localStorage.setItem('hd_prologue', '1');
     if (gstate === 'story') gstate = 'menu';
@@ -6108,6 +6163,8 @@ const Prologue = (() => {
   }
   function play(cb) {
     active = true; onDone = cb; pi = 0; li = 0; t = 0; fade = 1;
+    cine = false; el.classList.remove('cine'); setIgnition(false); glint.material.opacity = 0;
+    oldShip.rotation.set(0.12, 0.35, 0.16);
     gstate = 'story';
     setMood('night');
     renderPass.scene = S; renderPass.camera = cam;
@@ -6144,11 +6201,69 @@ const Prologue = (() => {
       camPos.set(48, g0 + 16, 92); camTarget.set(-30, g0 + 14, -20);
       ray.position.set(16, groundY(16, 14) + 11 + bob, 14); ray.rotation.set(0, -0.8, 0);
       fires.forEach((f, i) => { f.material.opacity = 0.18 + Math.sin(t * 5 + i) * 0.06; });
-    } else {
-      camPos.set(30, g0 + 18 + t * 2, 110 + t * 4); camTarget.set(SHIP_X + 10, g0 + 20 + t * 6, SHIP_Z);
+    } else if (!cine) {
+      const sy = groundY(SHIP_X, SHIP_Z) + 5;
+      // shake loose from the rubble, then hover; settles level as it rises
+      const lift = Math.min(1, Math.max(0, t - 1.2) / 1.6);
+      const hover = (lift * lift * (3 - 2 * lift)) * 14 + (ignited ? Math.sin(t * 6) * 0.8 : 0);
+      oldShip.position.set(SHIP_X + (ignited ? (Math.random() - 0.5) * 0.6 : 0), sy + hover, SHIP_Z);
+      oldShip.rotation.set(0.12 * (1 - lift), 0.35, 0.16 * (1 - lift));
+      camPos.set(30, g0 + 18 + Math.min(t, 3) * 2, 110 + Math.min(t, 3) * 4);
+      camTarget.set(SHIP_X + 10, oldShip.position.y + 10, SHIP_Z);
       ray.visible = li < 1;                                   // Ray climbs in after the first line
-      oldShip.position.y = groundY(SHIP_X, SHIP_Z) + 5 + Math.max(0, t - 1.2) * 12;
-      oldShip.rotation.z = 0.16 - Math.min(0.16, t * 0.1);
+      if (ignited) {
+        thrust.material.opacity = Math.min(0.9, thrust.material.opacity + s * 1.5) * (0.85 + Math.random() * 0.15);
+        const fl = oldShip.getObjectByName('flame'); if (fl) fl.scale.set(1, 0.8 + Math.random() * 0.4, 1);
+        shake = Math.max(shake, 0.15);
+      }
+    } else {
+      // ── take-off cinematic ──
+      ct += s;
+      ray.visible = false;
+      const fl = oldShip.getObjectByName('flame');
+      if (ct < 0.7) {                                         // spool up: flame swells, ground shakes
+        const k = ct / 0.7;
+        if (fl) fl.scale.set(1 + k, 1 + k * 2 + Math.random() * 0.5, 1 + k);
+        thrust.material.opacity = 0.9;
+        thrust.scale.setScalar(26 + k * 40);
+        shake = Math.max(shake, 0.3 + k * 0.6);
+      } else {
+        if (!liftSaid) { liftSaid = true; sfx.liftoff(); fxFlash(0xbff8ff, 0.45); shake = 1.6; }
+        const k = ct - 0.7;
+        // accelerate up and away (nose pitches toward the sky)
+        oldShip.rotation.z += (1.05 - oldShip.rotation.z) * Math.min(1, s * 2.2);
+        oldShip.rotation.x *= 0.95;
+        const acc = 260 + k * 900;
+        shipVel.x += acc * s * 0.42; shipVel.y += acc * s; shipVel.z -= acc * s * 0.9;
+        oldShip.position.addScaledVector(shipVel, s);
+        if (fl) fl.scale.set(1.4, 2.4 + Math.random() * 0.6, 1.4);
+        thrust.scale.setScalar(70);
+        // trail puffs at the nozzle
+        nozzle.set(-22, 0, 2.5); oldShip.localToWorld(nozzle);
+        for (let n = 0; n < 2; n++) {
+          const p = trail[trailI++ % trail.length];
+          p.life = 1; p.g.visible = true; p.g.position.copy(nozzle);
+          p.g.position.x += (Math.random() - 0.5) * 4; p.g.position.y += (Math.random() - 0.5) * 4;
+        }
+        if (k > 1.5 && !glintSaid) {                          // a star-like glint where it vanished
+          glintSaid = true; sfx.glint();
+          glint.position.copy(oldShip.position);
+        }
+        if (glintSaid) glint.material.opacity = Math.max(0, Math.sin(Math.min(1, (k - 1.5) / 0.9) * Math.PI));
+        glint.scale.setScalar(10 + Math.max(0, k - 1.5) * 220);
+        if (k > 2.2 && !flashed) { flashed = true; fxFlash(0xffffff, 0.9); }
+        if (k > 2.45) { finish(); return; }
+      }
+      // camera: hold position, tilt up to follow the ship into the sky
+      camPos.set(24, g0 + 16, 104);
+      camTarget.lerp(oldShip.position, Math.min(1, s * (ct < 0.7 ? 2 : 4)));
+    }
+    for (const p of trail) {
+      if (p.life <= 0) continue;
+      p.life -= s * 1.4;
+      p.g.material.opacity = Math.max(0, p.life) * 0.7;
+      p.g.scale.setScalar(30 + (1 - p.life) * 40);
+      if (p.life <= 0) p.g.visible = false;
     }
     if (mood !== 'launch') ray.visible = true;
     cam.position.lerp(camPos, Math.min(1, s * 3));
