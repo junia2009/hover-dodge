@@ -1654,7 +1654,7 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
   </div>
 
   <p class="rot-secret" id="rot-secret" hidden>&gt; SPIN CYCLE DETECTED — 目が回った？ MIRROR MODE 解放</p>
-  <p class="rot-version">SYS_REV  1.5.1 · SECRETS <span id="rot-secrets">0/9</span></p>
+  <p class="rot-version">SYS_REV  1.5.2 · SECRETS <span id="rot-secrets">0/9</span></p>
 </div>
 
 <div id="shop-modal" class="modal">
@@ -1870,7 +1870,7 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
         <span class="best">BEST<b id="t-best">—</b></span>
         <span>SOUND<b id="t-sound">ON</b> [M]</span>
         <span class="secret-count">SECRETS<b id="t-secrets">0/9</b></span>
-        <span class="ver" id="t-ver">VER<b>1.5.1</b></span>
+        <span class="ver" id="t-ver">VER<b>1.5.2</b></span>
       </div>
     </div>
 
@@ -3891,6 +3891,25 @@ function getPhase(s) {
   if (s < 100) return 2;
   return 3;
 }
+// Difficulty numbers for a given score. Instead of switching at the phase
+// boundary (which made PHASE 4 an abrupt wall of difficulty), each phase's
+// numbers ease in from the previous phase over PHASE_BLEND seconds.
+const PHASE_STARTS = [0, 20, 50, 100];
+const PHASE_BLEND = 8;
+function phaseCfg(s) {
+  const p = getPhase(s), cur = PHASE_CONFIG[p];
+  if (p === 0) return cur;
+  const t = Math.min(1, (s - PHASE_STARTS[p]) / PHASE_BLEND);
+  if (t >= 1) return cur;
+  const prev = PHASE_CONFIG[p - 1], e = t * t * (3 - 2 * t);
+  const mix = k => prev[k] + (cur[k] - prev[k]) * e;
+  return {
+    gapMin: mix('gapMin'), gapBase: mix('gapBase'), seekerProb: mix('seekerProb'), spdCap: mix('spdCap'),
+    spawnBase: p === 1 ? cur.spawnBase : mix('spawnBase'),   // phase 1 had no enemies to blend from
+    name: cur.name,
+  };
+}
+const wallSpacing = s => Math.max(190, 265 - s * 0.4);
 
 // ── Time ──────────────────────────────────────────────────────────────────────
 // dtScale: 1.0 == one 60Hz frame. Capped to avoid huge jumps after tab-resume.
@@ -4123,11 +4142,29 @@ let overdriveOn = false;          // OVERDRIVE active (combo ≥ 5)
 const bulletMeshMap = new Map();
 
 // ── Spawners ──────────────────────────────────────────────────────────────────
+// Fair wall placement: the next gap is only ever drawn from heights a human
+// can reach from the previous gap in the time between the two walls (real
+// physics, a tap every 7 frames), scaled down by WALL_FAIRNESS for margin.
+// Difficulty comes from speed, gap size and enemies — never from a gap that
+// is physically out of reach.
+const WALL_FAIRNESS = 0.65;
+let lastGapCentre = VH / 2;
+function humanClimb(frames) {
+  let y = 0, v = 0;
+  for (let t = 0; t < frames; t++) { if (t % 7 === 0) v = FLAP_VY; v += GRAVITY; y += v; }
+  return Math.max(0, -y);
+}
 function addWall(startX) {
-  const cfg = PHASE_CONFIG[curPhase];
+  const cfg = phaseCfg(score);
   const margin = 55;
   const gap = Math.max(cfg.gapMin, cfg.gapBase - score * 0.18);
-  const gapY = margin + Math.random() * (VH - margin*2 - gap);
+  const frames = Math.max(1, (wallSpacing(score) - WALL_W - 2 * P.r) / Math.max(spd, 3));
+  const reach = (humanClimb(Math.floor(frames)) + (gap - 2 * P.r) * 0.75) * WALL_FAIRNESS;
+  const lo = Math.max(margin + gap / 2, lastGapCentre - reach);
+  const hi = Math.min(VH - margin - gap / 2, lastGapCentre + reach);
+  const centre = lo + Math.random() * Math.max(0, hi - lo);
+  lastGapCentre = centre;
+  const gapY = centre - gap / 2;
   const w = { x: startX ?? VW+10, gapY, gap, w: WALL_W, pulse: Math.random()*Math.PI*2, passed: false };
   walls.push(w);
   // XP orb in ~45% of gaps; ones near the lips are worth double (risk/reward)
@@ -4142,7 +4179,7 @@ function addWall(startX) {
   }
 }
 function addEnemy() {
-  const cfg = PHASE_CONFIG[curPhase];
+  const cfg = phaseCfg(score);
   const seeker = Math.random() < cfg.seekerProb;
   const y = 45 + Math.random() * (VH - 90);
   if (seeker) {
@@ -4256,6 +4293,7 @@ function startGame() {
   PULSE_MAX_R    = Math.round(PULSE_MAX_R_BASE    * [1, 1.3, 1.6][rank('mega_pulse')]);
   bonusPopups = [];
   clearWorld();
+  lastGapCentre = VH / 2;
   for (let i = 0; i < 4; i++) addWall(VW + i*265);
   timeScale = 1; runBestPhase = 0; wasRecord = false; prevHiScore = hiScore;
   trailPrimed = false;
@@ -4457,7 +4495,7 @@ function update(dt) {
     Music.setSection('p' + (curPhase + 1));
     lastPhase = curPhase;
   }
-  const cfg = PHASE_CONFIG[curPhase];
+  const cfg = phaseCfg(score);
   spd = Math.min(cfg.spdCap, 3 + Math.sqrt(score) * 0.35);
 
   // Music: predict the next phase change and pre-roll a riser into it
@@ -4526,7 +4564,7 @@ function update(dt) {
   P.bankAngle += (bankTarget - P.bankAngle) * Math.min(0.5, 0.10 * dt);
 
   // Walls
-  const spacing = Math.max(190, 265 - score*0.4);
+  const spacing = wallSpacing(score);
   if (!walls.length || walls[walls.length-1].x < VW-spacing) addWall();
   for (const w of walls) {
     w.x -= spd * dt;
