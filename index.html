@@ -1201,7 +1201,7 @@ body.retro #ui { filter: grayscale(1) sepia(1) hue-rotate(70deg) saturate(2.6) b
   position: absolute; left: 0; right: 0; top: 100%;
   text-align: center;
 }
-.cr-roll.roll { animation: cr-roll 26s linear forwards; }
+.cr-roll.roll { animation: cr-roll 36s linear forwards; }
 @keyframes cr-roll { from { transform: translateY(0); } to { transform: translateY(calc(-100% - 100vh)); } }
 .cr-end { font: 900 26px/1.2 var(--f-disp); letter-spacing: 6px; color: #fff; text-shadow: 0 0 20px #b98cff, 0 0 40px #b98cff; }
 .cr-thanks { margin: 14px 0 70px; font: 600 14px/1.6 var(--f-ui); letter-spacing: 2px; color: #d8b4ff; }
@@ -1215,6 +1215,16 @@ body.retro #ui { filter: grayscale(1) sepia(1) hue-rotate(70deg) saturate(2.6) b
 .cr-k { font: 700 11px/1 var(--f-ui); letter-spacing: 5px; color: rgba(170, 200, 230, 0.6); }
 .cr-v { margin: 10px 0 46px; font: 700 20px/1.3 var(--f-disp); letter-spacing: 2px; color: #fff; }
 .cr-v small { font: 600 12px/1 var(--f-ui); letter-spacing: 2px; color: var(--c-dim); }
+.cr-cast-h { margin: 0 0 26px; font: 900 16px/1 var(--f-disp); letter-spacing: 10px; color: var(--c-cyan); text-shadow: 0 0 12px rgba(0, 232, 255, 0.6); }
+.cr-cast { display: flex; flex-direction: column; gap: 26px; width: min(360px, 86vw); margin: 0 auto 70px; text-align: left; }
+.cr-c { display: flex; align-items: center; gap: 16px; }
+.cr-c svg { flex: none; width: 60px; height: 60px; border-radius: 10px; box-shadow: 0 0 18px var(--cc, rgba(0, 232, 255, 0.35)); }
+.cr-c .unk { flex: none; width: 60px; height: 60px; border-radius: 10px; display: grid; place-items: center;
+  border: 2px solid rgba(170, 200, 230, 0.3); font: 900 26px/1 var(--f-disp); color: rgba(170, 200, 230, 0.4); }
+.cr-c b { display: block; font: 900 17px/1.1 var(--f-disp); letter-spacing: 3px; color: #fff; }
+.cr-c b small { margin-left: 8px; font: 700 11px/1 var(--f-ui); letter-spacing: 2px; color: var(--cc, var(--c-cyan)); }
+.cr-c i { display: block; margin-top: 4px; font: 700 10px/1.2 var(--f-ui); font-style: normal; letter-spacing: 2px; color: var(--cc, var(--c-cyan)); }
+.cr-c span { display: block; margin-top: 5px; font: 600 12px/1.5 var(--f-ui); color: #c9d6e6; }
 .cr-reward { margin: 30px 0 60px; font: 700 14px/2 var(--f-disp); letter-spacing: 3px; color: var(--c-gold); text-shadow: 0 0 10px rgba(255, 216, 74, 0.6); }
 .cr-fin { margin-top: 40px; font: 900 18px/1 var(--f-disp); letter-spacing: 8px; color: var(--c-cyan); text-shadow: 0 0 14px var(--c-cyan); }
 .cr-skip {
@@ -1772,7 +1782,7 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
   </div>
 
   <p class="rot-secret" id="rot-secret" hidden>&gt; SPIN CYCLE DETECTED — 目が回った？ MIRROR MODE 解放</p>
-  <p class="rot-version">SYS_REV  1.8.0 · SECRETS <span id="rot-secrets">0/9</span></p>
+  <p class="rot-version">SYS_REV  1.8.1 · SECRETS <span id="rot-secrets">0/9</span></p>
 </div>
 
 <div id="shop-modal" class="modal">
@@ -2036,7 +2046,7 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
         <span class="best">BEST<b id="t-best">—</b></span>
         <span>SOUND<b id="t-sound">ON</b> [M]</span>
         <span class="secret-count">SECRETS<b id="t-secrets">0/9</b></span>
-        <span class="ver" id="t-ver">VER<b>1.8.0</b></span>
+        <span class="ver" id="t-ver">VER<b>1.8.1</b></span>
       </div>
     </div>
 
@@ -6866,6 +6876,25 @@ addEventListener('keydown', e => {
 const creditsEl = document.getElementById('credits');
 let creditsOpen = false;
 let creditsOnClose = null;
+// CAST — the bosses stay hidden until the player has actually met them in battle
+function creditsCast() {
+  const met = lsJSON('hd_boss_met', {});
+  const C = (face, cc, en, jp, role, line) =>
+    `<div class="cr-c" style="--cc:${cc}">${face}<div><b>${en}<small>${jp}</small></b><i>${role}</i><span>${line}</span></div></div>`;
+  const U = () => `<div class="cr-c"><div class="unk">?</div><div><b>???</b><i>BIDENT</i><span>まだ見ぬ穂先。</span></div></div>`;
+  const seen = (id, i) => bossBest > i || (met[id] || 0) > 0;
+  return `<div class="cr-cast-h">CAST</div><div class="cr-cast">` +
+    C(RAY_FACE, '#2ab4ee', 'RAY', 'レイ', 'PILOT ／ アイギス出身',
+      '自称クールな、未来の宇宙パイロット。どこか抜けているが、何度だって立ち上がる。') +
+    C(PALLAS_FACE, '#00e8ff', 'PALLAS', 'パラス', 'SHIP AI ／ 元アイギス防衛網',
+      '冷静で口が悪く、たまに優しい相棒。レイの衝突回数を正確に数えている。') +
+    (seen('styx', 0) ? C(STYX_FACE, '#ff3048', 'STYX', 'ステュクス', 'BIDENT ／ 第一の穂先',
+      'でかい図体に、でかい声。何度負けても懲りない。') : U()) +
+    (seen('acheron', 1) ? C(ACHERON_FACE, '#9a6cff', 'ACHERON', 'アケロン', 'BIDENT ／ 第二の穂先',
+      'アイギス襲撃の立案者。冷酷で、美を好む。') : U()) +
+    `</div>` +
+    `<div class="cr-k">SETTING</div><div class="cr-v">PLANET AEGIS<br><small>最強の盾の名を冠した、美しい星</small></div>`;
+}
 function showCredits(ending, onClose = null) {
   if (creditsOpen) return;
   creditsOpen = true;
@@ -6877,6 +6906,7 @@ function showCredits(ending, onClose = null) {
     (story ? `<div class="cr-end">BIDENT FALLS</div><div class="cr-thanks">アイギスの空に、静かな夜が戻った。</div>`
      : ending ? `<div class="cr-end">ALL SECRETS FOUND</div><div class="cr-thanks">すべての秘密を見つけてくれて、ありがとう。</div>` : '') +
     `<div class="cr-logo">HOVER<br>DODGE</div>` +
+    creditsCast() +
     L('PRODUCED & DIRECTED BY', 'RYOHEI TAKAUCHI') +
     L('GAME DESIGN', 'RYOHEI TAKAUCHI') +
     L('DEVELOPMENT', 'RYOHEI TAKAUCHI<br><small>with Claude Code</small>') +
@@ -6887,8 +6917,10 @@ function showCredits(ending, onClose = null) {
     (story ? `<div class="cr-reward">◆ TITLE: AEGIS PILOT</div>`
      : ending ? `<div class="cr-reward">◆ PRISM SKIN UNLOCKED<br>◆ TITLE: SECRET MASTER</div>` : '') +
     `<div class="cr-fin">THANK YOU FOR PLAYING</div>`;
-  restartAnim(roll, 'roll');
   creditsEl.classList.add('open');
+  // keep a steady scroll speed however long the roll is
+  roll.style.animationDuration = Math.max(26, (roll.scrollHeight + innerHeight) / 62) + 's';
+  restartAnim(roll, 'roll');
   if (ending) { sfx.record(); fxFlash(0xffffff, 0.6); }
 }
 function closeCredits() {

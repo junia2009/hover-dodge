@@ -4,7 +4,7 @@
 
 Three.js + WebGL で描画する一画面・タップで遊べるアーケードシューターです。ブラウザだけで動き、PWA としてホーム画面に追加すればオフラインでもプレイできます。フェーズに応じて重厚化する手続き合成 BGM 付き。
 
-[![Play](https://img.shields.io/badge/play-online-00e8ff?style=flat-square)](#) ![Version](https://img.shields.io/badge/version-1.8.0-aa44ff?style=flat-square)
+[![Play](https://img.shields.io/badge/play-online-00e8ff?style=flat-square)](#) ![Version](https://img.shields.io/badge/version-1.8.1-aa44ff?style=flat-square)
 
 ---
 
@@ -324,6 +324,7 @@ SW キャッシュキーを上げることで、既存 PWA ユーザーに新版
 | :---: | --- |
 | **1.7.0**  | ボス戦：バイデントの頭領 STYX（120 秒）/ ACHERON（240 秒）。コア回収→AEGIS CANNON、PULSE 反射、射撃。エピローグ・スタッフロール・称号 AEGIS PILOT、ボス専用 BGM・SE |
 | **1.8.0**  | 会話パターン大幅拡張：状況（前回の死因・連続ミス・時間帯・ボス撃破状況・装備）に応じたセリフ、ギリギリ回避・連続撃破・反射・経過時間などの新トリガー、出撃をまたいで進む連作ネタ、ボス再戦セリフ、重複回避（hd_comm） |
+| **1.8.1**  | クレジットに CAST（レイ・パラス・ステュクス・アケロン）と舞台 PLANET AEGIS を追加。ボスは遭遇するまで ??? 表示 |
 | **1.6.0**  | ストーリー導入：主人公レイ（3D モデル）・相棒 AI パラス、3D プロローグ、プレイ中の無線、リザルトの一言、航海日誌 10 ページ、区間名 |
 | **1.5.2**  | 壁の隙間が物理的に届かない位置に出る問題を修正（前の隙間から人間が余裕をもって届く範囲にだけ出現）。フェーズ切替時の難易度を 8 秒かけてなだらかに移行 |
 | **1.5.1**  | ショップのリスペック（スキル振り直し）機能を削除 |
