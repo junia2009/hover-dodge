@@ -710,6 +710,7 @@ button { font-family: var(--f-ui) }
   transition: background .15s, color .15s, transform .1s;
   display: inline-flex; align-items: center; gap: calc(8 * var(--px));
 }
+.btn[hidden] { display: none; }
 .btn:hover { background: linear-gradient(180deg, rgba(80, 120, 180, 0.55), rgba(20, 34, 64, 0.8)); color: #fff; }
 .btn:active { transform: scale(0.95); }
 .btn .tag {
@@ -954,6 +955,103 @@ button { font-family: var(--f-ui) }
   font: bold 12px/16px var(--f-ui);
   letter-spacing: 0;
 }
+
+/* ══ Story ═══════════════════════════════════════════════════════════════ */
+/* in-play comm (bottom centre, inside the scaled #ui) */
+.comm {
+  position: absolute; left: 50%; bottom: calc(12 * var(--px));
+  width: calc(330 * var(--px));
+  display: flex; align-items: center; gap: calc(8 * var(--px));
+  padding: calc(6 * var(--px)) calc(10 * var(--px)) calc(6 * var(--px)) calc(6 * var(--px));
+  background: linear-gradient(90deg, rgba(6, 16, 34, 0.86), rgba(6, 16, 34, 0.55));
+  clip-path: polygon(calc(8 * var(--px)) 0, 100% 0, 100% calc(100% - calc(8 * var(--px))), calc(100% - calc(8 * var(--px))) 100%, 0 100%, 0 calc(8 * var(--px)));
+  opacity: 0; transform: translate(-50%, calc(10 * var(--px)));
+  transition: opacity .25s, transform .25s;
+}
+.comm.on { opacity: 1; transform: translate(-50%, 0); }
+.comm-face { flex: none; width: calc(30 * var(--px)); height: calc(30 * var(--px)); }
+.comm-face svg { width: 100%; height: 100%; display: block; }
+.comm-name { font: 700 calc(8 * var(--px))/1 var(--f-disp); letter-spacing: calc(2 * var(--px)); }
+.comm.ray .comm-name { color: #5fd0ff; }
+.comm.pallas .comm-name { color: #7ff6ff; }
+.comm-text { margin-top: calc(3 * var(--px)); font: 600 calc(11 * var(--px))/1.35 var(--f-ui); color: #fff; min-height: calc(15 * var(--px)); }
+.pallas-eye { animation: pallas-eye 1.6s ease-in-out infinite; transform-origin: 32px 32px; }
+@keyframes pallas-eye { 50% { opacity: .55; transform: scale(.8); } }
+/* result screen: Ray's line + new log notice */
+.r-ray { margin-top: calc(10 * var(--px)); display: flex; align-items: center; gap: calc(8 * var(--px)); }
+.r-ray-face { width: calc(30 * var(--px)); height: calc(30 * var(--px)); }
+.r-ray-face svg { width: 100%; height: 100%; display: block; }
+.r-ray-text { font: 700 calc(13 * var(--px))/1.3 var(--f-ui); letter-spacing: calc(1 * var(--px)); color: #bfe9ff; }
+.r-newlog { margin-top: calc(10 * var(--px)); font: 700 calc(10 * var(--px))/1 var(--f-ui); letter-spacing: calc(2 * var(--px)); color: #9dffc4; text-align: center; }
+.btn.log .new {
+  font: 900 calc(7 * var(--px))/1 var(--f-disp); letter-spacing: calc(1 * var(--px));
+  padding: calc(2 * var(--px)) calc(4 * var(--px)); color: #021018; background: #9dffc4;
+}
+/* LOG screen */
+#log-modal { --k: #5fd0ff; }
+.btn-mini {
+  border: none; padding: 9px 12px;
+  background: rgba(95, 208, 255, 0.12); color: #bfe9ff;
+  font: 700 10px/1 var(--f-disp) !important; letter-spacing: 2px;
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+}
+.log-body { display: grid; grid-template-columns: minmax(200px, 34%) 1fr; }
+.log-list { overflow-y: auto; padding: 12px; display: grid; gap: 6px; align-content: start; border-right: 1px solid rgba(160, 200, 255, 0.09); }
+.log-item {
+  position: relative; text-align: left; border: none;
+  padding: 9px 10px; display: grid; grid-template-columns: auto 1fr auto; gap: 2px 8px; align-items: center;
+  background: rgba(255, 255, 255, 0.04); color: var(--c-ink);
+}
+.log-item .no { font: 500 9px/1 var(--f-disp); color: #5fd0ff; }
+.log-item b { font: 700 12px/1.2 var(--f-ui); letter-spacing: 1px; }
+.log-item i { font: 900 7px/1 var(--f-disp); font-style: normal; padding: 2px 4px; color: #021018; background: #9dffc4; }
+.log-item .hint { grid-column: 2 / 4; font: 600 9px/1.2 var(--f-ui); color: rgba(160, 180, 210, 0.5); }
+.log-item.sel { background: rgba(95, 208, 255, 0.16); box-shadow: inset 2px 0 0 #5fd0ff; }
+.log-item.locked { opacity: .55; cursor: default; }
+.log-item.locked b { color: rgba(160, 180, 210, 0.5); }
+.log-page { overflow-y: auto; padding: 18px 26px 24px; }
+.lp-head { display: flex; align-items: center; gap: 12px; }
+.lp-face { width: 46px; height: 46px; } .lp-face svg { width: 100%; height: 100%; }
+.lp-no { font: 500 10px/1 var(--f-disp); letter-spacing: 2px; color: #5fd0ff; }
+.lp-title { margin-top: 6px; font: 900 20px/1 var(--f-disp); letter-spacing: 3px; color: #fff; }
+.lp-text { margin-top: 16px; }
+.lp-text p { font: 600 14px/1.85 var(--f-ui); letter-spacing: .5px; color: rgba(225, 235, 250, 0.9); margin-bottom: 8px; }
+@media (max-width: 640px) {
+  .log-body { grid-template-columns: 1fr; grid-auto-rows: max-content; overflow-y: auto; }
+  .log-list { border-right: none; grid-template-columns: 1fr 1fr; }
+}
+@media (max-height: 460px) { .log-page { padding: 12px 18px; } .lp-text p { font-size: 13px; line-height: 1.7; } }
+/* prologue overlay (the 3D scene renders underneath in the game canvas) */
+#story {
+  display: none; position: fixed; inset: 0; z-index: 9000;
+  font-family: var(--f-ui); -webkit-user-select: none; user-select: none;
+  --fade: 0;
+}
+#story.on { display: block; }
+#story::before { content: ''; position: absolute; inset: 0; background: #000; opacity: var(--fade); pointer-events: none; }
+.story-skip {
+  position: absolute; top: max(14px, env(safe-area-inset-top)); right: max(14px, env(safe-area-inset-right));
+  border: none; padding: 8px 12px; background: rgba(0, 0, 0, 0.4); color: rgba(220, 235, 255, 0.75);
+  font: 700 11px/1 var(--f-disp) !important; letter-spacing: 2px; cursor: pointer;
+}
+.story-box {
+  position: absolute; left: 50%; bottom: max(18px, env(safe-area-inset-bottom));
+  transform: translateX(-50%); width: min(720px, calc(100vw - 32px));
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px 22px 18px;
+  background: linear-gradient(180deg, rgba(4, 10, 24, 0.82), rgba(4, 10, 24, 0.92));
+  box-shadow: inset 0 1px 0 rgba(160, 200, 255, 0.25);
+  clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+}
+.story-face { display: none; flex: none; width: 56px; height: 56px; }
+.story-face svg { width: 100%; height: 100%; }
+#story.talk .story-face { display: block; }
+.story-name { font: 700 11px/1 var(--f-disp); letter-spacing: 3px; color: #5fd0ff; min-height: 11px; }
+.story-text { margin-top: 6px; font: 600 16px/1.6 var(--f-ui); letter-spacing: 1px; color: #fff; min-height: 26px; }
+#story:not(.talk) .story-text { font-size: 17px; color: #e6f0ff; text-align: center; }
+#story:not(.talk) .story-body { flex: 1; }
+#story.sfx .story-text { font: 900 34px/1.2 var(--f-disp); color: #ffd84a; text-shadow: 0 0 14px #ff9a3c; }
+.story-next { position: absolute; right: 14px; bottom: 8px; font-size: 10px; color: #5fd0ff; animation: rot-blink 1s steps(2) infinite; }
 
 /* ══ Secrets ═════════════════════════════════════════════════════════════ */
 /* hidden touch targets on the title */
@@ -1611,7 +1709,7 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
   </div>
 
   <p class="rot-brand">HOVER DODGE</p>
-  <p class="rot-tagline">壁と敵をよけ続けろ</p>
+  <p class="rot-tagline">宇宙海賊団バイデントを追え</p>
 
   <div class="rot-icon-wrap">
     <div class="rot-scope r1"></div>
@@ -1654,7 +1752,7 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
   </div>
 
   <p class="rot-secret" id="rot-secret" hidden>&gt; SPIN CYCLE DETECTED — 目が回った？ MIRROR MODE 解放</p>
-  <p class="rot-version">SYS_REV  1.5.1 · SECRETS <span id="rot-secrets">0/9</span></p>
+  <p class="rot-version">SYS_REV  1.6.0 · SECRETS <span id="rot-secrets">0/9</span></p>
 </div>
 
 <div id="shop-modal" class="modal">
@@ -1714,6 +1812,12 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
       <button class="m-close" id="howto-close" type="button" aria-label="Close">×</button>
     </header>
     <div class="m-body howto-body">
+
+    <section class="howto-sec">
+      <h3>STORY</h3>
+      <p>最強の盾の名を冠した星〈アイギス〉は、宇宙海賊団〈バイデント〉に焼き尽くされた。パイロットに憧れていた小さな鳥 <b>レイ</b> は、古い機体と AI の <b>パラス</b> とともに飛び立つ。海賊団を壊滅させるまで、何度だって立ち上がる。</p>
+      <p>記録を伸ばすと <b>LOG（航海日誌）</b> のページが増えていく。</p>
+    </section>
 
     <section class="howto-sec">
       <h3>基本操作</h3>
@@ -1805,6 +1909,30 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
   </div>
 </div>
 
+<div id="log-modal" class="modal">
+  <div class="m-panel">
+    <header class="m-head">
+      <div><div class="m-title">FLIGHT LOG</div><div class="m-sub" id="log-count">航海日誌</div></div>
+      <div class="m-spacer"></div>
+      <button class="btn-mini" id="log-prologue" type="button">PROLOGUE ▶</button>
+      <button class="m-close" id="log-close" type="button" aria-label="Close">×</button>
+    </header>
+    <div class="m-body log-body">
+      <div class="log-list" id="log-list"></div>
+      <div class="log-page" id="log-page"></div>
+    </div>
+  </div>
+</div>
+
+<div id="story">
+  <button class="story-skip" id="story-skip" type="button">SKIP ▶▶</button>
+  <div class="story-box">
+    <div class="story-face" id="story-face"></div>
+    <div class="story-body"><div class="story-name" id="story-name"></div><div class="story-text" id="story-text"></div></div>
+    <div class="story-next">▼</div>
+  </div>
+</div>
+
 <div id="secret-toast" aria-live="polite">
   <div class="st-k">SECRET FOUND · <span id="st-n">1 / 9</span></div>
   <div class="st-name" id="st-name">???</div>
@@ -1841,6 +1969,7 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
         <span class="xp">XP<b id="hud-xp">+0</b></span>
         <span class="muted" id="hud-muted" hidden>[M] MUTED</span>
       </div>
+      <div class="comm" id="comm"><div class="comm-face" id="comm-face"></div><div class="comm-body"><div class="comm-name" id="comm-name"></div><div class="comm-text" id="comm-text"></div></div></div>
       <div class="hud-banner" id="hud-banner">
         <div class="b-kicker">ENTERING</div>
         <div class="b-title" id="banner-title">PHASE 2</div>
@@ -1856,13 +1985,14 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
       <div class="t-col stagger">
         <div class="t-eyebrow">NEON EVASION ARCADE</div>
         <h1 class="t-logo"><span>HOVER</span><span class="l2">DODGE</span></h1>
-        <div class="t-tag">壁と敵をよけ続けろ</div>
+        <div class="t-tag">宇宙海賊団バイデントを追え</div>
         <button class="btn-primary t-start" id="start-btn" type="button">START<kbd>SPACE</kbd></button>
         <div class="t-modes" id="t-modes"></div>
         <div class="t-menu">
           <button class="btn" id="t-howto-btn" type="button">HOW TO PLAY</button>
           <button class="btn" id="t-shop-btn" type="button">SHOP <span class="tag" id="t-xp">0 XP</span></button>
           <button class="btn" id="t-skin-btn" type="button">SKIN <span class="dot" id="t-skin-dot"></span></button>
+          <button class="btn log" id="t-log-btn" type="button">LOG <span class="new" id="t-log-new" hidden>NEW</span></button>
           <button class="btn secrets" id="t-secrets-btn" type="button" hidden>SECRETS <span class="tag" id="t-secrets-tag">0/9</span></button>
         </div>
       </div>
@@ -1870,7 +2000,7 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
         <span class="best">BEST<b id="t-best">—</b></span>
         <span>SOUND<b id="t-sound">ON</b> [M]</span>
         <span class="secret-count">SECRETS<b id="t-secrets">0/9</b></span>
-        <span class="ver" id="t-ver">VER<b>1.5.1</b></span>
+        <span class="ver" id="t-ver">VER<b>1.6.0</b></span>
       </div>
     </div>
 
@@ -1878,6 +2008,7 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
     <div class="screen" id="result-screen">
       <div class="t-col stagger">
         <div class="r-head" data-text="GAME OVER">GAME OVER</div>
+        <div class="r-ray"><span class="r-ray-face" id="r-ray-face"></span><span class="r-ray-text" id="r-ray-text"></span></div>
         <div class="r-panel">
           <div class="r-top">
             <div>
@@ -1887,6 +2018,7 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
             <div class="r-best"><div class="hud-label">BEST</div><b id="r-best">0</b></div>
           </div>
           <div class="r-newrec" id="r-newrec">★ NEW RECORD ★</div>
+          <div class="r-newlog" id="r-newlog" hidden>📓 航海日誌に新しいページが追加された</div>
           <div class="r-grid">
             <div><div class="hud-label">PHASE</div><b id="r-phase">1</b></div>
             <div><div class="hud-label">KILLS</div><b id="r-kills">0</b></div>
@@ -1968,7 +2100,8 @@ function W(x, y, z = 0) {
 
 // ── Post-processing ───────────────────────────────────────────────────────────
 const composer = new EffectComposer(renderer);
-composer.addPass(new RenderPass(scene, camera));
+const renderPass = new RenderPass(scene, camera);   // scene/camera swapped for the prologue
+composer.addPass(renderPass);
 const bloom = new UnrealBloomPass(new THREE.Vector2(VW, VH), 0.8, 0.4, 0.2);
 composer.addPass(bloom);
 composer.addPass(new OutputPass());
@@ -2076,7 +2209,7 @@ const WALL_EDGE_GEOM = new THREE.BoxGeometry(WALL_W - 2, 1.4, 8);
 // the ship without having to re-traverse the scene graph by name.
 const shipParts = { hull: null, wings: [], cockpit: null, engine: null, flame: null };
 
-function buildShipGroup() {
+function buildShipGroup(register = true) {
   const g = new THREE.Group();
 
   // Hull — extruded bezier path (points to +X)
@@ -2095,7 +2228,7 @@ function buildShipGroup() {
   );
   hullMesh.position.z = -2.5; // center hull depth around z=0
   g.add(hullMesh);
-  shipParts.hull = hullMesh;
+  if (register) shipParts.hull = hullMesh;
 
   // Wings (y negated from canvas coords for Three.js y-up)
   for (const pts of [
@@ -2112,7 +2245,7 @@ function buildShipGroup() {
     );
     wm.position.z = -1.25;
     g.add(wm);
-    shipParts.wings.push(wm);
+    if (register) shipParts.wings.push(wm);
   }
 
   // Cockpit dome
@@ -2122,7 +2255,7 @@ function buildShipGroup() {
   );
   ck.position.set(5, 0, 5); ck.scale.set(1.45, 0.85, 0.72);
   g.add(ck);
-  shipParts.cockpit = ck;
+  if (register) shipParts.cockpit = ck;
 
   // Engine nozzle glow sphere (emissive → bloomed)
   const eng = new THREE.Mesh(
@@ -2131,7 +2264,7 @@ function buildShipGroup() {
   );
   eng.position.set(-16, 0, 2.5); eng.name = 'engine';
   g.add(eng);
-  shipParts.engine = eng;
+  if (register) shipParts.engine = eng;
 
   // Flame cone — rotation.z=π/2 so tip points to -X (trailing behind ship)
   const flameMesh = new THREE.Mesh(
@@ -2141,7 +2274,7 @@ function buildShipGroup() {
   flameMesh.rotation.z = Math.PI / 2;
   flameMesh.position.set(-16, 0, 2.5); flameMesh.name = 'flame';
   g.add(flameMesh);
-  shipParts.flame = flameMesh;
+  if (register) shipParts.flame = flameMesh;
 
   g.scale.setScalar(0.85);
   return g;
@@ -2620,7 +2753,7 @@ const FLAP_VY   = -5.2;  // upward impulse (canvas y-down, so negative = up)
 let   spaceDown = false;
 
 function flap() {
-  if (gstate === 'menu') return;             // require start button on title
+  if (gstate === 'menu' || gstate === 'story') return;   // require start button on title
   if (gstate === 'dead') return;             // require RETRY button on game over
   P.vy = FLAP_VY;
   sfx.flap(P.y);
@@ -2725,7 +2858,7 @@ function onTap(el, fn) {
   el.addEventListener('touchstart', e => { e.preventDefault(); e.stopPropagation(); fn(e); }, { passive: false });
 }
 const anyModalOpen = () =>
-  [shopModal, skinModal, howtoModal, document.getElementById('secrets-modal'), document.getElementById('credits')]
+  [shopModal, skinModal, howtoModal, document.getElementById('secrets-modal'), document.getElementById('credits'), document.getElementById('log-modal')]
     .some(m => m && m.classList.contains('open'));
 
 function toggleMute() {
@@ -2738,12 +2871,17 @@ function toggleMute() {
 renderer.domElement.addEventListener('click', flap);
 renderer.domElement.addEventListener('touchstart', e => { e.preventDefault(); flap(); }, { passive: false });
 addEventListener('keydown', e => {
+  if (Prologue.active) {                   // prologue: Space/Enter advance, ESC skips
+    if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); if (!e.repeat) Prologue.advance(); }
+    if (e.code === 'Escape') { e.preventDefault(); Prologue.finish(); }
+    return;
+  }
   if (anyModalOpen()) return;              // modal handlers own ESC while open
   if (e.code === 'Space' || e.code === 'Enter') {
     e.preventDefault();
     if (!spaceDown) {
       spaceDown = true;
-      if (gstate === 'menu') startGame();
+      if (gstate === 'menu') requestStart();
       else if (gstate === 'dead') { if (deadCooldown <= 0) startGame(); }
       else if (gstate === 'paused') resumeGame();
       else flap();
@@ -2768,7 +2906,7 @@ const pulseSub   = document.getElementById('pulse-sub');
 onTap(pulseBtn, firePulse);
 
 const startBtn = document.getElementById('start-btn');
-onTap(startBtn, () => { if (gstate === 'menu') { ui.confirm(); startGame(); } });
+onTap(startBtn, () => { if (gstate === 'menu') { ui.confirm(); requestStart(); } });
 onTap(document.getElementById('retry-btn'), () => { if (gstate === 'dead' && deadCooldown <= 0) { ui.confirm(); startGame(); } });
 onTap(document.getElementById('title-btn'), () => { if (gstate === 'dead' && deadCooldown <= 0) { ui.back(); gotoMenu(); } });
 onTap(document.getElementById('pause-btn'),  () => { if (gstate === 'play') { ui.select(); pauseGame(); } });
@@ -3824,6 +3962,23 @@ const sfx = {
     voice({ type: 'sine', f: 1568, t, dur: 0.3, vol: 0.06, out: AU.sfxBus, rev: 0.4 });
     voice({ type: 'sine', f: 2349, t: t + 0.08, dur: 0.4, vol: 0.06, out: AU.sfxBus, rev: 0.4 });
   },
+  // comm: short radio blip (two-tone for PALLAS, chirp for RAY)
+  comm(sp) {
+    if (!this.ok()) return;
+    const t = this.now();
+    if (sp === 'P') { voice({ type: 'sine', f: 1320, t, dur: 0.05, vol: 0.035, out: AU.sfxBus }); voice({ type: 'sine', f: 1760, t: t + 0.06, dur: 0.06, vol: 0.03, out: AU.sfxBus }); }
+    else voice({ type: 'triangle', f: 900, f2: 1500, t, dur: 0.09, vol: 0.04, out: AU.sfxBus });
+    noiseHit({ t, dur: 0.06, vol: 0.03, out: AU.sfxBus, type: 'bandpass', f: 2500, q: 2 });
+  },
+  // comedic head bonk (prologue)
+  bonk() {
+    if (!this.ok()) return;
+    const t = this.now();
+    voice({ type: 'sine', f: 180, f2: 90, t, dur: 0.25, vol: 0.4, out: AU.sfxBus });
+    voice({ type: 'square', f: 420, f2: 300, t, dur: 0.12, vol: 0.06, out: AU.sfxBus, lp: 1500 });
+    noiseHit({ t, dur: 0.08, vol: 0.2, out: AU.sfxBus, type: 'lowpass', f: 1200 });
+    for (const [i, m] of [88, 91, 88].entries()) voice({ type: 'sine', f: mtof(m), t: t + 0.3 + i * 0.09, dur: 0.12, vol: 0.04, out: AU.sfxBus, rev: 0.3 });
+  },
   launch() {
     if (!this.ok()) return;
     const t = this.now();
@@ -3891,6 +4046,25 @@ function getPhase(s) {
   if (s < 100) return 2;
   return 3;
 }
+// Difficulty numbers for a given score. Instead of switching at the phase
+// boundary (which made PHASE 4 an abrupt wall of difficulty), each phase's
+// numbers ease in from the previous phase over PHASE_BLEND seconds.
+const PHASE_STARTS = [0, 20, 50, 100];
+const PHASE_BLEND = 8;
+function phaseCfg(s) {
+  const p = getPhase(s), cur = PHASE_CONFIG[p];
+  if (p === 0) return cur;
+  const t = Math.min(1, (s - PHASE_STARTS[p]) / PHASE_BLEND);
+  if (t >= 1) return cur;
+  const prev = PHASE_CONFIG[p - 1], e = t * t * (3 - 2 * t);
+  const mix = k => prev[k] + (cur[k] - prev[k]) * e;
+  return {
+    gapMin: mix('gapMin'), gapBase: mix('gapBase'), seekerProb: mix('seekerProb'), spdCap: mix('spdCap'),
+    spawnBase: p === 1 ? cur.spawnBase : mix('spawnBase'),   // phase 1 had no enemies to blend from
+    name: cur.name,
+  };
+}
+const wallSpacing = s => Math.max(190, 265 - s * 0.4);
 
 // ── Time ──────────────────────────────────────────────────────────────────────
 // dtScale: 1.0 == one 60Hz frame. Capped to avoid huge jumps after tab-resume.
@@ -3934,7 +4108,7 @@ const SKILL_DEFS = [
   { id: 'regen_shield', name: 'REGEN SHIELD', kind: 'DEFENSE', price: 750, requires: ['double_shield'],
     desc: 'シールド1枚。失ったシールドは20秒で再生する' },
   { id: 'aegis', name: 'AEGIS', kind: 'DEFENSE', price: 1500, requires: ['regen_shield'], ult: true,
-    desc: 'シールド1枚。破壊時に超巨大な衝撃波を放ち、時間が止まる' },
+    desc: '故郷の名を継ぐ最後の盾。シールド1枚、破壊時に超巨大な衝撃波を放ち時間が止まる' },
   { id: 'phoenix', name: 'PHOENIX', kind: 'DEFENSE', price: 500, requires: ['shield'],
     desc: '死亡時に1度だけ復活、3秒間無敵' },
   { id: 'last_stand', name: 'LAST STAND', kind: 'DEFENSE', price: 800, requires: ['phoenix'],
@@ -4123,11 +4297,29 @@ let overdriveOn = false;          // OVERDRIVE active (combo ≥ 5)
 const bulletMeshMap = new Map();
 
 // ── Spawners ──────────────────────────────────────────────────────────────────
+// Fair wall placement: the next gap is only ever drawn from heights a human
+// can reach from the previous gap in the time between the two walls (real
+// physics, a tap every 7 frames), scaled down by WALL_FAIRNESS for margin.
+// Difficulty comes from speed, gap size and enemies — never from a gap that
+// is physically out of reach.
+const WALL_FAIRNESS = 0.65;
+let lastGapCentre = VH / 2;
+function humanClimb(frames) {
+  let y = 0, v = 0;
+  for (let t = 0; t < frames; t++) { if (t % 7 === 0) v = FLAP_VY; v += GRAVITY; y += v; }
+  return Math.max(0, -y);
+}
 function addWall(startX) {
-  const cfg = PHASE_CONFIG[curPhase];
+  const cfg = phaseCfg(score);
   const margin = 55;
   const gap = Math.max(cfg.gapMin, cfg.gapBase - score * 0.18);
-  const gapY = margin + Math.random() * (VH - margin*2 - gap);
+  const frames = Math.max(1, (wallSpacing(score) - WALL_W - 2 * P.r) / Math.max(spd, 3));
+  const reach = (humanClimb(Math.floor(frames)) + (gap - 2 * P.r) * 0.75) * WALL_FAIRNESS;
+  const lo = Math.max(margin + gap / 2, lastGapCentre - reach);
+  const hi = Math.min(VH - margin - gap / 2, lastGapCentre + reach);
+  const centre = lo + Math.random() * Math.max(0, hi - lo);
+  lastGapCentre = centre;
+  const gapY = centre - gap / 2;
   const w = { x: startX ?? VW+10, gapY, gap, w: WALL_W, pulse: Math.random()*Math.PI*2, passed: false };
   walls.push(w);
   // XP orb in ~45% of gaps; ones near the lips are worth double (risk/reward)
@@ -4142,7 +4334,7 @@ function addWall(startX) {
   }
 }
 function addEnemy() {
-  const cfg = PHASE_CONFIG[curPhase];
+  const cfg = phaseCfg(score);
   const seeker = Math.random() < cfg.seekerProb;
   const y = 45 + Math.random() * (VH - 90);
   if (seeker) {
@@ -4256,6 +4448,7 @@ function startGame() {
   PULSE_MAX_R    = Math.round(PULSE_MAX_R_BASE    * [1, 1.3, 1.6][rank('mega_pulse')]);
   bonusPopups = [];
   clearWorld();
+  lastGapCentre = VH / 2;
   for (let i = 0; i < 4; i++) addWall(VW + i*265);
   timeScale = 1; runBestPhase = 0; wasRecord = false; prevHiScore = hiScore;
   trailPrimed = false;
@@ -4266,6 +4459,8 @@ function startGame() {
   Music.startRun();
   riserFor = -1;
   secretRunStart();
+  storyRunBegin();
+  Story.onRunStart();
 }
 
 function gotoMenu() {
@@ -4274,6 +4469,7 @@ function gotoMenu() {
   gstate = 'menu';
   timeScale = 1;
   hardcoreRun = false;
+  commClear();
   Music.toMenu();
   refreshTitleInfo();
 }
@@ -4312,6 +4508,7 @@ function die() {
       pushBonus(P.x, P.y - 22, 'SHIELD!', '#aaffaa');
     }
     if (hasSynergy('fortress')) pulseCooldown = 0;
+    Story.onShield();
     return;
   }
   // PHOENIX skill: one-time per-run revive with 3s invulnerability.
@@ -4325,6 +4522,7 @@ function die() {
     spawnSparks(P.x, P.y, 34, { vMin: 3, vMax: 10, szMax: 3.5, color: [15, 30, 45] });
     spawnRing(P.x, P.y, 0xffaa55, 0xff4422);   // fiery orange-red ring
     pushBonus(P.x, P.y - 22, 'PHOENIX!', '#ffaa55');
+    Story.onRevive();
     if (hasSynergy('salvage')) { addRunXP(100); pushBonus(P.x, P.y - 58, '+100 XP', '#9dffc4'); }
     if (hasSkill('last_stand')) {
       lastStandT = 600; xpMult = 2;
@@ -4339,6 +4537,7 @@ function die() {
   comboCount = 0; comboTimer = 0;
   sfx.death();
   Music.die();
+  commClear();
   vibrate([60, 40, 90]);
   const s = Math.floor(score);
   wasRecord = s > prevHiScore && s > 0;
@@ -4448,7 +4647,8 @@ function update(dt) {
   // Phase progression
   curPhase = getPhase(score);
   if (curPhase !== lastPhase) {
-    if (lastPhase >= 0) { phaseFlash = 90; showPhaseBanner(curPhase); fxFlash(0xffffff, 0.18); fx.aberr = Math.max(fx.aberr, 0.6); }
+    storyPhaseReached(curPhase);
+    if (lastPhase >= 0) { Story.onZone(curPhase); phaseFlash = 90; showPhaseBanner(curPhase); fxFlash(0xffffff, 0.18); fx.aberr = Math.max(fx.aberr, 0.6); }
     runBestPhase = Math.max(runBestPhase, curPhase);
     if (curPhase === 3 && lastPhase < 3) {
       addRunXP(60);
@@ -4457,7 +4657,7 @@ function update(dt) {
     Music.setSection('p' + (curPhase + 1));
     lastPhase = curPhase;
   }
-  const cfg = PHASE_CONFIG[curPhase];
+  const cfg = phaseCfg(score);
   spd = Math.min(cfg.spdCap, 3 + Math.sqrt(score) * 0.35);
 
   // Music: predict the next phase change and pre-roll a riser into it
@@ -4489,6 +4689,7 @@ function update(dt) {
   if (P.vy > 14) P.vy = 14;
   P.y = Math.max(P.r, Math.min(VH - P.r, P.y + P.vy * dt));
   secretTick(dt);
+  Story.tick(dt);
 
   // Bullets (FORWARD SHOT skill).
   // Swept collision: the bullet moves up to 11*dt px/frame which can exceed
@@ -4526,7 +4727,7 @@ function update(dt) {
   P.bankAngle += (bankTarget - P.bankAngle) * Math.min(0.5, 0.10 * dt);
 
   // Walls
-  const spacing = Math.max(190, 265 - score*0.4);
+  const spacing = wallSpacing(score);
   if (!walls.length || walls[walls.length-1].x < VW-spacing) addWall();
   for (const w of walls) {
     w.x -= spd * dt;
@@ -4548,6 +4749,7 @@ function update(dt) {
         // Streak (always tracked; COMBO MULTIPLIER turns it into XP, OVERDRIVE into score)
         comboCount++;
         comboTimer = 300;                      // 5s decay window
+        if (comboCount === 5) Story.onCombo();
         let comboMul = 1;
         if (hasSkill('combo_multiplier')) comboMul = Math.min(3, 1 + (comboCount - 1) * 0.5);
         if (comboCount >= 2 && (hasSkill('combo_multiplier') || hasSkill('overdrive')))
@@ -4929,10 +5131,10 @@ const hudBanner    = document.getElementById('hud-banner');
 const SCREEN_IDS   = { menu: 'title-screen', dead: 'result-screen', paused: 'pause-screen' };
 
 const PHASE_META = [
-  { sub: 'WALLS',   banner: 'WARM-UP',          color: '#00e8ff', from: 0,   to: 20   },
-  { sub: 'BULLETS', banner: 'BULLETS INCOMING', color: '#ffc040', from: 20,  to: 50   },
-  { sub: 'SEEKERS', banner: 'SEEKERS DEPLOYED', color: '#ff8a3a', from: 50,  to: 100  },
-  { sub: 'CHAOS',   banner: 'TOTAL CHAOS',      color: '#ff3b6b', from: 100, to: null },
+  { sub: 'AEGIS SKY',    banner: 'アイギス上空',   color: '#00e8ff', from: 0,   to: 20   },
+  { sub: 'BIDENT FRONT', banner: 'バイデント前線', color: '#ffc040', from: 20,  to: 50   },
+  { sub: 'WATCH ZONE',   banner: '監視宙域',       color: '#ff8a3a', from: 50,  to: 100  },
+  { sub: 'BIDENT HOLD',  banner: 'バイデント本拠', color: '#ff3b6b', from: 100, to: null },
 ];
 
 function setText(el, v) {
@@ -4967,6 +5169,7 @@ function refreshTitleInfo() {
   setText(document.getElementById('rot-secrets'), cnt);
   setText(document.getElementById('howto-secrets'), cnt.replace('/', ' / '));
   document.getElementById('t-secrets-btn').hidden = secretsFound.length === 0;
+  document.getElementById('t-log-new').hidden = newLogCount() === 0;
   const eyebrow = document.querySelector('.t-eyebrow');
   setText(eyebrow, secOpts.title || 'NEON EVASION ARCADE');
   eyebrow.classList.toggle('titled', !!secOpts.title);
@@ -4988,6 +5191,9 @@ function fillResult() {
   setText(document.getElementById('r-xp'), `+${Math.floor(runXP)}`);
   document.getElementById('r-newrec').classList.toggle('on', wasRecord);
   resultAnim = { target: s, t0: 0 };
+  document.getElementById('r-ray-face').innerHTML = RAY_FACE;
+  setText(document.getElementById('r-ray-text'), `「${rayResultLine()}」`);
+  document.getElementById('r-newlog').hidden = !logUnlocked().some(id => !logsBeforeRun.includes(id));
 }
 
 // Status chips (top-right) are keyed so each one animates in once and then
@@ -5043,7 +5249,7 @@ function syncUI(now) {
     const sc = Math.floor(score);
     setText(hudScore, sc);
     if (prevHiScore > 0 && sc > prevHiScore) {
-      if (!hudBest.classList.contains('beaten')) hudBest.classList.add('beaten');
+      if (!hudBest.classList.contains('beaten')) { hudBest.classList.add('beaten'); Story.onRecord(); }
       setText(hudBestVal, sc);
     }
     if (curPhase !== lastPhaseUI) {
@@ -5088,6 +5294,433 @@ function drawHUD() {
   }
   HX.globalAlpha = 1; HX.shadowBlur = 0;
   HX.textBaseline = 'alphabetic';
+}
+
+// ══ Story ═════════════════════════════════════════════════════════════════════
+// Ray — a round, two-tone bird from the planet AEGIS — flies after the space
+// pirate fleet BIDENT that burned his home. His salvaged ship's AI, PALLAS,
+// keeps him company over the comm. Story is layered on without ever pausing
+// play: a skippable prologue (first START only), one-line comm chatter,
+// Ray's line on the result screen, and a flight log unlocked by progress.
+
+// ── Portraits (inline SVG, used by the comm box, result screen and log) ──
+const RAY_FACE = `<svg viewBox="0 0 64 64" aria-hidden="true">
+  <defs><clipPath id="rf"><ellipse cx="32" cy="36" rx="22" ry="25"/></clipPath></defs>
+  <path d="M33 13c2-7 8-10 11-9-1 5-5 9-11 9z" fill="#2fb36a"/>
+  <g clip-path="url(#rf)">
+    <rect x="0" y="0" width="32" height="40" fill="#1c2340"/><rect x="32" y="0" width="32" height="40" fill="#2ab4ee"/>
+    <rect x="0" y="40" width="32" height="30" fill="#2ab4ee"/><rect x="32" y="40" width="32" height="30" fill="#1c2340"/>
+  </g>
+  <ellipse cx="22" cy="31" rx="6" ry="6.5" fill="#f4f8ff"/><ellipse cx="42" cy="31" rx="6" ry="6.5" fill="#f4f8ff"/>
+  <circle cx="23.5" cy="32" r="3.2" fill="#2d4ed8"/><circle cx="40.5" cy="32" r="3.2" fill="#2d4ed8"/>
+  <circle cx="24.5" cy="31" r="1" fill="#fff"/><circle cx="41.5" cy="31" r="1" fill="#fff"/>
+  <path d="M27 36q5-3 10 0l-5 9z" fill="#d6b43a"/>
+</svg>`;
+const PALLAS_FACE = `<svg viewBox="0 0 64 64" aria-hidden="true">
+  <polygon points="32,4 56,18 56,46 32,60 8,46 8,18" fill="#06202a" stroke="#00e8ff" stroke-width="2"/>
+  <circle cx="32" cy="32" r="12" fill="none" stroke="#00e8ff" stroke-width="1.5" opacity=".6"/>
+  <circle class="pallas-eye" cx="32" cy="32" r="6" fill="#7ff6ff"/>
+  <path d="M14 32h6M44 32h6M32 14v5M32 45v5" stroke="#00e8ff" stroke-width="1.5"/>
+</svg>`;
+const SPEAKERS = {
+  R: { name: 'RAY',    face: RAY_FACE,    cls: 'ray' },
+  P: { name: 'PALLAS', face: PALLAS_FACE, cls: 'pallas' },
+};
+
+// ── 3D Ray (procedural, modelled on the reference render) ──
+function buildRay() {
+  const g = new THREE.Group();
+  const NAVY = new THREE.Color(0x1c2340), CYAN = new THREE.Color(0x2ab4ee);
+  // Body: one sphere painted in quadrants — head split navy | cyan,
+  // lower body flipped cyan | navy (the jester-like pattern of the render)
+  const body = new THREE.SphereGeometry(10, 40, 30);
+  const pos = body.attributes.position, cols = [];
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i), y = pos.getY(i);
+    const c = ((x < 0) !== (y < -1.5)) ? NAVY : CYAN;
+    cols.push(c.r, c.g, c.b);
+  }
+  body.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3));
+  const bodyM = new THREE.Mesh(body, new THREE.MeshPhongMaterial({ vertexColors: true, shininess: 70, specular: 0x334466 }));
+  bodyM.scale.set(1, 1.12, 0.95);
+  g.add(bodyM);
+  const white = new THREE.MeshPhongMaterial({ color: 0xf4f8ff, shininess: 90 });
+  const blue = new THREE.MeshPhongMaterial({ color: 0x2d4ed8, shininess: 120 });
+  for (const sx of [-1, 1]) {
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(2.7, 18, 14), white);
+    eye.position.set(sx * 4.3, 3.2, 8.2); eye.scale.set(1, 1.1, 0.6);
+    const pup = new THREE.Mesh(new THREE.SphereGeometry(1.35, 14, 10), blue);
+    pup.position.set(sx * 4.0, 3.0, 9.6);
+    g.add(eye, pup);
+    const wing = new THREE.Mesh(new THREE.SphereGeometry(3.4, 16, 12),
+      new THREE.MeshPhongMaterial({ color: sx < 0 ? 0x2ab4ee : 0x1c2340, shininess: 60 }));
+    wing.position.set(sx * 10, -4, 1.5); wing.scale.set(0.55, 1, 0.8); wing.rotation.z = sx * 0.5;
+    wing.name = sx < 0 ? 'wingL' : 'wingR';
+    g.add(wing);
+  }
+  const beak = new THREE.Mesh(new THREE.ConeGeometry(2.8, 6.5, 20),
+    new THREE.MeshPhongMaterial({ color: 0xd6b43a, shininess: 100, specular: 0xfff0b0 }));
+  beak.rotation.x = Math.PI / 2; beak.position.set(0, -0.2, 11.8);
+  g.add(beak);
+  const leaf = new THREE.Mesh(new THREE.SphereGeometry(2.4, 14, 10), new THREE.MeshPhongMaterial({ color: 0x2fb36a, shininess: 40 }));
+  leaf.scale.set(0.55, 1.5, 0.22); leaf.position.set(1.2, 12.6, 0.5); leaf.rotation.z = -0.4;
+  leaf.name = 'leaf';
+  g.add(leaf);
+  return g;
+}
+
+// ── Comm (one-line chatter during play; never blocks input) ──
+const commEl = document.getElementById('comm');
+const commFace = document.getElementById('comm-face');
+const commName = document.getElementById('comm-name');
+const commText = document.getElementById('comm-text');
+const commQ = [];
+let commCur = null;              // { sp, text, shown, hold }
+function commSay(lines) {
+  if (gstate !== 'play') return;
+  for (const l of lines) if (commQ.length < 6) commQ.push(l);
+}
+function commClear() {
+  commQ.length = 0; commCur = null;
+  commEl.classList.remove('on');
+}
+function commTick(realDt) {
+  const s = realDt / 60;
+  if (!commCur) {
+    if (!commQ.length || gstate !== 'play') { commEl.classList.remove('on'); return; }
+    const [sp, text] = commQ.shift();
+    const who = SPEAKERS[sp];
+    commCur = { text, shown: 0, hold: 0 };
+    commFace.innerHTML = who.face;
+    commEl.className = 'comm on ' + who.cls;
+    setText(commName, who.name);
+    commText.textContent = '';
+    sfx.comm(sp);
+  }
+  if (commCur.shown < commCur.text.length) {
+    commCur.shown = Math.min(commCur.text.length, commCur.shown + s * 30);
+    commText.textContent = commCur.text.slice(0, Math.floor(commCur.shown));
+  } else if ((commCur.hold += s) > 2.1) {
+    commCur = null;
+  }
+}
+
+// ── Chatter script ──
+const pick = a => a[(Math.random() * a.length) | 0];
+const STORY_LINES = {
+  start: [
+    [['P', 'システム起動。今回の目標：壁にぶつからないこと。'], ['R', '毎回それを言うな。']],
+    [['R', 'レイ、出る。'], ['P', '了解。……今のはかっこよかったですね。'], ['R', 'だろ。']],
+    [['P', '機体チェック完了。操縦士のチェックは省略します。'], ['R', 'なんでだよ。']],
+    [['R', 'バイデント……待ってろ。'], ['P', '前方に壁。まずはそちらを待ってください。']],
+  ],
+  zone: [
+    null,
+    [['P', 'バイデントの前線に入ります。砲撃に注意。'], ['R', '見えてる。……たぶん。']],
+    [['P', '追跡ドローンを確認。振り切ってください。'], ['R', '鳥をなめるなよ。']],
+    [['P', 'バイデント本拠地の宙域です。ここからが本番です。'], ['R', '……ずっと本番のつもりだったんだけど。']],
+  ],
+  shield: [
+    [['P', 'シールド損傷。わざとですか？'], ['R', '作戦だ。']],
+    [['R', 'っ……！'], ['P', 'シールドが守りました。感謝してください。']],
+  ],
+  revive: [
+    [['R', '……まだだ。まだ終わってない。'], ['P', '再起動を確認。しぶといですね。']],
+  ],
+  record: [
+    [['P', '自己記録を更新中。'], ['R', '知ってる。……もっと言っていいぞ。']],
+  ],
+  combo: [
+    [['R', '見たか、今の。'], ['P', '見ていました。偶然にしては上出来です。']],
+    [['R', 'フッ……完璧だ。'], ['P', '油断は禁物です、レイ。']],
+  ],
+  idle: [
+    [['R', '……パラス、腹減った。'], ['P', '操縦に集中してください。']],
+    [['P', '前方の壁、今回も壁です。'], ['R', '知ってるよ！']],
+    [['R', 'アイギスの空は、もっと青かった。'], ['P', '……取り戻しましょう。']],
+    [['P', '心拍数が上がっています。'], ['R', '武者震いだ。']],
+    [['R', 'パラス、俺ってかっこいいよな。'], ['P', '回答を保留します。']],
+  ],
+};
+let commIdleT = 0, comboSaid = false;
+const Story = {
+  onRunStart() { commClear(); commIdleT = 0; comboSaid = false; setTimeout(() => commSay(pick(STORY_LINES.start)), 700); },
+  onZone(p)    { if (STORY_LINES.zone[p]) commSay(STORY_LINES.zone[p]); },
+  onShield()   { commSay(pick(STORY_LINES.shield)); },
+  onRevive()   { commSay(pick(STORY_LINES.revive)); },
+  onRecord()   { commSay(pick(STORY_LINES.record)); },
+  onCombo()    { if (!comboSaid) { comboSaid = true; commSay(pick(STORY_LINES.combo)); } },
+  tick(dt) {
+    commIdleT += dt / 60;
+    if (commIdleT > 38 && !commCur && !commQ.length) { commIdleT = 0; commSay(pick(STORY_LINES.idle)); }
+  },
+};
+
+// Ray's line on the result screen (cool… mostly)
+function rayResultLine() {
+  const s = Math.floor(score);
+  if (wasRecord) return pick(['当然の結果だ。……ちょっと嬉しい。', '見たか、パラス。', '記録更新。アイギスに届いたかな。']);
+  if (s < 10) return pick(['……ウォーミングアップだ。', '今のは機体のせいだ。たぶん。', 'フッ……まだ本気じゃない。']);
+  if (runBestPhase >= 3) return pick(['本拠地まで来た。あと少しだ。', 'バイデントの旗が見えた。次こそ。']);
+  return pick(['今のは、わざとだ。', '壁が勝手に動いた。間違いない。', '次は避ける。たぶん。',
+               '……パラス、今の記録するな。', '立ち上がるのは得意なんだ。', '何度だって、立ち上がる。']);
+}
+
+// ── Flight log (航海日誌): pages unlock with progress ──
+let storyRuns = +localStorage.getItem('hd_runs') || 0;
+let storyMaxPhase = +localStorage.getItem('hd_maxphase') || 0;
+let logsRead = [];
+try { logsRead = JSON.parse(localStorage.getItem('hd_logs_read') || '[]') || []; } catch (e) { logsRead = []; }
+const LOGS = [
+  { id: 'start', title: '出発', hint: '1回飛ぶ', ok: () => storyRuns >= 1,
+    text: '今日から日誌をつける。パイロットってのはそういうものらしい。\n機体はアイギス防衛隊の払い下げ。古いが、悪くない。\nAIのパラスが言うには「操縦士のほうが旧型に見えます」らしい。……意味がわからない。' },
+  { id: 'aegis', title: 'アイギス', hint: 'PHASE 2 に到達', ok: () => storyMaxPhase >= 1,
+    text: 'アイギスは、最強の盾の名を持つ星だった。\n青い海と、背の高い木々と、夜になると降ってきそうな星。俺はいつも丘の上で空を見ていた。\nいつかあそこを飛ぶって決めていた。こんな形で飛ぶことになるとは、思ってなかったけど。' },
+  { id: 'bident', title: 'バイデント', hint: 'PHASE 3 に到達', ok: () => storyMaxPhase >= 2,
+    text: '宇宙海賊団バイデント。二本の穂先の槍を旗に掲げる連中だ。\nパラスのデータベースによると、頭目は二人いるらしい。\n二人まとめて叩けばいい。簡単だ。……パラスが黙った。黙るな。' },
+  { id: 'pallas', title: 'パラス', hint: '10回飛ぶ', ok: () => storyRuns >= 10,
+    text: 'パラスはこの機体に眠っていたAIだ。元はアイギスの防衛網の一部だったらしい。\n冷静で、口が悪くて、たまに優しい。\n昨日は、俺が壁にぶつかった回数を正確に数えていた。優しくはなかった。' },
+  { id: 'again', title: '何度でも', hint: '25回飛ぶ', ok: () => storyRuns >= 25,
+    text: 'また落ちた。でも機体は直る。俺も起き上がる。\nアイギスの空を焼いたやつらは、俺が諦めるのを待ってるんだろう。\nだったら、何度だって立ち上がってやる。……パラス、今のは録音するな。' },
+  { id: 'hold', title: '本拠地', hint: 'PHASE 4 に到達', ok: () => storyMaxPhase >= 3,
+    text: 'バイデントの本拠に入った。空気が違う。砲撃の密度も、追手の数も。\nパラスが「引き返す選択肢もあります」と言った。\nない。そんな選択肢は、最初からない。' },
+  { id: 'shield', title: '盾', hint: 'スキル AEGIS を解放', ok: () => ownedSkills.includes('aegis'),
+    text: 'パラスが古いシールド制御プログラムを復元してくれた。名前は〈AEGIS〉。故郷の名前だ。\n砕けるとき、星みたいに光る。\n……少しだけ泣いた。パラスには言ってない。たぶんバレてる。' },
+  { id: 'record150', title: '成長', hint: '150 秒生き残る', ok: () => hiScore >= 150,
+    text: '150秒。昔の俺なら考えられない数字だ。\nパラスが「成長しましたね」と言った。初めて褒められた気がする。\n録音しておけばよかった。' },
+  { id: 'flagship', title: '二つの穂先', hint: '200 秒生き残る', ok: () => hiScore >= 200,
+    text: '前方に巨大な反応。バイデントの旗艦だ。\n二本の槍の、片方の穂先。\n待ってろ。アイギスの借りは、ここで返す。' },
+  { id: 'secrets', title: '隠し機能', hint: 'SECRETS を5つ発見', ok: () => secretsFound.length >= 5,
+    text: 'この機体、隠し機能が多すぎる。ロゴを叩くと画面が緑になるし、逆さに回すと世界が反転する。\nパラスに聞いたら「設計者の趣味です」とだけ返ってきた。\nアイギスの技術者、たぶん俺と気が合う。' },
+];
+const logUnlocked = () => LOGS.filter(l => l.ok()).map(l => l.id);
+let logsBeforeRun = [];
+function storyRunBegin() {
+  storyRuns++; localStorage.setItem('hd_runs', String(storyRuns));
+  logsBeforeRun = logUnlocked();
+}
+function storyPhaseReached(p) {
+  if (p > storyMaxPhase) { storyMaxPhase = p; localStorage.setItem('hd_maxphase', String(p)); }
+}
+const newLogCount = () => logUnlocked().filter(id => !logsRead.includes(id)).length;
+
+const logModal = document.getElementById('log-modal');
+let logSel = null;
+function renderLogUI() {
+  const un = logUnlocked();
+  setText(document.getElementById('log-count'), `${un.length} / ${LOGS.length} PAGES`);
+  if (!logSel || !un.includes(logSel)) logSel = un[un.length - 1] || null;
+  document.getElementById('log-list').innerHTML = LOGS.map((l, i) => {
+    const open = un.includes(l.id), isNew = open && !logsRead.includes(l.id);
+    return `<button class="log-item${open ? '' : ' locked'}${l.id === logSel ? ' sel' : ''}" type="button" data-log="${open ? l.id : ''}"${open ? '' : ' disabled'}>
+      <span class="no">#${String(i + 1).padStart(2, '0')}</span><b>${open ? l.title : '???'}</b>${isNew ? '<i>NEW</i>' : ''}
+      ${open ? '' : `<span class="hint">${l.hint}</span>`}</button>`;
+  }).join('');
+  const L = LOGS.find(l => l.id === logSel);
+  document.getElementById('log-page').innerHTML = L
+    ? `<div class="lp-head"><span class="lp-face">${RAY_FACE}</span><div><div class="lp-no">FLIGHT LOG #${String(LOGS.indexOf(L) + 1).padStart(2, '0')}</div><div class="lp-title">${L.title}</div></div></div>
+       <div class="lp-text">${L.text.split('\n').map(t => `<p>${t}</p>`).join('')}</div>`
+    : '<div class="syn-hint">まだ日誌はない。まずは飛ぼう。</div>';
+  if (L && !logsRead.includes(L.id)) { logsRead.push(L.id); localStorage.setItem('hd_logs_read', JSON.stringify(logsRead)); }
+  for (const b of document.querySelectorAll('#log-list [data-log]')) b.addEventListener('click', () => {
+    if (!b.dataset.log) return;
+    logSel = b.dataset.log; ui.select(); renderLogUI();
+  });
+}
+function openLog()  { ui.open(); renderLogUI(); logModal.classList.add('open'); }
+function closeLog() { ui.back(); logModal.classList.remove('open'); refreshTitleInfo(); }
+onTap(document.getElementById('t-log-btn'), openLog);
+onTap(document.getElementById('log-close'), closeLog);
+onTap(document.getElementById('log-prologue'), () => { closeLog(); Prologue.play(null); });
+addEventListener('keydown', e => {
+  if (e.code === 'Escape' && logModal.classList.contains('open')) { e.preventDefault(); closeLog(); }
+});
+
+// ── Prologue (its own little 3D scene, rendered instead of the game) ──
+const Prologue = (() => {
+  const S = new THREE.Scene();
+  S.background = new THREE.Color(0x040a26);
+  S.fog = new THREE.Fog(0x040a26, 300, 1400);
+  const cam = new THREE.PerspectiveCamera(42, VW / VH, 1, 4000);
+  const hemi = new THREE.HemisphereLight(0x4a6ad0, 0x0a1014, 1.1);
+  const moon = new THREE.DirectionalLight(0x8fb0ff, 1.4); moon.position.set(-1, 2, 1.5);
+  const rim = new THREE.PointLight(0x6fa0ff, 2.5, 160); rim.position.set(30, 30, 30);
+  S.add(hemi, moon, rim);
+  // hill (top of a huge sphere) + pines
+  const HC = new THREE.Vector3(0, -905, -150), HR = 900;
+  const hill = new THREE.Mesh(new THREE.SphereGeometry(HR, 64, 32), new THREE.MeshLambertMaterial({ color: 0x16242a }));
+  hill.position.copy(HC); S.add(hill);
+  const groundY = (x, z) => HC.y + Math.sqrt(Math.max(0, HR * HR - x * x - (z - HC.z) * (z - HC.z)));
+  const pineMat = new THREE.MeshLambertMaterial({ color: 0x0f2c28 });
+  const pines = [];
+  for (let i = 0; i < 46; i++) {
+    const x = (Math.random() - 0.5) * 760, z = -60 - Math.random() * 420;
+    if (Math.abs(x) < 40 && z > -120) continue;
+    const h = 22 + Math.random() * 30;
+    const p = new THREE.Mesh(new THREE.ConeGeometry(h * 0.28, h, 6), pineMat);
+    p.position.set(x, groundY(x, z) + h / 2 - 2, z);
+    S.add(p); pines.push(p);
+  }
+  // stars
+  const sp = [];
+  for (let i = 0; i < 1600; i++) {
+    const th = Math.random() * Math.PI * 2, ph = Math.random() * 1.3;
+    sp.push(Math.cos(th) * Math.sin(ph) * 1500, Math.cos(ph) * 1500 - 200, Math.sin(th) * Math.sin(ph) * 1500 - 300);
+  }
+  const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.Float32BufferAttribute(sp, 3));
+  const stars = new THREE.Points(sg, new THREE.PointsMaterial({ color: 0xcfe0ff, size: 1.5, sizeAttenuation: false, fog: false }));
+  S.add(stars);
+  // Ray
+  const ray = buildRay();
+  ray.position.set(0, groundY(0, 0) + 11, 0);
+  S.add(ray);
+  // pirate ships (dark wedges with red engines)
+  const pirates = [];
+  for (let i = 0; i < 4; i++) {
+    const pg = new THREE.Group();
+    const hull = new THREE.Mesh(new THREE.ConeGeometry(14, 60, 4), new THREE.MeshPhongMaterial({ color: 0x14080c, emissive: 0x200004 }));
+    hull.rotation.z = -Math.PI / 2; pg.add(hull);
+    for (const dz of [-6, 6]) { const prong = new THREE.Mesh(new THREE.ConeGeometry(2.5, 26, 4), new THREE.MeshBasicMaterial({ color: 0xff3048 })); prong.rotation.z = -Math.PI / 2; prong.position.set(36, 0, dz); pg.add(prong); }
+    const glow = glowSprite(0xff2a3c, 70, 0.9); glow.position.x = -32; pg.add(glow);
+    pg.visible = false; S.add(pg); pirates.push(pg);
+  }
+  // fires + embers
+  const fires = [];
+  for (let i = 0; i < 14; i++) {
+    const f = glowSprite(0xff6a1a, 140 + Math.random() * 120, 0);
+    const x = (Math.random() - 0.5) * 700, z = -120 - Math.random() * 380;
+    f.position.set(x, groundY(x, z) + 20, z); f.visible = false; S.add(f); fires.push(f);
+  }
+  // the old ship, half-buried in the ruins (a second, unregistered build)
+  const oldShip = buildShipGroup(false);
+  // weathered: grey hull, no glow
+  oldShip.traverse(o => { if (o.material && o.material.color) {
+    o.material = o.material.clone();
+    o.material.color.setHex(o.name === 'engine' || o.name === 'flame' ? 0x332a2a : 0x5d6b78);
+    if (o.material.emissive) o.material.emissive.setHex(0x05080a);
+  } });
+  const SHIP_X = -62, SHIP_Z = -48;
+  oldShip.scale.setScalar(2.4);
+  oldShip.position.set(SHIP_X, groundY(SHIP_X, SHIP_Z) + 5, SHIP_Z);
+  oldShip.rotation.set(0.12, 0.35, 0.16);
+  oldShip.visible = false; S.add(oldShip);
+
+  const PANELS = [
+    { mood: 'night', lines: ['星の海に浮かぶ、最強の盾の名を冠した美しい星——アイギス。', '小さな鳥のレイは、いつか宇宙を飛ぶパイロットになると決めていた。'] },
+    { mood: 'attack', lines: ['ある夜、空が赤く裂けた。', '宇宙海賊団〈バイデント〉。', '二本の槍の旗のもと、アイギスは一夜にして焼き尽くされた。'] },
+    { mood: 'ruins', lines: ['瓦礫の中で、レイは一機の古い機体を見つけた。', 'P:……起動。操縦士を確認。ずいぶん小さいですね。', 'R:うるさい。'] },
+    { mood: 'launch', lines: ['R:行くぞ、パラス。', 'R:海賊団を壊滅させるまで——何度だって立ち上がる。', '!ゴンッ', 'R:……今のは、なしで。', 'P:記録しました。'] },
+  ];
+  const el = document.getElementById('story');
+  const elName = document.getElementById('story-name'), elText = document.getElementById('story-text'), elFace = document.getElementById('story-face');
+  let active = false, pi = 0, li = 0, shown = 0, t = 0, fade = 0, onDone = null, shake = 0;
+  const camTarget = new THREE.Vector3(), camPos = new THREE.Vector3();
+
+  function setMood(m) {
+    const red = m === 'attack', burnt = m === 'ruins' || m === 'launch';
+    S.background.setHex(red ? 0x2a0710 : burnt ? 0x120810 : 0x040a26);
+    S.fog.color.copy(S.background);
+    hemi.color.setHex(red ? 0xff5a3a : burnt ? 0x8a5a6a : 0x4a6ad0);
+    pineMat.color.setHex(burnt ? 0x120c0e : 0x0f2c28);
+    for (const p of pirates) p.visible = red;
+    for (const f of fires) f.visible = red || burnt;
+    oldShip.visible = burnt;
+    stars.material.opacity = red ? 0.3 : 1; stars.material.transparent = true;
+    if (Music.started) Music.setSection(red ? 'p3' : 'menu');
+    if (red) { sfx.death(); shake = 1; }
+  }
+  function showLine() {
+    const raw = PANELS[pi].lines[li];
+    let who = null, text = raw;
+    if (/^[RP]:/.test(raw)) { who = SPEAKERS[raw[0]]; text = raw.slice(2); }
+    if (raw.startsWith('!')) { text = raw.slice(1); sfx.bonk(); shake = 1.4; fxFlash(0xffffff, 0.5); }
+    el.classList.toggle('talk', !!who);
+    el.classList.toggle('sfx', raw.startsWith('!'));
+    elFace.innerHTML = who ? who.face : '';
+    setText(elName, who ? who.name : '');
+    elText._full = text; shown = 0; elText.textContent = '';
+  }
+  function advance() {
+    if (!active) return;
+    if (shown < elText._full.length) { shown = elText._full.length; elText.textContent = elText._full; return; }
+    ui.select();
+    li++;
+    if (li >= PANELS[pi].lines.length) {
+      li = 0; pi++;
+      if (pi >= PANELS.length) return finish();
+      fade = 1; setMood(PANELS[pi].mood); t = 0;
+    }
+    showLine();
+  }
+  function finish() {
+    active = false;
+    el.classList.remove('on');
+    renderPass.scene = scene; renderPass.camera = camera;
+    localStorage.setItem('hd_prologue', '1');
+    if (gstate === 'story') gstate = 'menu';
+    const cb = onDone; onDone = null;
+    if (cb) cb(); else if (Music.started) Music.setSection('menu');
+  }
+  function play(cb) {
+    active = true; onDone = cb; pi = 0; li = 0; t = 0; fade = 1;
+    gstate = 'story';
+    setMood('night');
+    renderPass.scene = S; renderPass.camera = cam;
+    el.classList.add('on');
+    showLine();
+  }
+  function update(realDt) {
+    const s = realDt / 60;
+    t += s;
+    if (shown < (elText._full || '').length) {
+      shown = Math.min(elText._full.length, shown + s * 26);
+      elText.textContent = elText._full.slice(0, Math.floor(shown));
+    }
+    fade = Math.max(0, fade - s * 1.6);
+    el.style.setProperty('--fade', fade.toFixed(3));
+    shake = Math.max(0, shake - s * 2);
+    // per-panel camera + animation
+    const mood = PANELS[pi].mood;
+    const bob = Math.sin(t * 2) * 0.4;
+    ray.position.set(0, groundY(0, 0) + 11 + bob, 0);
+    ray.rotation.set(0, 0, 0);
+    const leaf = ray.getObjectByName('leaf'); if (leaf) leaf.rotation.z = -0.4 + Math.sin(t * 3) * 0.12;
+    const g0 = groundY(0, 0);
+    if (mood === 'night') {
+      // like the reference render: Ray low-right, a big starry sky above
+      camPos.set(-34 + t * 0.6, g0 + 8, 104 - t * 1.2); camTarget.set(-26, g0 + 30 + t * 0.6, -20);
+      ray.rotation.set(-0.3, -0.35, 0);                      // gazing up at the stars
+    } else if (mood === 'attack') {
+      camPos.set(-40, 30, 90); camTarget.set(30, 70, -200);
+      ray.rotation.set(-0.2, 0.6 + Math.sin(t * 9) * 0.05, 0);
+      pirates.forEach((p, i) => { p.position.set(-700 + ((t * 160 + i * 260) % 1500), 160 + i * 45, -420 - i * 60); });
+      fires.forEach((f, i) => { f.material.opacity = 0.35 + Math.sin(t * 7 + i) * 0.12; });
+    } else if (mood === 'ruins') {
+      camPos.set(48, g0 + 16, 92); camTarget.set(-30, g0 + 14, -20);
+      ray.position.set(16, groundY(16, 14) + 11 + bob, 14); ray.rotation.set(0, -0.8, 0);
+      fires.forEach((f, i) => { f.material.opacity = 0.18 + Math.sin(t * 5 + i) * 0.06; });
+    } else {
+      camPos.set(30, g0 + 18 + t * 2, 110 + t * 4); camTarget.set(SHIP_X + 10, g0 + 20 + t * 6, SHIP_Z);
+      ray.visible = li < 1;                                   // Ray climbs in after the first line
+      oldShip.position.y = groundY(SHIP_X, SHIP_Z) + 5 + Math.max(0, t - 1.2) * 12;
+      oldShip.rotation.z = 0.16 - Math.min(0.16, t * 0.1);
+    }
+    if (mood !== 'launch') ray.visible = true;
+    cam.position.lerp(camPos, Math.min(1, s * 3));
+    if (fade > 0.95) cam.position.copy(camPos);
+    cam.position.x += (Math.random() - 0.5) * shake * 3;
+    cam.position.y += (Math.random() - 0.5) * shake * 3;
+    cam.lookAt(camTarget);
+  }
+  // tap / key to advance, SKIP to jump straight in
+  onTap(el, advance);
+  onTap(document.getElementById('story-skip'), () => { if (active) { ui.back(); finish(); } });
+  return { play, update, advance, finish, get active() { return active; } };
+})();
+// START from the title: the first time, the prologue plays before the run
+function requestStart() {
+  if (!localStorage.getItem('hd_prologue')) Prologue.play(() => startGame());
+  else startGame();
 }
 
 // ── Secrets ───────────────────────────────────────────────────────────────────
@@ -5430,6 +6063,8 @@ function loop(now) {
   Music.update(realDt);
   if (gstate !== 'paused') update(dtScale);
   syncScene();
+  if (Prologue.active) Prologue.update(realDt);
+  commTick(realDt);
   fx.aberr *= Math.pow(0.9, realDt);
   fx.flash *= Math.pow(0.86, realDt);
   lensPass.uniforms.uAberr.value = fx.aberr;
