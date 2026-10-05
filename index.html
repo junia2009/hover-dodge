@@ -1679,6 +1679,8 @@ body.retro #ui { filter: grayscale(1) sepia(1) hue-rotate(70deg) saturate(2.6) b
   transition: background .15s, transform .1s;
 }
 .skin-card:hover  { background: rgba(255, 255, 255, 0.07); }
+.skin-card.locked { opacity: 0.45; cursor: default; filter: saturate(0.5); }
+.skin-card .lvq { font: 600 9px/1 var(--f-disp); letter-spacing: 2px; color: #ffb08a; }
 .skin-card:active { transform: scale(.97); }
 .skin-card .bar {
   height: 26px;
@@ -1985,10 +1987,10 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
 
     <section class="howto-sec">
       <h3>XP & スキルツリー (SHOP)</h3>
-      <p>プレイ中に XP を獲得 → タイトル画面の <b>SHOP</b> でスキルを解放・強化・装備。全 31 スキル（ATTACK / DEFENSE / PASSIVE / VITAL）、各系統の最深部には <b>★ULTIMATE</b>。</p>
+      <p>プレイ中に XP を獲得 → タイトル画面の <b>SHOP</b> でスキルを解放・強化・装備。全 36 スキル（ATTACK / DEFENSE / PASSIVE / VITAL）、各系統の最深部には <b>★ULTIMATE</b>。</p>
       <dl>
         <dt>ランク</dt><dd>取得済みスキルは Lv2〜3 に強化できる（●●○ で表示）</dd>
-        <dt>装備枠</dt><dd>最初は 2 枠。パイロット Lv3 / 7 / 12 / 20 で 3〜6 枠に拡張</dd>
+        <dt>装備枠</dt><dd>最初は 2 枠。パイロット Lv3 / 7 / 12 / 20 / 45 / 60 で最大 8 枠に拡張</dd>
         <dt>シナジー</dt><dd>特定の 2 スキルを同時装備でボーナス効果 (⟡)</dd>
         <dt>XP オーブ</dt><dd>壁の隙間に浮かぶ緑の結晶。縁寄りは価値 2 倍。MAGNET で吸い寄せ</dd>
         <dt>+2 / 秒</dt><dd>生存（時間経過）</dd>
@@ -2000,12 +2002,13 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
 
     <section class="howto-sec">
       <h3>PILOT LEVEL & HULL</h3>
-      <p>これまでに稼いだ <b>XP の累計</b>でパイロットレベルが上がる（SHOP で XP を使ってもレベルは下がらない）。最大 Lv30。</p>
+      <p>これまでに稼いだ <b>XP の累計</b>でパイロットレベルが上がる（SHOP で XP を使ってもレベルは下がらない）。最大 Lv60。レベルに応じて称号が CADET → PILOT（Lv10）→ ACE（20）→ VETERAN（30）→ COMMANDER（40）→ HERO（50）→ LEGEND（60）と上がる。</p>
       <dl>
-        <dt>装備枠</dt><dd>Lv3 で 3 枠、Lv7 で 4 枠、Lv12 で 5 枠、Lv20 で 6 枠</dd>
-        <dt>基本耐久</dt><dd>Lv5 / 14 / 25 で機体の HULL（耐久）が +1</dd>
+        <dt>装備枠</dt><dd>Lv3 / 7 / 12 / 20 / 45 / 60 で 3〜8 枠</dd>
+        <dt>基本耐久</dt><dd>Lv5 / 14 / 25 / 38 / 52 で機体の HULL（耐久）が +1</dd>
+        <dt>Lv31〜</dt><dd>新スキル（TWIN PULSE / SECOND WIND / IMMORTAL / TREASURE HUNTER / ★TITAN FRAME）とレベル限定スキン（NEBULA Lv40 / AEGIS Lv50 / LEGEND Lv60）</dd>
         <dt>新スキル</dt><dd>VITAL 系スキルはレベルで解放される</dd>
-        <dt>XP ボーナス</dt><dd>レベル1つごとに獲得 XP +1.5%</dd>
+        <dt>XP ボーナス</dt><dd>Lv30 まではレベルごとに獲得 XP +1.5%、それ以降は +1%</dd>
         <dt>HULL</dt><dd>左上のオレンジの六角形。被弾するとシールド→HULL の順に減り、短い無敵時間。0 になると墜落</dd>
       </dl>
     </section>
@@ -2143,7 +2146,7 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
         </div>
       </div>
       <div class="t-foot">
-        <span class="pilot">PILOT<b id="t-lv">Lv 1</b></span>
+        <span class="pilot"><span id="t-rank">CADET</span><b id="t-lv">Lv 1</b></span>
         <span class="best">BEST<b id="t-best">—</b></span>
         <button class="snd" id="t-bgm" type="button">BGM<b>ON</b></button>
         <button class="snd" id="t-se" type="button">SE<b>ON</b></button>
@@ -2174,7 +2177,7 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
             <div class="xp"><div class="hud-label">XP</div><b id="r-xp">+0</b></div>
           </div>
           <div class="r-level">
-            <div class="r-lv-top">PILOT <b id="r-lv">Lv 1</b><em id="r-lvup" hidden>LEVEL UP!</em><small id="r-lv-next"></small></div>
+            <div class="r-lv-top"><span id="r-rank">CADET</span> <b id="r-lv">Lv 1</b><em id="r-lvup" hidden>LEVEL UP!</em><small id="r-lv-next"></small></div>
             <div class="r-lv-bar"><i id="r-lv-fill"></i></div>
             <div class="r-lv-rew" id="r-lv-rew"></div>
           </div>
@@ -2223,7 +2226,7 @@ import { GLTFLoader }      from 'three/addons/loaders/GLTFLoader.js';
 
 // Single source of truth for the version: shown on the title / portrait
 // screens and passed to the service worker, which names its cache after it.
-const VERSION = '2.0.1';
+const VERSION = '2.1.0';
 
 // ── 3D models (glTF). The ship, Ray and PALLAS are waited for (briefly) before
 // the scene is built; the two flagships stream in the background — they are
@@ -2544,6 +2547,34 @@ const SHIP_SKINS = [
     flame:   0xffee88,
     light:   0xffcc44,
   },
+  // ── Pilot-level skins (shown locked until reached) ──
+  {
+    id: 'nebula', name: 'NEBULA', accent: '#c46bff', lv: 40,
+    hull:    { color: 0x7a3cff, emissive: 0x30105a, specular: 0xe8c8ff },
+    wing:    { color: 0xff5ad9, emissive: 0x400a30 },
+    cockpit: { color: 0xf0d8ff, emissive: 0x200a30, specular: 0xffffff },
+    engine:  0xff8cf0,
+    flame:   0xd08cff,
+    light:   0xb070ff,
+  },
+  {
+    id: 'aegis', name: 'AEGIS', accent: '#ffe28a', lv: 50,
+    hull:    { color: 0xf4f6ff, emissive: 0x404858, specular: 0xffffff },
+    wing:    { color: 0xffcf4a, emissive: 0x4a3200 },
+    cockpit: { color: 0xbfeaff, emissive: 0x0a2030, specular: 0xffffff },
+    engine:  0xffe28a,
+    flame:   0xfff2b0,
+    light:   0xffe8a0,
+  },
+  {
+    id: 'legend', name: 'LEGEND', accent: '#ffb000', lv: 60, anim: 'legend',
+    hull:    { color: 0x1a1420, emissive: 0x3a2400, specular: 0xffd890 },
+    wing:    { color: 0xffb000, emissive: 0x553300 },
+    cockpit: { color: 0xffd890, emissive: 0x2a1800, specular: 0xffffff },
+    engine:  0xffc040,
+    flame:   0xffd870,
+    light:   0xffb030,
+  },
   // ── Secret skins (listed only once their secret is found) ──
   {
     id: 'glitch', name: 'GLITCH', accent: '#ff2bd6', secret: 'swipe', anim: 'glitch',
@@ -2580,6 +2611,13 @@ function animateSkin(t) {
   const s = SHIP_SKINS.find(x => x.id === currentSkinId);
   if (!s || !s.anim) return;
   const set = (h, sat, l) => _skinCol.setHSL(((h % 1) + 1) % 1, sat, l);
+  if (s.anim === 'legend') {
+    // LEGEND: black hull with a slow molten-gold heartbeat
+    const k = 0.5 + 0.5 * Math.sin(t * 0.05);
+    shipParts.hull.material.emissive.setRGB(0.25 + k * 0.35, 0.14 + k * 0.2, 0.0);
+    shipLight.color.setRGB(1, 0.65 + k * 0.15, 0.2);
+    return;
+  }
   if (s.anim === 'prism') {
     const h = t * 0.004;
     shipParts.hull.material.color.copy(set(h, 0.9, 0.6));
@@ -3085,6 +3123,10 @@ function firePulse() {
   fx.aberr = Math.max(fx.aberr, 0.5);
   fxFlash(0x00e8ff, 0.12);
   spawnRing(P.x, P.y, 0x00e8ff, 0xaa44ff);
+  if (hasSkill('twin_pulse')) setTimeout(() => {
+    if (gstate !== 'play') return;
+    sfx.pulse(); spawnRing(P.x, P.y, 0xaa44ff, 0x00e8ff); fxFlash(0xaa44ff, 0.1);
+  }, 350);
 }
 
 // Bind a handler to both click and touchstart (touch fires instantly and
@@ -3219,6 +3261,11 @@ const SKILL_ICONS = {
   impact_damper:    '<path d="M4 12h3l2-5 3 10 2-6 1 1h5"/><path d="M3 5v14M21 5v14"/>',
   adrenaline:       '<path d="M12 21s-8-5.5-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.5-8 11-8 11z"/><path d="M6 12h3l1.5-3 2 6 1.5-3H18"/>',
   repair_kit:       '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V4h6v3"/><path d="M12 10v7M8.5 13.5h7"/>',
+  twin_pulse:       '<circle cx="9" cy="12" r="5.5"/><circle cx="15" cy="12" r="5.5"/><circle cx="12" cy="12" r="1.5"/>',
+  immortal:         '<path d="M12 3c-3 3-6 4-6 8a6 6 0 0 0 12 0c0-4-3-5-6-8z"/><path d="M12 9c-1.5 1.5-3 2-3 4a3 3 0 0 0 6 0c0-2-1.5-2.5-3-4z"/><path d="M4 20h16"/>',
+  treasure_hunter:  '<path d="M4 9h16v10H4z"/><path d="M4 9l2-4h12l2 4"/><path d="M10 13h4"/><path d="M19 3l.6 1.4 1.4.6-1.4.6L19 7l-.6-1.4L17 5l1.4-.6z"/>',
+  second_wind:      '<path d="M3 9h11a3 3 0 1 0-3-3"/><path d="M3 14h15a3 3 0 1 1-3 3"/><path d="M3 19h6"/>',
+  titan_frame:      '<path d="M12 2l9 4v6c0 5.5-4 9-9 10-5-1-9-4.5-9-10V6z"/><path d="M12 6l5 2.2v4c0 3-2.2 5-5 5.6-2.8-.6-5-2.6-5-5.6v-4z"/>',
   phase_shift:      '<path d="M8 21V11a5 5 0 0 1 10 0v10l-1.7-1.4-1.6 1.4-1.7-1.4-1.6 1.4-1.7-1.4z"/><path d="M4 4v16" stroke-dasharray="2 2"/><path d="M1 10h4M1 14h4"/>',
 };
 const LOCK_ICON = '<svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="1"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
@@ -3288,7 +3335,7 @@ function renderShopUI() {
   loadProgression();
   if (shopXpEl)    shopXpEl.textContent = totalXP;
   const lp = levelProgress();
-  document.getElementById('shop-pilot').innerHTML = `<span>PILOT</span><b>Lv ${lp.L}</b><span class="pb"><i><u style="width:${lp.pct.toFixed(1)}%"></u></i>` +
+  document.getElementById('shop-pilot').innerHTML = `<span>${rankName(lp.L)}</span><b>Lv ${lp.L}</b><span class="pb"><i><u style="width:${lp.pct.toFixed(1)}%"></u></i>` +
     `<small>${lp.L >= MAX_LEVEL ? 'MAX LEVEL' : `NEXT ${lp.next} XP`}</small></span>`;
   if (shopSlotsEl) shopSlotsEl.textContent = `${equippedSkills.length}/${equipSlots}`;
   if (rotXpEl)     rotXpEl.textContent = totalXP;
@@ -3560,6 +3607,17 @@ function renderSkinUI() {
   const cur = SHIP_SKINS.find(x => x.id === currentSkinId) || SHIP_SKINS[0];
   paintSkinStage(cur);
   skinGrid.innerHTML = '';
+  // level skins not reached yet are shown locked, as goals
+  for (const s of SHIP_SKINS.filter(x => x.lv && !skinUnlocked(x) && (!x.secret || hasSecret(x.secret)))) {
+    const card = document.createElement('button');
+    card.type = 'button'; card.disabled = true;
+    card.className = 'skin-card locked';
+    card.style.setProperty('--c1', hexCss(s.wing.color));
+    card.style.setProperty('--c2', s.accent);
+    card.style.setProperty('--c3', hexCss(s.flame));
+    card.innerHTML = `<span class="bar"></span><span class="nm">${s.name}</span><span class="lvq">PILOT Lv ${s.lv}</span>`;
+    skinGrid.appendChild(card);
+  }
   for (const s of SHIP_SKINS.filter(skinUnlocked)) {
     const card = document.createElement('button');
     card.type = 'button';
@@ -4529,6 +4587,17 @@ const SKILL_DEFS = [
     desc: '耐久が残り1の間、PULSE のチャージ速度2倍・獲得 XP 1.5倍' },
   { id: 'repair_kit', name: 'REPAIR KIT', kind: 'VITAL', price: 500, requires: ['hull_plating'], lvReq: 11,
     desc: '撃破した敵がたまに修理キットを落とす（拾うと耐久1回復）' },
+  // ── Lv31+ skills: one more step at the end of several branches ──
+  { id: 'second_wind', name: 'SECOND WIND', kind: 'VITAL', price: 1400, requires: ['repair_kit'], lvReq: 37,
+    desc: '耐久が残り1になった瞬間、1回だけ耐久+1・2秒無敵' },
+  { id: 'titan_frame', name: 'TITAN FRAME', kind: 'VITAL', price: 3000, requires: ['adrenaline'], lvReq: 55, ult: true,
+    desc: '巨神の装甲。最大耐久 +2、被弾後の無敵時間 +1秒' },
+  { id: 'twin_pulse', name: 'TWIN PULSE', kind: 'ATTACK', price: 1800, requires: ['overload'], lvReq: 33,
+    desc: 'PULSE の直後にもう一度衝撃波が走る（二重 PULSE）' },
+  { id: 'immortal', name: 'IMMORTAL', kind: 'DEFENSE', price: 2200, requires: ['last_stand'], lvReq: 40,
+    desc: '復活が2回に。復活するたびに LAST STAND（10秒間スコア・XP 2倍）' },
+  { id: 'treasure_hunter', name: 'TREASURE HUNTER', kind: 'PASSIVE', price: 1800, requires: ['golden_orbs'], lvReq: 44,
+    desc: 'XPオーブの出現率UP（45%→75%）、金オーブの確率2倍' },
 ];
 
 // Two specific skills equipped together unlock a bonus effect.
@@ -4545,22 +4614,27 @@ const SYNERGIES = [
 // ── Pilot level ── grows with the XP earned over all runs (spending XP in the
 // SHOP never lowers it). Levels open loadout slots, add base HULL, unlock the
 // VITAL skills and give a small XP bonus.
-const MAX_LEVEL = 30;
-const MAX_SLOTS = 6;
-const SLOT_LEVELS = [1, 1, 3, 7, 12, 20];          // pilot level that opens slot i+1
-const HULL_LEVELS = [5, 14, 25];                   // +1 base HULL at each of these
+const MAX_LEVEL = 60;
+const MAX_SLOTS = 8;
+const SLOT_LEVELS = [1, 1, 3, 7, 12, 20, 45, 60];  // pilot level that opens slot i+1
+const HULL_LEVELS = [5, 14, 25, 38, 52];           // +1 base HULL at each of these
+// pilot ranks (shown next to the level; reaching one is a LEVEL UP reward)
+const RANKS = [[1, 'CADET'], [10, 'PILOT'], [20, 'ACE'], [30, 'VETERAN'], [40, 'COMMANDER'], [50, 'HERO'], [60, 'LEGEND']];
+const rankName = L => RANKS.filter(([l]) => L >= l).pop()[1];
 const LEGACY_SLOT_COSTS = { 3: 1200, 4: 3000 };    // pre-1.9 slot purchases (refunded)
 const lvXP = L => 40 * (L - 1) * (L - 1) + 160 * (L - 1);   // lifetime XP needed for level L
 let lifeXP = 0;
 function pilotLevel(x = lifeXP) { let L = 1; while (L < MAX_LEVEL && x >= lvXP(L + 1)) L++; return L; }
 const slotsAt = L => SLOT_LEVELS.filter(l => L >= l).length;
 const baseHullAt = L => 1 + HULL_LEVELS.filter(l => L >= l).length;
-const levelXpBonus = L => (L - 1) * 0.015;
+const levelXpBonus = L => L <= 30 ? (L - 1) * 0.015 : 0.435 + (L - 30) * 0.01;   // +1.5%/Lv to 30, then +1%/Lv
 function levelRewards(L) {
   const r = [];
   if (L > 1 && SLOT_LEVELS.includes(L)) r.push(`装備枠 ${slotsAt(L)} 枠`);
   if (HULL_LEVELS.includes(L)) r.push(`基本耐久 ${baseHullAt(L)}`);
   for (const sk of SKILL_DEFS) if (sk.lvReq === L) r.push(`NEW ${sk.name}`);
+  const rk = RANKS.find(([l]) => l === L && l > 1); if (rk) r.push(`称号 ${rk[1]}`);
+  for (const sk of SHIP_SKINS) if (sk.lv === L) r.push(`SKIN ${sk.name}`);
   if (!r.length) r.push(`XP +${(levelXpBonus(L) * 100).toFixed(1)}%`);
   return r;
 }
@@ -4717,7 +4791,7 @@ const P = { x: 150, y: VH/2, vx: 0, vy: 0, bankAngle: 0, r: 6, inv: 0, ghost: 0,
 let hullMax = 1, repairT = 0, lifeBefore = 0;
 function calcHullMax() {
   if (hardcoreRun) return 1;
-  return baseHullAt(pilotLevel()) + rank('hull_plating') + (hasSkill('nano_frame') ? 1 : 0);
+  return baseHullAt(pilotLevel()) + rank('hull_plating') + (hasSkill('nano_frame') ? 1 : 0) + (hasSkill('titan_frame') ? 2 : 0);
 }
 const adrenalOn = () => hasSkill('adrenaline') && P.hp === 1 && hullMax > 1;
 let walls = [], enemies = [], sparks = [], bullets = [];
@@ -4725,7 +4799,8 @@ let orbs = [];                    // XP orbs floating in wall gaps
 let beams = [];                   // short-lived beam / lightning visuals
 let bulletCooldown = 0;
 let shieldCharges = 0;
-let phoenixUsed = false;          // PHOENIX skill: revive flag (per run)
+let phoenixUsed = false;
+let revivesLeft = 0, secondWindUsed = false;          // PHOENIX skill: revive flag (per run)
 let comboCount = 0;               // COMBO MULTIPLIER: consecutive near-miss streak
 let comboTimer = 0;               // frames before the combo decays back to 0
 let shieldMax = 0;                // shield charges the loadout starts with
@@ -4763,12 +4838,12 @@ function addWall(startX) {
   const w = { x: startX ?? VW+10, gapY, gap, w: WALL_W, pulse: Math.random()*Math.PI*2, passed: false };
   walls.push(w);
   // XP orb in ~45% of gaps; ones near the lips are worth double (risk/reward)
-  if (Math.random() < 0.45) {
+  if (Math.random() < (hasSkill('treasure_hunter') ? 0.75 : 0.45)) {
     const u = Math.random();
     let value = Math.abs(u - 0.5) * 2 > 0.6 ? 10 : 5, gold = false;
     if (hasSkill('golden_orbs')) {
       value *= 2;
-      if (Math.random() < 0.12) { gold = true; value = 40; }
+      if (Math.random() < (hasSkill('treasure_hunter') ? 0.24 : 0.12)) { gold = true; value = 40; }
     }
     dropOrb(w.x + w.w / 2, gapY + gap * (0.12 + 0.76 * u), value, gold);
   }
@@ -4889,7 +4964,8 @@ function startGame(opts = {}) {
   runLevel = pilotLevel(); lifeBefore = lifeXP;
   hullMax = calcHullMax(); P.hp = hullMax; repairT = 0;
   comboCount = 0; comboTimer = 0;
-  phoenixUsed = false;
+  phoenixUsed = false; secondWindUsed = false;
+  revivesLeft = hasSkill('immortal') ? 2 : (hasSkill('phoenix') || hasSkill('last_stand')) ? 1 : 0;
   warpCD = 0; lastStandT = 0; xpMult = 1; shotCount = 0; overdriveOn = false;
   P.ghost = 0; P.ghostCD = 0;
   // Apply PULSE skill modifiers (rank-scaled)
@@ -4944,7 +5020,11 @@ function resumeGame() {
 
 function hullHit() {
   const damper = hasSkill('impact_damper');
-  P.inv = damper ? 210 : 130;
+  P.inv = (damper ? 210 : 130) + (hasSkill('titan_frame') ? 60 : 0);
+  if (P.hp === 1 && hullMax > 1 && hasSkill('second_wind') && !secondWindUsed) {
+    secondWindUsed = true; P.hp = Math.min(hullMax, 2); P.inv = Math.max(P.inv, 120);
+    pushBonus(P.x, P.y - 40, 'SECOND WIND', '#ffd0b0');
+  }
   sfx.hull(); vibrate([50, 30, 50]);
   shakeX = 9; shakeY = 7; timeScale = Math.min(timeScale, 0.3); fx.aberr = 1.1; fxFlash(0xff7a59, 0.4);
   spawnSparks(P.x, P.y, 26, { vMin: 2, vMax: 8, color: [8, 25] });
@@ -4995,8 +5075,8 @@ function die() {
   // HULL: each armour point soaks one hit
   if (P.hp > 1) { P.hp--; hullHit(); return; }
   // PHOENIX skill: one-time per-run revive with 3s invulnerability.
-  if ((hasSkill('phoenix') || hasSkill('last_stand')) && !phoenixUsed) {
-    phoenixUsed = true;
+  if (revivesLeft > 0) {
+    revivesLeft--; phoenixUsed = true;
     P.inv = 180;         // 3s invulnerability after revive
     sfx.phoenix();
     vibrate([60, 30, 60]);
@@ -5007,7 +5087,7 @@ function die() {
     pushBonus(P.x, P.y - 22, 'PHOENIX!', '#ffaa55');
     Story.onRevive();
     if (hasSynergy('salvage')) { addRunXP(100); pushBonus(P.x, P.y - 58, '+100 XP', '#9dffc4'); }
-    if (hasSkill('last_stand')) {
+    if (hasSkill('last_stand') || hasSkill('immortal')) {
       lastStandT = 600; xpMult = 2;
       pushBonus(P.x, P.y - 40, 'LAST STAND ×2', '#ffd84a');
     }
@@ -5701,6 +5781,7 @@ function refreshTitleInfo() {
   setText(document.getElementById('t-best'), hiScore > 0 ? `${hiScore}s` : '—');
   setText(document.getElementById('t-xp'), `${totalXP} XP`);
   setText(document.getElementById('t-lv'), `Lv ${pilotLevel()}`);
+  setText(document.getElementById('t-rank'), rankName(pilotLevel()));
   refreshSoundUI();
   const skin = SHIP_SKINS.find(x => x.id === currentSkinId) || SHIP_SKINS[0];
   document.getElementById('t-skin-dot').style.setProperty('--skin', skin.accent);
@@ -5736,6 +5817,7 @@ function fillResult() {
   const fill = document.getElementById('r-lv-fill');
   fill.classList.remove('anim'); fill.style.width = lp0.pct.toFixed(1) + '%';
   setText(document.getElementById('r-lv'), `Lv ${lp0.L}`);
+  setText(document.getElementById('r-rank'), rankName(lp0.L));
   setText(document.getElementById('r-lv-next'), lp0.L >= MAX_LEVEL ? 'MAX' : `NEXT ${lp0.next} XP`);
   document.getElementById('r-lvup').hidden = true;
   document.getElementById('r-lv-rew').innerHTML = '';
@@ -5765,6 +5847,7 @@ function playLevelAnim() {
     fill.classList.remove('anim'); fill.style.width = '0%'; void fill.offsetWidth;
     fill.classList.add('anim'); fill.style.width = to.pct.toFixed(1) + '%';
     setText(document.getElementById('r-lv'), `Lv ${to.L}`);
+    setText(document.getElementById('r-rank'), rankName(to.L));
     setText(document.getElementById('r-lv-next'), nextTxt);
     const em = document.getElementById('r-lvup');
     em.hidden = false; restartAnim(em, 'pop');
@@ -5800,7 +5883,7 @@ function syncChips() {
   const regenOn = hasSkill('regen_shield') && shieldCharges < Math.max(1, shieldMax);
   if (shieldCharges > 0 || regenOn)
     want.push(['shield', '#aaffcc', `◇ SHIELD ×${shieldCharges}` + (regenOn ? ` · ${Math.ceil((1200 - shieldRegen) / 60)}s` : '')]);
-  if ((hasSkill('phoenix') || hasSkill('last_stand')) && !phoenixUsed) want.push(['phoenix', '#ffaa55', '▲ REVIVE READY']);
+  if (revivesLeft > 0) want.push(['phoenix', '#ffaa55', revivesLeft > 1 ? `▲ REVIVE ×${revivesLeft}` : '▲ REVIVE READY']);
   if (lastStandT > 0) want.push(['laststand', '#ffd84a', `★ ×2 · ${Math.ceil(lastStandT / 60)}s`]);
   if (hasSkill('time_warp') || hasSkill('chrono'))
     want.push(['warp', '#9ec0ff', warpCD > 0 ? `⧗ WARP ${Math.ceil(warpCD / 60)}s` : '⧗ WARP READY']);
@@ -7265,7 +7348,7 @@ function saveSecrets() {
   localStorage.setItem('hd_secrets', JSON.stringify(secretsFound));
   localStorage.setItem('hd_sec_opts', JSON.stringify(secOpts));
 }
-const skinUnlocked = s => !s.secret || hasSecret(s.secret);
+const skinUnlocked = s => (!s.secret || hasSecret(s.secret)) && (!s.lv || pilotLevel() >= s.lv);
 
 // ── Applying the rewards ──
 const PHASE_TINT_NIGHT = [0xa8b8ff, 0xb4a8ff, 0xc8a0ff, 0xe0a0ff];
