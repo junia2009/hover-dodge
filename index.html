@@ -2219,10 +2219,30 @@ import { RenderPass }      from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass }      from 'three/addons/postprocessing/OutputPass.js';
 import { ShaderPass }      from 'three/addons/postprocessing/ShaderPass.js';
+import { GLTFLoader }      from 'three/addons/loaders/GLTFLoader.js';
 
 // Single source of truth for the version: shown on the title / portrait
 // screens and passed to the service worker, which names its cache after it.
-const VERSION = '1.9.3';
+const VERSION = '2.0.0';
+
+// ── 3D models (glTF). The ship, Ray and PALLAS are waited for (briefly) before
+// the scene is built; the two flagships stream in the background — they are
+// first needed 120 s into a run. Any model that fails to load falls back to
+// the procedural build, so the game always runs.
+const MODELS = {};
+const gltfLoader = new GLTFLoader();
+const loadModel = (k, url) => gltfLoader.loadAsync(url)
+  .then(g => { MODELS[k] = g.scene; })
+  .catch(e => console.warn('model', k, e && e.message));
+const coreModels = Promise.all([loadModel('ship', 'models/ship.glb'), loadModel('ray', 'models/ray.glb'), loadModel('pallas', 'models/pallas.glb')]);
+loadModel('styx', 'models/styx.glb'); loadModel('acheron', 'models/acheron.glb');
+await Promise.race([coreModels, new Promise(r => setTimeout(r, 6000))]);
+// deep clone with private materials (so skins / flashes don't leak between copies)
+function cloneModel(src) {
+  const m = src.clone(true);
+  m.traverse(o => { if (o.isMesh) o.material = o.material.clone(); });
+  return m;
+}
 document.getElementById('t-ver-n').textContent = VERSION;
 document.getElementById('rot-ver').textContent = VERSION;
 
@@ -2359,6 +2379,10 @@ scene.add(new THREE.AmbientLight(0x1a3355, 1.8));
 const shipLight = new THREE.PointLight(0x33ddff, 4, 140);
 scene.add(shipLight);
 const rimLight = new THREE.DirectionalLight(0x334488, 0.8);
+// key light for the flagships (faded in only while a boss is on screen)
+const bossKey = new THREE.DirectionalLight(0xfff0f4, 0);
+bossKey.position.set(-260, 320, 600);
+scene.add(bossKey);
 rimLight.position.set(-1, 1, 2);
 scene.add(rimLight);
 
@@ -2374,6 +2398,22 @@ const shipParts = { hull: null, wings: [], cockpit: null, engine: null, flame: n
 
 function buildShipGroup(register = true) {
   const g = new THREE.Group();
+  if (MODELS.ship) {
+    const m = cloneModel(MODELS.ship);
+    // no environment map in this scene: keep the paint readable
+    m.traverse(o => { if (o.isMesh) o.material.metalness = Math.min(o.material.metalness, 0.12); });
+    g.add(m);
+    const part = n => m.getObjectByName(n);
+    const flame = part('flame'), engine = part('engine');
+    flame.userData.bx = -12.4; flame.userData.len = 14;     // nozzle x / cone length (model units)
+    engine.userData.s0 = engine.scale.clone();
+    if (register) {
+      shipParts.hull = part('hull'); shipParts.wings = [part('wingTop'), part('wingBottom')];
+      shipParts.cockpit = part('cockpit'); shipParts.engine = engine; shipParts.flame = flame;
+    }
+    g.scale.setScalar(0.85);
+    return g;
+  }
 
   // Hull — extruded bezier path (points to +X)
   const hull = new THREE.Shape();
@@ -2564,7 +2604,7 @@ function applySkin(id) {
   if (shipParts.hull) {
     shipParts.hull.material.color.setHex(s.hull.color);
     shipParts.hull.material.emissive.setHex(s.hull.emissive);
-    shipParts.hull.material.specular.setHex(s.hull.specular);
+    if (shipParts.hull.material.specular) shipParts.hull.material.specular.setHex(s.hull.specular);
   }
   for (const w of shipParts.wings) {
     w.material.color.setHex(s.wing.color);
@@ -2573,7 +2613,7 @@ function applySkin(id) {
   if (shipParts.cockpit) {
     shipParts.cockpit.material.color.setHex(s.cockpit.color);
     shipParts.cockpit.material.emissive.setHex(s.cockpit.emissive);
-    shipParts.cockpit.material.specular.setHex(s.cockpit.specular);
+    if (shipParts.cockpit.material.specular) shipParts.cockpit.material.specular.setHex(s.cockpit.specular);
   }
   if (shipParts.engine) shipParts.engine.material.color.setHex(s.engine);
   if (shipParts.flame)  shipParts.flame.material.color.setHex(s.flame);
@@ -5402,8 +5442,14 @@ function syncScene() {
   const flame = shipGroup.getObjectByName('flame');
   const engine = shipGroup.getObjectByName('engine');
   const fl = 10 + Math.abs(Math.sin(tick*0.52))*7 + Math.hypot(P.vx,P.vy)*0.42;
-  if (flame) { flame.scale.y = fl / 16; flame.position.x = -16 - fl / 2; }
-  if (engine) engine.scale.setScalar(0.7 + Math.abs(Math.sin(tick*0.44))*0.5);
+  if (flame) {
+    const bx = flame.userData.bx ?? -16, len = flame.userData.len ?? 16;
+    flame.scale.y = fl / 16; flame.position.x = bx - len * fl / 32;
+  }
+  if (engine) {
+    const k = 0.7 + Math.abs(Math.sin(tick*0.44))*0.5;
+    if (engine.userData.s0) engine.scale.copy(engine.userData.s0).multiplyScalar(k); else engine.scale.setScalar(k);
+  }
 
   let sx, sy;
   const preview = gstate === 'menu' && skinPreview;
@@ -5880,6 +5926,15 @@ const SPEAKERS = {
 
 // ── 3D Ray (procedural, modelled on the reference render) ──
 function buildRay() {
+  if (MODELS.ray) {
+    // wrapper keeps the old convention: origin at the body centre, ~24 units tall
+    const g = new THREE.Group();
+    const m = cloneModel(MODELS.ray);
+    m.scale.setScalar(7.5); m.position.y = -11;
+    g.add(m);
+    const leaf = g.getObjectByName('leaf'); if (leaf) leaf.userData.rz0 = leaf.rotation.z;
+    return g;
+  }
   const g = new THREE.Group();
   const NAVY = new THREE.Color(0x1c2340), CYAN = new THREE.Color(0x2ab4ee);
   // Body: one sphere painted in quadrants — head split navy | cyan,
@@ -6464,6 +6519,8 @@ const Prologue = (() => {
   oldShip.position.set(SHIP_X, groundY(SHIP_X, SHIP_Z) + 5, SHIP_Z);
   oldShip.rotation.set(0.12, 0.35, 0.16);
   oldShip.visible = false; S.add(oldShip);
+  const pallas = MODELS.pallas ? cloneModel(MODELS.pallas) : null;
+  if (pallas) { pallas.scale.setScalar(5.5); pallas.visible = false; S.add(pallas); }
   const shipMats = [];                               // [material, weathered hex, name, mesh] to restore on replay
   oldShip.traverse(o => { if (o.name === 'engine' || o.name === 'flame') shipMats.push([o.material, o.material.color.getHex(), o.name, o]); });
   const thrust = glowSprite(0x33ddff, 26, 0);         // engine glow, in ship space (behind the nozzle)
@@ -6505,6 +6562,7 @@ const Prologue = (() => {
     for (const p of pirates) p.visible = red;
     for (const f of fires) f.visible = red || burnt;
     oldShip.visible = burnt;
+    if (pallas) pallas.visible = m === 'ruins' || m === 'launch';
     stars.material.opacity = red ? 0.3 : 1; stars.material.transparent = true;
     if (Music.started) Music.setSection(red ? 'p3' : 'menu');
     if (red) { sfx.death(); shake = 1; }
@@ -6585,7 +6643,26 @@ const Prologue = (() => {
     const bob = Math.sin(t * 2) * 0.4;
     ray.position.set(0, groundY(0, 0) + 11 + bob, 0);
     ray.rotation.set(0, 0, 0);
-    const leaf = ray.getObjectByName('leaf'); if (leaf) leaf.rotation.z = -0.4 + Math.sin(t * 3) * 0.12;
+    const leaf = ray.getObjectByName('leaf'); if (leaf) leaf.rotation.z = (leaf.userData.rz0 ?? -0.4) + Math.sin(t * 3) * 0.12;
+    if (pallas && pallas.visible) {
+      // hovers beside the wreck, eye flickering awake; dives into the cockpit when Ray boards
+      const boarding = mood === 'launch' && li >= 1;
+      const px = SHIP_X + 24, py = groundY(SHIP_X, SHIP_Z) + 26 + Math.sin(t * 2.2) * 1.5, pz = SHIP_Z + 14;
+      if (boarding) {
+        pallas.position.lerp(oldShip.position, Math.min(1, s * 3));
+        pallas.scale.multiplyScalar(Math.max(0.85, 1 - s * 2));
+        if (pallas.scale.x < 0.4) pallas.visible = false;
+      } else {
+        pallas.scale.setScalar(5.5);
+        pallas.position.set(px, py, pz);
+        pallas.lookAt(camPos.x, py, camPos.z);
+      }
+      const orbit = pallas.getObjectByName('orbit'); if (orbit) orbit.rotation.y = t * 0.8;
+      const wake = mood === 'ruins' ? Math.min(1, t / 1.2) : 1;
+      const eye = pallas.getObjectByName('eye');
+      if (eye) eye.material.emissiveIntensity = (wake < 1 ? (Math.random() < 0.5 ? 0.3 : 2.6) * wake : 2.2 + Math.sin(t * 5) * 0.4);
+      for (const n of ['finL', 'finR']) { const f = pallas.getObjectByName(n); if (f) f.rotation.x = Math.sin(t * 6 + (n === 'finL' ? 0 : 1)) > 0.97 ? 0.35 : 0; }
+    }
     const g0 = groundY(0, 0);
     if (mood === 'night') {
       // like the reference render: Ray low-right, a big starry sky above
@@ -6747,8 +6824,32 @@ const BOSS_LINES = {
 const sayOnce = (b, key, lines) => { if (!b.said[key]) { b.said[key] = true; commSay(lines); } };
 
 // ── Flagship model ──
+// flagship models: where the prongs fire from (relative to the boss centre) and
+// where the ship parks — the models are ~2× the old procedural ones
+const BOSS_MODEL = { styx: { tipDX: 324, tipDY: 80, bossX: VW + 10 }, acheron: { tipDX: 324, tipDY: 80, bossX: VW - 20 } };
 function buildBossShip(def, second) {
   const g = new THREE.Group();
+  if (MODELS[def.id]) {
+    const m = cloneModel(MODELS[def.id]);
+    m.traverse(o => {
+      if (!o.isMesh) return;
+      o.material.metalness = Math.min(o.material.metalness, 0.3);
+      if (o.material.emissiveIntensity > 1) o.material.emissiveIntensity *= 0.45;   // bloom does the rest
+    });
+    m.scale.z = 0.5;                                   // seen from above: keep the camera-side depth shallow
+    g.add(m);
+    const at = n => { const o = m.getObjectByName(n); return o ? o.getWorldPosition(new THREE.Vector3()) : null; };
+    m.updateMatrixWorld(true);
+    for (const n of ['prongTip_L', 'prongTip_R']) { const p = at(n); if (p) { const sp = glowSprite(def.color, 90, 0.9); sp.position.copy(p); g.add(sp); } }
+    for (const n of ['engine_L', 'engine_R']) { const p = at(n); if (p) { const sp = glowSprite(def.color, 130, 0.7); sp.position.copy(p); g.add(sp); } }
+    const c = at('core');
+    if (c) { const cg = glowSprite(def.color, 200, 0.55); cg.position.copy(c); cg.name = 'coreGlow'; g.add(cg); }
+    let hull = null; m.traverse(o => { if (o.isMesh && o.material.name === 'hull') hull = o.material; });
+    g.userData.hullMat = hull || new THREE.MeshStandardMaterial();
+    Object.assign(g.userData, BOSS_MODEL[def.id]);
+    scene.add(g);
+    return g;
+  }
   const hullMat = new THREE.MeshPhongMaterial({ color: def.hull, emissive: 0x000000, shininess: 50, specular: 0x664455 });
   const sh = new THREE.Shape();
   if (!second) {   // STYX: heavy arrowhead
@@ -6833,8 +6934,8 @@ function bossDefeat() {
 }
 
 // ── Patterns ──
-const tipY = s => boss.y + s * 40;
-const TIP_X = () => boss.x - 200;
+const tipY = s => boss.y + s * (boss.mesh.userData.tipDY || 40);
+const TIP_X = () => boss.x - (boss.mesh.userData.tipDX || 200);
 function bossShot(x, y, ang, speed, type = 'b') {
   enemies.push({ x, y, vx: Math.cos(ang) * speed, vy: Math.sin(ang) * speed, r: type === 'p' ? 11 : 5,
                  type, spin: 0, life: 700, boss: true });
@@ -6925,7 +7026,7 @@ function bossTick(dt) {
   boss.flash = Math.max(0, boss.flash - dt * 0.08);
   const bob = Math.sin(boss.t * 0.025) * (boss.rage ? 46 : 32);
   if (boss.state === 'intro') {
-    boss.x += (BOSS_X - boss.x) * Math.min(1, 0.03 * dt);
+    boss.x += ((boss.mesh.userData.bossX || BOSS_X) - boss.x) * Math.min(1, 0.03 * dt);
     boss.y = VH / 2 + bob;
     if (boss.t > 210) { boss.state = 'fight'; boss.patT = 40; }
     return;
@@ -6994,6 +7095,7 @@ function removeLaserMesh(L) {
   L.mesh = null;
 }
 function syncBoss(sk) {
+  bossKey.intensity += ((boss && boss.mesh.userData.tipDX ? 2.2 : 0) - bossKey.intensity) * 0.05;
   if (!boss) return;
   const m = boss.mesh;
   m.position.copy(W(boss.x, boss.y, -6)).add(sk);
@@ -7003,6 +7105,7 @@ function syncBoss(sk) {
   m.userData.hullMat.emissive.setRGB(boss.flash * 0.9 + (boss.rage ? pulse * 0.18 : 0), boss.flash * 0.9, boss.flash * 0.9);
   const glow = m.getObjectByName('coreGlow'); if (glow) glow.material.opacity = 0.4 + pulse * 0.4;
   const ring = m.getObjectByName('ring'); if (ring) ring.rotation.set(boss.t * 0.02, boss.t * 0.03, 0);
+  const ring2 = m.getObjectByName('ring2'); if (ring2) ring2.rotation.set(Math.PI / 2.6 + boss.t * 0.025, 0, boss.t * 0.02);
   for (const L of bossLasers) {
     if (!L.mesh) {
       const grp = new THREE.Group();
@@ -7427,9 +7530,10 @@ function showCredits(ending, onClose = null) {
     creditsCast() +
     L('PRODUCED & DIRECTED BY', 'RYOHEI TAKAUCHI') +
     L('GAME DESIGN', 'RYOHEI TAKAUCHI') +
+    L('CHARACTER DESIGN', 'RAY — RYOHEI TAKAUCHI') +
     L('DEVELOPMENT', 'RYOHEI TAKAUCHI<br><small>with Claude Code</small>') +
     L('MUSIC & SOUND', 'Interactive WebAudio Synthesis') +
-    L('VISUALS', 'Three.js · WebGL · Bloom') +
+    L('VISUALS', 'Three.js · WebGL · Bloom<br><small>3D models: glTF</small>') +
     L('TYPEFACES', 'Orbitron · Rajdhani') +
     L('SPECIAL THANKS', 'YOU') +
     (story ? `<div class="cr-reward">◆ TITLE: AEGIS PILOT</div>`
