@@ -1867,7 +1867,7 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
   </div>
 
   <p class="rot-secret" id="rot-secret" hidden>&gt; SPIN CYCLE DETECTED — 目が回った？ MIRROR MODE 解放</p>
-  <p class="rot-version">SYS_REV  1.9.2 · SECRETS <span id="rot-secrets">0/9</span></p>
+  <p class="rot-version">SYS_REV  <span id="rot-ver"></span> · SECRETS <span id="rot-secrets">0/9</span></p>
 </div>
 
 <div id="shop-modal" class="modal">
@@ -1965,10 +1965,10 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
     <section class="howto-sec">
       <h3>スコア・ボーナス</h3>
       <dl>
-        <dt><span class="bonus-val">+10</span></dt><dd>壁スレスレ通過（隙間の外側30%以内）</dd>
-        <dt><span class="bonus-val">+25</span></dt><dd>極スレスレ NEAR! （外側15%以内）</dd>
-        <dt><span class="bonus-val">+15</span></dt><dd>PULSE で弾型 (BULLET) 撃破</dd>
-        <dt><span class="bonus-val">+20</span></dt><dd>PULSE で追跡型 (SEEKER) 撃破</dd>
+        <dt><span class="bonus-val">SCORE</span></dt><dd>生き残った秒数（OVERDRIVE 中は 1.5 倍で進む）</dd>
+        <dt><span class="bonus-val">+3 XP</span></dt><dd>壁スレスレ通過 CLOSE（隙間の外側30%以内）</dd>
+        <dt><span class="bonus-val">+8 XP</span></dt><dd>極スレスレ NEAR!（外側15%以内）</dd>
+        <dt><span class="bonus-val">+5 XP</span></dt><dd>敵を撃破（PULSE / 弾 / 連鎖）</dd>
       </dl>
     </section>
 
@@ -2148,7 +2148,7 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
         <button class="snd" id="t-bgm" type="button">BGM<b>ON</b></button>
         <button class="snd" id="t-se" type="button">SE<b>ON</b></button>
         <span class="secret-count">SECRETS<b id="t-secrets">0/9</b></span>
-        <span class="ver" id="t-ver">VER<b>1.9.2</b></span>
+        <span class="ver" id="t-ver">VER<b id="t-ver-n"></b></span>
       </div>
     </div>
 
@@ -2219,6 +2219,12 @@ import { RenderPass }      from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass }      from 'three/addons/postprocessing/OutputPass.js';
 import { ShaderPass }      from 'three/addons/postprocessing/ShaderPass.js';
+
+// Single source of truth for the version: shown on the title / portrait
+// screens and passed to the service worker, which names its cache after it.
+const VERSION = '1.9.3';
+document.getElementById('t-ver-n').textContent = VERSION;
+document.getElementById('rot-ver').textContent = VERSION;
 
 'use strict';
 const VW = 800, VH = 450;
@@ -2888,7 +2894,13 @@ function removeOrbMesh(o) {
 }
 
 // ── Sparks ────────────────────────────────────────────────────────────────────
-const sparkMeshPool = [];
+const sparkMeshPool = [];   // live spark meshes
+const sparkFree = [];       // hidden, reusable spark meshes
+function freeSpark(sm) {
+  sm.visible = false;
+  if (sparkFree.length < 600) sparkFree.push(sm);
+  else { scene.remove(sm); sm.material.dispose(); }
+}
 const SPARK_GEOM = new THREE.SphereGeometry(1, 6, 6);
 // Radial burst of additive sparks. `color` is a hex or an array of hues.
 function spawnSparks(x, y, n, { vMin = 2, vMax = 6, szMin = 0.8, szMax = 2.8, color = 0x00e8ff, light = 70 } = {}) {
@@ -2896,17 +2908,29 @@ function spawnSparks(x, y, n, { vMin = 2, vMax = 6, szMin = 0.8, szMax = 2.8, co
     const a = Math.random() * Math.PI * 2, v = vMin + Math.random() * (vMax - vMin);
     const sp = { x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 1, sz: szMin + Math.random() * (szMax - szMin) };
     sparks.push(sp);
-    const c = Array.isArray(color)
-      ? new THREE.Color(`hsl(${color[Math.floor(Math.random() * color.length)]},100%,${light}%)`)
-      : new THREE.Color(color);
-    const sm = new THREE.Mesh(SPARK_GEOM, new THREE.MeshBasicMaterial({
-      color: c, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false,
-    }));
+    let sm = sparkFree.pop();
+    if (!sm) {
+      sm = new THREE.Mesh(SPARK_GEOM, new THREE.MeshBasicMaterial({
+        transparent: true, blending: THREE.AdditiveBlending, depthWrite: false,
+      }));
+      scene.add(sm);
+    }
+    if (Array.isArray(color)) sm.material.color.setHSL(color[Math.floor(Math.random() * color.length)] / 360, 1, light / 100);
+    else sm.material.color.set(color);
+    sm.material.opacity = 1;
+    sm.visible = true;
     sm.scale.setScalar(sp.sz * 0.8);
     sm.userData.sp = sp;
-    scene.add(sm);
     sparkMeshPool.push(sm);
   }
+}
+
+// PULSE button: write to the DOM only when a value actually changes
+const pulseUI = { cd: '', label: '', sub: '' };
+function setPulseUI(cd, label, sub) {
+  if (cd !== pulseUI.cd) { pulseUI.cd = cd; pulseBtn.style.setProperty('--cd', cd); }
+  if (label !== pulseUI.label) { pulseUI.label = label; pulseLabel.textContent = label; }
+  if (sub !== pulseUI.sub) { pulseUI.sub = sub; pulseSub.textContent = sub; }
 }
 
 // ── Pulse skill ───────────────────────────────────────────────────────────────
@@ -3057,8 +3081,8 @@ function refreshSoundUI() {
 for (const id of ['t-bgm', 'p-bgm']) onTap(document.getElementById(id), () => setSound(!bgmOn, sfxOn));
 for (const id of ['t-se', 'p-se'])   onTap(document.getElementById(id), () => setSound(bgmOn, !sfxOn));
 
-renderer.domElement.addEventListener('click', flap);
-renderer.domElement.addEventListener('touchstart', e => { e.preventDefault(); flap(); }, { passive: false });
+renderer.domElement.addEventListener('pointerdown', e => { if (e.button === 0 || e.pointerType !== 'mouse') flap(); });
+renderer.domElement.addEventListener('touchstart', e => e.preventDefault(), { passive: false });   // no scroll / zoom
 addEventListener('keydown', e => {
   if (Epilogue.active) {
     if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); if (!e.repeat) Epilogue.advance(); }
@@ -4752,10 +4776,9 @@ function killEnemy(e, src, depth = 0) {
   killCount++;
   sfx.kill();
   Story.onKill();
+  const xp0 = runXP;
   addRunXP(5);
-  const kb = src === 'pulse' ? (e.type === 'b' ? 15 : 20) : (e.type === 'b' ? 10 : 15);
-  addScore(kb / 60);
-  pushBonus(e.x, e.y, `+${kb}`, src === 'pulse' ? (e.type === 'b' ? '#ff8844' : '#ffaa55') : src === 'storm' ? '#c8b4ff' : '#88ffcc');
+  pushBonus(e.x, e.y, `+${Math.round(runXP - xp0)} XP`, src === 'pulse' ? (e.type === 'b' ? '#ff8844' : '#ffaa55') : src === 'storm' ? '#c8b4ff' : '#88ffcc');
   spawnSparks(e.x, e.y, src === 'pulse' ? 16 : 12, { vMin: 2, vMax: 7, szMin: 0.7, szMax: 3.2, color: e.type === 'b' ? [15, 25] : [35, 45] });
   if (src === 'pulse' && hasSkill('overload')) pulseCooldown = Math.max(0, pulseCooldown - 60);
   if (src === 'shot' && hasSynergy('scavenger')) dropOrb(e.x, e.y, 5);
@@ -4790,7 +4813,7 @@ function clearWorld() {
   for (const w of walls) removeWallMesh(w);
   for (const e of enemies) removeEnemyMesh(e);
   for (const b of bullets) removeBulletMesh(b);
-  for (const sm of sparkMeshPool) { scene.remove(sm); sm.material.dispose(); }
+  for (const sm of sparkMeshPool) freeSpark(sm);
   sparkMeshPool.length = 0;
   for (const o of orbs) removeOrbMesh(o);
   for (const b of beams) { scene.remove(b.mesh); b.mesh.geometry.dispose(); b.mesh.material.dispose(); }
@@ -5035,15 +5058,12 @@ function update(dt) {
       if (gstate === 'play' && !hasSkill('auto_pulse')) sfx.pulseReady();
       setTimeout(() => pulseBtn.classList.remove('flash'), 500);
     }
-    pulseBtn.style.setProperty('--cd', 1);
-    pulseLabel.textContent = hasSkill('auto_pulse') ? 'AUTO' : 'PULSE';
-    pulseSub.textContent = hasSkill('auto_pulse') ? 'ON' : 'Z';
+    setPulseUI('1', hasSkill('auto_pulse') ? 'AUTO' : 'PULSE', hasSkill('auto_pulse') ? 'ON' : 'Z');
     // AUTO-PULSE skill: trigger automatically the moment CD becomes ready
     if (hasSkill('auto_pulse') && gstate === 'play') firePulse();
   } else {
     pulseBtn.classList.remove('ready');
-    pulseBtn.style.setProperty('--cd', (1 - pulseCooldown / PULSE_COOLDOWN).toFixed(3));
-    pulseLabel.textContent = Math.ceil(pulseCooldown/60) + 's'; pulseSub.textContent = 'CHARGING';
+    setPulseUI((1 - pulseCooldown / PULSE_COOLDOWN).toFixed(2), Math.ceil(pulseCooldown / 60) + 's', 'CHARGING');
   }
 
   // Bonus popups (decay regardless of state for visual continuity)
@@ -5184,8 +5204,6 @@ function update(dt) {
       if (margin < halfGap * nearThresh) {
         // Tight pass! +bonus
         const tight = margin < halfGap * tightThresh;
-        const bonus = (tight ? 25 : 10) * (overdriveOn ? 2 : 1);
-        addScore(bonus / 60);  // convert "score points" to seconds (~minor add)
         nearMissCount++;
         // Streak (always tracked; COMBO MULTIPLIER turns it into XP, OVERDRIVE into score)
         comboCount++;
@@ -5197,8 +5215,9 @@ function update(dt) {
         if (comboCount >= 2 && (hasSkill('combo_multiplier') || hasSkill('overdrive')))
           pushBonus(P.x, P.y - 38, `COMBO x${comboCount}`, '#ffaa66');
         if (hasSynergy('slipstream')) pulseCooldown = Math.max(0, pulseCooldown - 60);
-        addRunXP((tight ? 8 : 3) * comboMul);
-        pushBonus(P.x, P.y - 22, `+${bonus} NEAR!`, '#ffee44');
+        const xp0 = runXP;
+        addRunXP((tight ? 8 : 3) * comboMul * (overdriveOn ? 2 : 1));   // OVERDRIVE: NEAR bonus ×2
+        pushBonus(P.x, P.y - 22, `${tight ? 'NEAR!' : 'CLOSE'} +${Math.round(runXP - xp0)} XP`, '#ffee44');
         sfx.near(tight);
         Story.onNear(tight);
         fx.aberr = Math.max(fx.aberr, tight ? 0.7 : 0.35);
@@ -5352,9 +5371,9 @@ function update(dt) {
         if (w.phased || !(P.x + P.r > w.x && P.x - P.r < w.x + w.w)) continue;
         if (!(P.y - P.r < w.gapY || P.y + P.r > w.gapY + w.gap)) continue;
         w.phased = w.passed = true;
-        addScore(40 / 60); addRunXP(10);
+        const xp0 = runXP; addRunXP(10);
         comboCount++; comboTimer = 300;
-        pushBonus(P.x, P.y - 22, '+40 PHASE', '#d08cff');
+        pushBonus(P.x, P.y - 22, `PHASE +${Math.round(runXP - xp0)} XP`, '#d08cff');
         spawnSparks(P.x, P.y, 14, { vMin: 2, vMax: 6, color: 0xd08cff });
         fxFlash(0xd08cff, 0.15);
         sfx.near(true);
@@ -5567,7 +5586,7 @@ function syncScene() {
   for (let i = sparkMeshPool.length - 1; i >= 0; i--) {
     const sm = sparkMeshPool[i];
     const sp = sm.userData.sp;
-    if (sp.life <= 0) { scene.remove(sm); sm.material.dispose(); sparkMeshPool.splice(i, 1); }
+    if (sp.life <= 0) { freeSpark(sm); sparkMeshPool.splice(i, 1); }
     else {
       sm.position.copy(W(sp.x, sp.y, 5)).add(sk);
       sm.material.opacity = Math.pow(sp.life, 1.3);
@@ -6825,7 +6844,7 @@ function addLaser(y, h, warn, delay = 0) {
 }
 const PATTERNS = {
   cores() {
-    const n = boss.rage ? 2 : 2;
+    const n = boss.rage ? 3 : 2;
     for (let i = 0; i < n; i++) {
       const y = 60 + Math.random() * (VH - 120);
       orbs.push({ x: boss.x - 150, y, value: 0, core: true, t: Math.random() * 6, vx: -3.2 - Math.random() * 0.6 });
@@ -6948,7 +6967,7 @@ function bossTick(dt) {
 }
 function finishBoss() {
   const def = boss.def, idx = boss.idx;
-  addRunXP(def.xp); addScore(def.xp / 60);
+  addRunXP(def.xp);
   pushBonus(P.x, P.y - 30, `+${def.xp} XP`, '#ffd84a');
   pushBonus(P.x, P.y - 50, `${def.name} DEFEATED`, def.css);
   timeScale = 1;
@@ -7458,7 +7477,14 @@ function loop(now) {
   dtScale = gstate === 'paused' ? 0 : realDt * timeScale;
   Music.timeScale = timeScale;
   Music.update(realDt);
-  if (gstate !== 'paused') update(dtScale);
+  if (gstate !== 'paused') {
+    // sub-step slow frames so fast walls / bullets can't tunnel through the ship
+    const steps = Math.min(4, Math.max(1, Math.ceil(dtScale / 1.5)));
+    for (let i = 0; i < steps; i++) {
+      if (i > 0 && gstate !== 'play') break;
+      update(dtScale / steps);
+    }
+  }
   syncScene();
   if (Prologue.active) Prologue.update(realDt);
   Epilogue.update(realDt);
@@ -7532,7 +7558,7 @@ if (location.protocol !== 'file:') {
   document.head.appendChild(ic2);
 
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js').catch(e => console.warn('SW:', e));
+    navigator.serviceWorker.register(`./sw.js?v=${VERSION}`).catch(e => console.warn('SW:', e));
   }
 }
 </script>
