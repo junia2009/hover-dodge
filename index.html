@@ -541,6 +541,19 @@ button { font-family: var(--f-ui) }
   color: rgba(255, 216, 74, 0.85);
 }
 .hud-best b { font-family: var(--f-disp); font-weight: 500; margin-left: calc(4 * var(--px)); }
+.hud-hull { display: flex; gap: calc(3 * var(--px)); margin-top: calc(6 * var(--px)); }
+.hud-hull[hidden] { display: none; }
+.hud-hull i {
+  width: calc(13 * var(--px)); height: calc(11 * var(--px));
+  clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
+  background: rgba(255, 138, 92, 0.18);
+  transition: background .25s, box-shadow .25s;
+}
+.hud-hull i.on { background: #ff8a5c; box-shadow: 0 0 calc(8 * var(--px)) #ff8a5c; }
+.hud-hull.low i.on { animation: hull-low .8s ease-in-out infinite; }
+@keyframes hull-low { 50% { background: #ffd0c0; } }
+.hud-hull.hit { animation: hull-hit .45s ease-out; }
+@keyframes hull-hit { 0% { transform: translateX(calc(-4 * var(--px))); } 30% { transform: translateX(calc(4 * var(--px))); } 100% { transform: none; } }
 .hud-best.beaten { color: #fff7b0; text-shadow: 0 0 calc(8 * var(--px)) var(--c-gold); }
 
 .hud-stats {
@@ -1002,6 +1015,20 @@ button { font-family: var(--f-ui) }
 .r-ray-face { width: calc(30 * var(--px)); height: calc(30 * var(--px)); }
 .r-ray-face svg { width: 100%; height: 100%; display: block; }
 .r-ray-text { font: 700 calc(13 * var(--px))/1.3 var(--f-ui); letter-spacing: calc(1 * var(--px)); color: #bfe9ff; }
+.r-level { margin-top: calc(12 * var(--px)); }
+.r-lv-top { display: flex; align-items: baseline; gap: calc(8 * var(--px)); font: 700 calc(9 * var(--px))/1 var(--f-ui); letter-spacing: calc(3 * var(--px)); color: var(--c-dim); }
+.r-lv-top b { font: 700 calc(14 * var(--px))/1 var(--f-disp); letter-spacing: calc(1 * var(--px)); color: #ffb08a; }
+.r-lv-top small { margin-left: auto; font: 500 calc(9 * var(--px))/1 var(--f-disp); letter-spacing: calc(1 * var(--px)); color: var(--c-dim); }
+.r-lv-top em { font: 900 calc(11 * var(--px))/1 var(--f-disp); font-style: normal; letter-spacing: calc(2 * var(--px)); color: #fff; text-shadow: 0 0 calc(10 * var(--px)) #ff8a5c, 0 0 calc(20 * var(--px)) #ff8a5c; }
+.r-lv-top em[hidden] { display: none; }
+.r-lv-top em.pop { animation: lv-pop .6s cubic-bezier(.2, 1.6, .4, 1) both; }
+@keyframes lv-pop { from { transform: scale(2.2); opacity: 0; } }
+.r-lv-bar { margin-top: calc(6 * var(--px)); height: calc(5 * var(--px)); background: rgba(255, 138, 92, 0.12); overflow: hidden; }
+.r-lv-bar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #ff6a3c, #ffc0a0); box-shadow: 0 0 calc(10 * var(--px)) #ff8a5c; }
+.r-lv-bar i.anim { transition: width 1.1s cubic-bezier(.3, .7, .2, 1); }
+.r-lv-rew { margin-top: calc(6 * var(--px)); display: flex; flex-wrap: wrap; gap: calc(4 * var(--px)); justify-content: center; }
+.r-lv-rew span { padding: calc(3 * var(--px)) calc(7 * var(--px)); font: 700 calc(9 * var(--px))/1.2 var(--f-ui); letter-spacing: calc(1 * var(--px)); color: #ffe0d0; background: rgba(255, 138, 92, 0.16); border: 1px solid rgba(255, 138, 92, 0.4); animation: lv-pop .5s ease-out both; }
+.t-foot .pilot b { color: #ffb08a; text-shadow: 0 0 calc(8 * var(--px)) rgba(255, 138, 92, 0.6); }
 .r-newlog { margin-top: calc(10 * var(--px)); font: 700 calc(10 * var(--px))/1 var(--f-ui); letter-spacing: calc(2 * var(--px)); color: #9dffc4; text-align: center; }
 .btn.log .new {
   font: 900 calc(7 * var(--px))/1 var(--f-disp); letter-spacing: calc(1 * var(--px));
@@ -1326,6 +1353,14 @@ body.retro #ui { filter: grayscale(1) sepia(1) hue-rotate(70deg) saturate(2.6) b
   font-variant-numeric: tabular-nums;
   display: inline-block;
 }
+.pilot-badge { display: flex; align-items: center; gap: 8px; margin-right: 10px; padding: 6px 12px; background: linear-gradient(90deg, rgba(255, 138, 92, 0.16), rgba(255, 138, 92, 0.03));
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px); }
+.pilot-badge span { font: 700 10px/1 var(--f-ui); letter-spacing: 3px; color: rgba(255, 176, 138, 0.8); }
+.pilot-badge b { white-space: nowrap; font: 700 18px/1 var(--f-disp); color: #ffb08a; text-shadow: 0 0 10px rgba(255, 138, 92, 0.6); }
+.pilot-badge .pb { display: flex; flex-direction: column; gap: 4px; min-width: 74px; }
+.pilot-badge i { display: block; height: 4px; background: rgba(255, 138, 92, 0.15); }
+.pilot-badge i u { display: block; height: 100%; background: #ff8a5c; box-shadow: 0 0 6px #ff8a5c; }
+.pilot-badge small { font: 500 9px/1 var(--f-disp); letter-spacing: 1px; color: var(--c-dim); white-space: nowrap; }
 .wallet b.bump { animation: wallet-bump .45s ease-out; }
 @keyframes wallet-bump { 0% { transform: scale(1.3); color: #fff; } 100% { transform: scale(1); } }
 
@@ -1408,6 +1443,9 @@ body.retro #ui { filter: grayscale(1) sepia(1) hue-rotate(70deg) saturate(2.6) b
   color: var(--c-dim);
 }
 .node .pr { font: 500 9px/1 var(--f-disp); letter-spacing: 1px; color: rgba(255, 216, 74, 0.8); }
+.node .pr.lvq { color: rgba(255, 150, 120, 0.9); }
+.slot.lvlock { border-style: dashed; color: rgba(255, 176, 138, 0.55); border-color: rgba(255, 138, 92, 0.3); }
+.slot.lvlock b { font-family: var(--f-disp); font-weight: 500; letter-spacing: 1px; }
 .node .lock {
   position: absolute; right: -4px; bottom: -2px;
   width: 16px; height: 16px; border-radius: 50%;
@@ -1728,7 +1766,14 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
   .tree { flex: none; height: 260px; }
   .shop-side { border-left: none; border-top: 1px solid rgba(160, 200, 255, 0.09); }
   .detail { overflow: visible; }
-  .tab { padding: 10px 8px; letter-spacing: 2px; }
+  .tabs { gap: 4px; }
+  .tab { padding: 8px 6px; letter-spacing: 1px; flex-direction: column; align-items: flex-start; gap: 4px; font-size: 10px !important; }
+  .pilot-badge { margin-right: 6px; padding: 6px 10px; }
+  .pilot-badge .pb, .pilot-badge span { display: none; }
+  .pilot-badge b { font-size: 15px; white-space: nowrap; }
+  .wallet { padding: 6px 10px; }
+  .wallet b { font-size: 15px; }
+  .m-sub { display: none; }
   .howto-body { padding: 14px; }
   .m-head { padding-left: 20px; }
 }
@@ -1789,7 +1834,7 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
   </div>
 
   <p class="rot-secret" id="rot-secret" hidden>&gt; SPIN CYCLE DETECTED — 目が回った？ MIRROR MODE 解放</p>
-  <p class="rot-version">SYS_REV  1.8.4 · SECRETS <span id="rot-secrets">0/9</span></p>
+  <p class="rot-version">SYS_REV  1.9.0 · SECRETS <span id="rot-secrets">0/9</span></p>
 </div>
 
 <div id="shop-modal" class="modal">
@@ -1797,6 +1842,7 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
     <header class="m-head">
       <div><div class="m-title">SHOP</div><div class="m-sub">SKILL TREE &amp; LOADOUT</div></div>
       <div class="m-spacer"></div>
+      <div class="pilot-badge" id="shop-pilot"></div>
       <div class="wallet"><span>XP</span><b id="shop-xp">0</b></div>
       <button class="m-close" id="shop-close" type="button" aria-label="Close">×</button>
     </header>
@@ -1906,16 +1952,28 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
 
     <section class="howto-sec">
       <h3>XP & スキルツリー (SHOP)</h3>
-      <p>プレイ中に XP を獲得 → タイトル画面の <b>SHOP</b> でスキルを解放・強化・装備。全 25 スキル、各系統の最深部には <b>★ULTIMATE</b>。</p>
+      <p>プレイ中に XP を獲得 → タイトル画面の <b>SHOP</b> でスキルを解放・強化・装備。全 31 スキル（ATTACK / DEFENSE / PASSIVE / VITAL）、各系統の最深部には <b>★ULTIMATE</b>。</p>
       <dl>
         <dt>ランク</dt><dd>取得済みスキルは Lv2〜3 に強化できる（●●○ で表示）</dd>
-        <dt>装備枠</dt><dd>最初は 2 枠。XP で 3 枠 (1200) → 4 枠 (3000) に拡張</dd>
+        <dt>装備枠</dt><dd>最初は 2 枠。パイロット Lv3 / 7 / 12 / 20 で 3〜6 枠に拡張</dd>
         <dt>シナジー</dt><dd>特定の 2 スキルを同時装備でボーナス効果 (⟡)</dd>
         <dt>XP オーブ</dt><dd>壁の隙間に浮かぶ緑の結晶。縁寄りは価値 2 倍。MAGNET で吸い寄せ</dd>
         <dt>+2 / 秒</dt><dd>生存（時間経過）</dd>
         <dt>+5</dt><dd>敵撃破</dd>
         <dt>+3 / +8</dt><dd>Near-miss / NEAR!</dd>
         <dt>+60</dt><dd>PHASE 4 初到達</dd>
+      </dl>
+    </section>
+
+    <section class="howto-sec">
+      <h3>PILOT LEVEL & HULL</h3>
+      <p>これまでに稼いだ <b>XP の累計</b>でパイロットレベルが上がる（SHOP で XP を使ってもレベルは下がらない）。最大 Lv30。</p>
+      <dl>
+        <dt>装備枠</dt><dd>Lv3 で 3 枠、Lv7 で 4 枠、Lv12 で 5 枠、Lv20 で 6 枠</dd>
+        <dt>基本耐久</dt><dd>Lv5 / 14 / 25 で機体の HULL（耐久）が +1</dd>
+        <dt>新スキル</dt><dd>VITAL 系スキルはレベルで解放される</dd>
+        <dt>XP ボーナス</dt><dd>レベル1つごとに獲得 XP +1.5%</dd>
+        <dt>HULL</dt><dd>左上のオレンジの六角形。被弾するとシールド→HULL の順に減り、短い無敵時間。0 になると墜落</dd>
       </dl>
     </section>
 
@@ -2003,6 +2061,7 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
         <div class="hud-label">SCORE</div>
         <div class="hud-score-val" id="hud-score">0</div>
         <div class="hud-best" id="hud-best">BEST<b id="hud-best-val">0</b></div>
+        <div class="hud-hull" id="hud-hull" hidden></div>
       </div>
       <div class="hud-phase" id="hud-phase">
         <div class="hud-phase-name" id="hud-phase-name">PHASE 1<span>WALLS</span></div>
@@ -2051,10 +2110,11 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
         </div>
       </div>
       <div class="t-foot">
+        <span class="pilot">PILOT<b id="t-lv">Lv 1</b></span>
         <span class="best">BEST<b id="t-best">—</b></span>
         <span>SOUND<b id="t-sound">ON</b> [M]</span>
         <span class="secret-count">SECRETS<b id="t-secrets">0/9</b></span>
-        <span class="ver" id="t-ver">VER<b>1.8.4</b></span>
+        <span class="ver" id="t-ver">VER<b>1.9.0</b></span>
       </div>
     </div>
 
@@ -2078,6 +2138,11 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
             <div><div class="hud-label">KILLS</div><b id="r-kills">0</b></div>
             <div><div class="hud-label">NEAR</div><b id="r-near">0</b></div>
             <div class="xp"><div class="hud-label">XP</div><b id="r-xp">+0</b></div>
+          </div>
+          <div class="r-level">
+            <div class="r-lv-top">PILOT <b id="r-lv">Lv 1</b><em id="r-lvup" hidden>LEVEL UP!</em><small id="r-lv-next"></small></div>
+            <div class="r-lv-bar"><i id="r-lv-fill"></i></div>
+            <div class="r-lv-rew" id="r-lv-rew"></div>
           </div>
         </div>
         <div class="r-actions">
@@ -2765,9 +2830,10 @@ const ORB_GEOM = new THREE.OctahedronGeometry(4.5, 0);
 function getOrCreateOrb(o) {
   let m = orbMeshMap.get(o);
   if (m) return m;
-  const col = o.core ? 0x7ff6ff : o.gold ? 0xffd84a : 0x5dffb0;
+  const col = o.repair ? 0xff8a5c : o.core ? 0x7ff6ff : o.gold ? 0xffd84a : 0x5dffb0;
   m = new THREE.Mesh(ORB_GEOM, new THREE.MeshBasicMaterial({ color: col }));
   if (o.gold) m.scale.setScalar(1.4);
+  if (o.repair) { m.scale.setScalar(1.6); m.add(new THREE.Mesh(new THREE.TorusGeometry(6, 0.6, 6, 6), new THREE.MeshBasicMaterial({ color: 0xffe0d0 }))); }
   if (o.core) { m.scale.setScalar(2); m.add(new THREE.Mesh(new THREE.TorusGeometry(7, 0.5, 6, 32), new THREE.MeshBasicMaterial({ color: 0xffffff }))); }
   m.add(glowSprite(col, o.core ? 30 : o.gold ? 34 : 24, 0.75));
   scene.add(m);
@@ -3029,12 +3095,18 @@ const SKILL_ICONS = {
   overdrive:        '<path d="M3 17a9 9 0 0 1 18 0"/><path d="M12 17l5-6"/><circle cx="12" cy="17" r="1.5"/><path d="M6.5 12.5l1 1M12 8v1.5M17.5 12.5l-1 1"/>',
   smaller_hitbox:   '<path d="M3 3l5 5M21 3l-5 5M3 21l5-5M21 21l-5-5"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/>',
   ghost_dash:       '<path d="M6 21V11a6 6 0 0 1 12 0v10l-2-1.6-2 1.6-2-1.6-2 1.6-2-1.6z"/><path d="M10 11v1M14 11v1"/><path d="M1 13h3M1 17h3"/>',
+  hull_plating:     '<path d="M12 2l8 3v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V5z"/><path d="M8 9h8M8 13h8M10 17h4"/>',
+  repair_drone:     '<circle cx="12" cy="12" r="3"/><path d="M12 5V3M12 21v-2M5 12H3M21 12h-2"/><path d="M6 6l2 2M16 16l2 2M18 6l-2 2M8 16l-2 2"/>',
+  nano_frame:       '<path d="M12 2l8.5 5v10L12 22l-8.5-5V7z"/><path d="M12 8v8M8 12h8"/>',
+  impact_damper:    '<path d="M4 12h3l2-5 3 10 2-6 1 1h5"/><path d="M3 5v14M21 5v14"/>',
+  adrenaline:       '<path d="M12 21s-8-5.5-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.5-8 11-8 11z"/><path d="M6 12h3l1.5-3 2 6 1.5-3H18"/>',
+  repair_kit:       '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V4h6v3"/><path d="M12 10v7M8.5 13.5h7"/>',
   phase_shift:      '<path d="M8 21V11a5 5 0 0 1 10 0v10l-1.7-1.4-1.6 1.4-1.7-1.4-1.6 1.4-1.7-1.4z"/><path d="M4 4v16" stroke-dasharray="2 2"/><path d="M1 10h4M1 14h4"/>',
 };
 const LOCK_ICON = '<svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="1"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
 const icon = (id, cls = 'ic') => `<svg class="${cls}" viewBox="0 0 24 24">${SKILL_ICONS[id] || ''}</svg>`;
-const KIND_COLOR = { ATTACK: '#ff5ad9', DEFENSE: '#6dffa8', PASSIVE: '#5cc8ff' };
-const KINDS = ['ATTACK', 'DEFENSE', 'PASSIVE'];
+const KIND_COLOR = { ATTACK: '#ff5ad9', DEFENSE: '#6dffa8', PASSIVE: '#5cc8ff', VITAL: '#ff8a5c' };
+const KINDS = ['ATTACK', 'DEFENSE', 'PASSIVE', 'VITAL'];
 const skillById = id => skillDef(id);   // skillDef is defined further down (progression section)
 
 // Tree layout for one kind: the root sits in column 0, each of its children
@@ -3097,6 +3169,9 @@ function nodeHtml(sk, st) {
 function renderShopUI() {
   loadProgression();
   if (shopXpEl)    shopXpEl.textContent = totalXP;
+  const lp = levelProgress();
+  document.getElementById('shop-pilot').innerHTML = `<span>PILOT</span><b>Lv ${lp.L}</b><span class="pb"><i><u style="width:${lp.pct.toFixed(1)}%"></u></i>` +
+    `<small>${lp.L >= MAX_LEVEL ? 'MAX LEVEL' : `NEXT ${lp.next} XP`}</small></span>`;
   if (shopSlotsEl) shopSlotsEl.textContent = `${equippedSkills.length}/${equipSlots}`;
   if (rotXpEl)     rotXpEl.textContent = totalXP;
 
@@ -3144,7 +3219,7 @@ function renderShopUI() {
     b.style.animationDelay = (n++ * 0.035) + 's';
     b.innerHTML = nodeHtml(sk, st) +
       `<span class="nm">${sk.name}</span>` +
-      (st.owned ? pipsHtml(st.rank, st.max) : `<span class="pr">${sk.price} XP</span>`);
+      (st.owned ? pipsHtml(st.rank, st.max) : lvLocked(sk) ? `<span class="pr lvq">Lv ${sk.lvReq}</span>` : `<span class="pr">${sk.price} XP</span>`);
     b.addEventListener('click', () => {
       if (shopSel === id) return;
       shopSel = id;
@@ -3155,23 +3230,16 @@ function renderShopUI() {
     shopTreeEl.appendChild(b);
   }
 
-  // Loadout slots (+ the next purchasable slot)
+  // Loadout slots (+ the next one, opened by pilot level)
   shopSlotListEl.innerHTML = '';
   for (let i = 0; i < Math.min(MAX_SLOTS, equipSlots + 1); i++) {
     const id = equippedSkills[i];
     const b = document.createElement('button');
     b.type = 'button';
     if (i >= equipSlots) {
-      const cost = SLOT_COSTS[i + 1];
-      b.className = 'slot buy' + (totalXP >= cost ? ' afford' : '');
-      b.innerHTML = `<span>+ SLOT ${i + 1}<br><b>${cost} XP</b></span>`;
-      b.disabled = totalXP < cost;
-      b.addEventListener('click', () => {
-        if (!buySlot()) return;
-        ui.buy(); vibrate(25);
-        restartAnim(shopXpEl, 'bump');
-        renderShopUI();
-      });
+      b.className = 'slot lvlock';
+      b.innerHTML = `<span>SLOT ${i + 1}<br><b>Lv ${SLOT_LEVELS[i]}</b></span>`;
+      b.disabled = true;
     } else if (id) {
       const sk = skillById(id);
       b.className = 'slot filled';
@@ -3216,8 +3284,13 @@ function renderShopDetail() {
     if (upCost != null) btns.push(`<button class="act buy" type="button" data-do="rank"${totalXP < upCost ? ' disabled' : ''}>RANK UP · ${upCost} XP</button>`);
     if (st.equipped) btns.push('<button class="act unequip" type="button" data-do="equip">UNEQUIP</button>');
     else btns.push(`<button class="act equip" type="button" data-do="equip"${slotsFull ? ' disabled' : ''}>EQUIP</button>`);
-    if (!st.equipped && slotsFull) hint = '装備枠がいっぱい — LOADOUT から外すか、枠を増やそう';
+    if (!st.equipped && slotsFull) hint = equipSlots < MAX_SLOTS
+      ? `装備枠がいっぱい — LOADOUT から外すか、パイロット Lv${SLOT_LEVELS[equipSlots]} で枠が増える`
+      : '装備枠がいっぱい — LOADOUT から外そう';
     else if (upCost != null && totalXP < upCost) hint = `次のランクまで あと ${upCost - totalXP} XP`;
+  } else if (lvLocked(sk)) {
+    btns.push(`<button class="act" type="button" disabled>PILOT Lv ${sk.lvReq}</button>`);
+    hint = `パイロット Lv${sk.lvReq} で解放（あと ${lvXP(sk.lvReq) - lifeXP} XP）`;
   } else if (!st.unlockable) {
     btns.push('<button class="act" type="button" disabled>LOCKED</button>');
     hint = `先に ${reqs.map(r => r.name).join(' + ')} を解放`;
@@ -3233,6 +3306,7 @@ function renderShopDetail() {
   const reqRow = reqs.length
     ? `<div>REQUIRES ${reqs.map(r => `<b class="${ownedSkills.includes(r.id) ? 'ok' : 'ng'}">${r.name}</b>`).join(' ')}</div>`
     : '<div>TYPE <b>ROOT SKILL</b></div>';
+  const lvRow = sk.lvReq ? `<div>PILOT <b class="${lvLocked(sk) ? 'ng' : 'ok'}">Lv ${sk.lvReq}</b></div>` : '';
   const lvRows = sk.lv ? `<div class="lv">${sk.lv.map((t, i) =>
     `<span class="${i < st.rank ? 'on' : ''}${i === st.rank - 1 ? ' cur' : ''}">Lv${i + 1} ${t}</span>`).join('')}</div>` : '';
   const syns = SYNERGIES.filter(x => x.a === sk.id || x.b === sk.id).map(x => {
@@ -3255,6 +3329,7 @@ function renderShopDetail() {
     <div class="d-meta">
       <div>STATUS ${status}</div>
       ${reqRow}
+      ${lvRow}
       ${st.owned ? '' : `<div>COST <b>${sk.price} XP</b></div>`}
     </div>
     ${syns ? `<div class="d-syn"><div class="side-label">SYNERGY</div>${syns}</div>` : ''}
@@ -4031,6 +4106,20 @@ const sfx = {
     voice({ type: 'sine', f: 2349, t: t + 0.08, dur: 0.4, vol: 0.06, out: AU.sfxBus, rev: 0.4 });
   },
   // comm: short radio blip (two-tone for PALLAS, chirp for RAY)
+  // HULL hit: metallic clang + crunch
+  hull() {
+    if (!this.ok()) return;
+    const t = this.now();
+    voice({ type: 'square', f: 220, f2: 70, t, dur: 0.3, vol: 0.12, out: AU.sfxBus, lp: 1400 });
+    noiseHit({ t, dur: 0.25, vol: 0.25, out: AU.sfxBus, type: 'bandpass', f: 1400, q: 3 });
+    voice({ type: 'triangle', f: 1180, t: t + 0.02, dur: 0.35, vol: 0.05, out: AU.sfxBus, rev: 0.3 });
+  },
+  // HULL repaired: rising wrench-y chime
+  repair() {
+    if (!this.ok()) return;
+    const t = this.now();
+    for (const [i, m] of [72, 76, 79].entries()) voice({ type: 'triangle', f: mtof(m), t: t + i * 0.06, dur: 0.14, vol: 0.06, out: AU.sfxBus, rev: 0.2 });
+  },
   // speech "voice": a tiny blip per couple of typed characters, one timbre per speaker
   talk(sp) {
     if (!this.ok()) return;
@@ -4292,6 +4381,19 @@ const SKILL_DEFS = [
     desc: 'フラップ直後0.15秒間無敵' },
   { id: 'phase_shift', name: 'PHASE SHIFT', kind: 'PASSIVE', price: 1500, requires: ['ghost_dash'], ult: true,
     desc: 'フラップ直後0.3秒無敵。無敵中に壁をすり抜けると PHASE ボーナス' },
+  // ── VITAL (hull / repair — unlocked by pilot level) ────────
+  { id: 'hull_plating', name: 'HULL PLATING', kind: 'VITAL', price: 200, ranks: [200, 500, 1000], lvReq: 2,
+    desc: '装甲板を増設し、機体の最大耐久（HULL）を増やす', lv: ['耐久 +1', '耐久 +2', '耐久 +3'] },
+  { id: 'repair_drone', name: 'REPAIR DRONE', kind: 'VITAL', price: 600, ranks: [600, 1200], requires: ['hull_plating'], lvReq: 6,
+    desc: '修理ドローンが一定時間ごとに耐久を1回復', lv: ['30秒ごと', '20秒ごと'] },
+  { id: 'nano_frame', name: 'NANO FRAME', kind: 'VITAL', price: 1600, requires: ['repair_drone'], lvReq: 18, ult: true,
+    desc: '自己修復フレーム。耐久 +1、PHASE 到達とボス撃破のたびに耐久が全回復' },
+  { id: 'impact_damper', name: 'IMPACT DAMPER', kind: 'VITAL', price: 700, requires: ['hull_plating'], lvReq: 9,
+    desc: '被弾後の無敵が 3.5 秒に延び、被弾の衝撃波で周囲の敵を撃破' },
+  { id: 'adrenaline', name: 'ADRENALINE', kind: 'VITAL', price: 900, requires: ['impact_damper'], lvReq: 15,
+    desc: '耐久が残り1の間、PULSE のチャージ速度2倍・獲得 XP 1.5倍' },
+  { id: 'repair_kit', name: 'REPAIR KIT', kind: 'VITAL', price: 500, requires: ['hull_plating'], lvReq: 11,
+    desc: '撃破した敵がたまに修理キットを落とす（拾うと耐久1回復）' },
 ];
 
 // Two specific skills equipped together unlock a bonus effect.
@@ -4302,11 +4404,37 @@ const SYNERGIES = [
   { id: 'salvage',   name: 'SALVAGE',       a: 'phoenix',          b: 'xp_boost',      desc: '復活時に +100 XP' },
   { id: 'fortress',  name: 'FORTRESS',      a: 'auto_pulse',       b: 'double_shield', desc: 'シールド破壊でPULSEが即チャージ' },
   { id: 'bullettime',name: 'BULLET TIME',   a: 'time_warp',        b: 'forward_shot',  desc: 'スローモーション中は射撃CDなし' },
+  { id: 'bulwark',   name: 'BULWARK',       a: 'hull_plating',     b: 'shield',        desc: '耐久が減るとPULSEが即チャージ' },
 ];
 
-// Loadout slots beyond the starting two are bought with XP.
-const SLOT_COSTS = { 3: 1200, 4: 3000 };
-const MAX_SLOTS = 4;
+// ── Pilot level ── grows with the XP earned over all runs (spending XP in the
+// SHOP never lowers it). Levels open loadout slots, add base HULL, unlock the
+// VITAL skills and give a small XP bonus.
+const MAX_LEVEL = 30;
+const MAX_SLOTS = 6;
+const SLOT_LEVELS = [1, 1, 3, 7, 12, 20];          // pilot level that opens slot i+1
+const HULL_LEVELS = [5, 14, 25];                   // +1 base HULL at each of these
+const LEGACY_SLOT_COSTS = { 3: 1200, 4: 3000 };    // pre-1.9 slot purchases (refunded)
+const lvXP = L => 40 * (L - 1) * (L - 1) + 160 * (L - 1);   // lifetime XP needed for level L
+let lifeXP = 0;
+function pilotLevel(x = lifeXP) { let L = 1; while (L < MAX_LEVEL && x >= lvXP(L + 1)) L++; return L; }
+const slotsAt = L => SLOT_LEVELS.filter(l => L >= l).length;
+const baseHullAt = L => 1 + HULL_LEVELS.filter(l => L >= l).length;
+const levelXpBonus = L => (L - 1) * 0.015;
+function levelRewards(L) {
+  const r = [];
+  if (L > 1 && SLOT_LEVELS.includes(L)) r.push(`装備枠 ${slotsAt(L)} 枠`);
+  if (HULL_LEVELS.includes(L)) r.push(`基本耐久 ${baseHullAt(L)}`);
+  for (const sk of SKILL_DEFS) if (sk.lvReq === L) r.push(`NEW ${sk.name}`);
+  if (!r.length) r.push(`XP +${(levelXpBonus(L) * 100).toFixed(1)}%`);
+  return r;
+}
+function levelProgress(x = lifeXP) {
+  const L = pilotLevel(x);
+  if (L >= MAX_LEVEL) return { L, pct: 100, next: 0 };
+  const a = lvXP(L), b = lvXP(L + 1);
+  return { L, pct: (x - a) / (b - a) * 100, next: b - x };
+}
 
 let totalXP = 0, runXP = 0;
 let ownedSkills = [];
@@ -4322,7 +4450,6 @@ function loadProgression() {
   catch (e) { equippedSkills = []; }
   try { skillRanks = JSON.parse(localStorage.getItem('hd_ranks') || '{}') || {}; }
   catch (e) { skillRanks = {}; }
-  equipSlots = Math.max(2, Math.min(MAX_SLOTS, +localStorage.getItem('hd_slots') || 2));
   // One-shot migration: slow_gravity was removed in v1.0.15 (it actually hurt
   // the player by floating them past wall gaps). Convert any owned/equipped
   // entry to its replacement, smaller_hitbox, which has the same price.
@@ -4341,6 +4468,25 @@ function loadProgression() {
       if (!ownedSkills.includes(reqId)) { ownedSkills.push(reqId); migrated = true; }
     }
   }
+  // v1.9 pilot level: derive lifetime XP from the wallet + everything spent,
+  // and refund any loadout slots bought with XP (slots now come from levels).
+  if (localStorage.getItem('hd_xp_life') == null) {
+    let spent = 0;
+    for (const id of ownedSkills) {
+      const sk = SKILL_DEFS.find(x => x.id === id);
+      if (!sk) continue;
+      spent += sk.price;
+      if (sk.ranks) for (let r = 1; r < (skillRanks[id] || 1); r++) spent += sk.ranks[r] || 0;
+    }
+    const oldSlots = +localStorage.getItem('hd_slots') || 2;
+    for (let k = 3; k <= oldSlots; k++) totalXP += LEGACY_SLOT_COSTS[k] || 0;
+    lifeXP = totalXP + spent;
+    localStorage.removeItem('hd_slots');
+    migrated = true;
+  } else {
+    lifeXP = +localStorage.getItem('hd_xp_life') || 0;
+  }
+  equipSlots = slotsAt(pilotLevel());
   // Drop unknown ids and trim the loadout to the slot count.
   const known = new Set(SKILL_DEFS.map(s => s.id));
   const o = ownedSkills.filter(id => known.has(id));
@@ -4354,7 +4500,7 @@ function saveProgression() {
   localStorage.setItem('hd_owned', JSON.stringify(ownedSkills));
   localStorage.setItem('hd_equip', JSON.stringify(equippedSkills));
   localStorage.setItem('hd_ranks', JSON.stringify(skillRanks));
-  localStorage.setItem('hd_slots', String(equipSlots));
+  localStorage.setItem('hd_xp_life', String(lifeXP));
 }
 const skillDef = id => SKILL_DEFS.find(s => s.id === id);
 // HARDCORE (secret mode): skills are switched off for the run, XP doubled
@@ -4368,12 +4514,14 @@ function hasSynergy(sid) {
   return !!s && hasSkill(s.a) && hasSkill(s.b);
 }
 let xpMult = 1;               // run-time multiplier (LAST STAND)
+let runLevel = 1;              // pilot level at the start of the run
 function addRunXP(n) {
   const boost = [1, 1.25, 1.4, 1.6][rank('xp_boost')];
-  runXP += n * boost * xpMult * (hardcoreRun ? 2 : 1);
+  runXP += n * boost * xpMult * (hardcoreRun ? 2 : 1) * (1 + levelXpBonus(runLevel)) * (adrenalOn() ? 1.5 : 1);
 }
+const lvLocked = sk => !!sk.lvReq && pilotLevel() < sk.lvReq;
 function isUnlockable(sk) {
-  return !sk.requires || sk.requires.every(req => ownedSkills.includes(req));
+  return !lvLocked(sk) && (!sk.requires || sk.requires.every(req => ownedSkills.includes(req)));
 }
 function buySkill(id) {
   const sk = skillDef(id);
@@ -4394,14 +4542,6 @@ function rankUp(id) {
   if (!cost || totalXP < cost) return false;
   totalXP -= cost;
   skillRanks[id] = ownedRank(id) + 1;
-  saveProgression();
-  return true;
-}
-function buySlot() {
-  const cost = SLOT_COSTS[equipSlots + 1];
-  if (!cost || totalXP < cost) return false;
-  totalXP -= cost;
-  equipSlots++;
   saveProgression();
   return true;
 }
@@ -4437,7 +4577,14 @@ let runBestPhase = 0;        // highest phase index reached this run
 let wasRecord = false;       // did this run beat the previous best?
 let prevHiScore = 0;         // best at run start (for the "beaten" HUD state)
 
-const P = { x: 150, y: VH/2, vx: 0, vy: 0, bankAngle: 0, r: 6, inv: 0, ghost: 0, ghostCD: 0 };
+const P = { x: 150, y: VH/2, vx: 0, vy: 0, bankAngle: 0, r: 6, inv: 0, ghost: 0, ghostCD: 0, hp: 1 };
+// HULL — armour points. Shield soaks hits first, then HULL; revive skills last.
+let hullMax = 1, repairT = 0, lifeBefore = 0;
+function calcHullMax() {
+  if (hardcoreRun) return 1;
+  return baseHullAt(pilotLevel()) + rank('hull_plating') + (hasSkill('nano_frame') ? 1 : 0);
+}
+const adrenalOn = () => hasSkill('adrenaline') && P.hp === 1 && hullMax > 1;
 let walls = [], enemies = [], sparks = [], bullets = [];
 let orbs = [];                    // XP orbs floating in wall gaps
 let beams = [];                   // short-lived beam / lightning visuals
@@ -4541,6 +4688,7 @@ function killEnemy(e, src, depth = 0) {
   spawnSparks(e.x, e.y, src === 'pulse' ? 16 : 12, { vMin: 2, vMax: 7, szMin: 0.7, szMax: 3.2, color: e.type === 'b' ? [15, 25] : [35, 45] });
   if (src === 'pulse' && hasSkill('overload')) pulseCooldown = Math.max(0, pulseCooldown - 60);
   if (src === 'shot' && hasSynergy('scavenger')) dropOrb(e.x, e.y, 5);
+  if (hasSkill('repair_kit') && Math.random() < 0.12) orbs.push({ x: e.x, y: e.y, value: 0, repair: true, t: 0 });
   if (hasSkill('storm') && depth < 2) {
     let best = null, bd = 160;
     for (const o of enemies) {
@@ -4604,6 +4752,8 @@ function startGame(opts = {}) {
   shieldMax = hasSkill('double_shield') ? 2
     : ['shield', 'regen_shield', 'aegis'].some(hasSkill) ? 1 : 0;
   shieldCharges = shieldMax; shieldRegen = 0;
+  runLevel = pilotLevel(); lifeBefore = lifeXP;
+  hullMax = calcHullMax(); P.hp = hullMax; repairT = 0;
   comboCount = 0; comboTimer = 0;
   phoenixUsed = false;
   warpCD = 0; lastStandT = 0; xpMult = 1; shotCount = 0; overdriveOn = false;
@@ -4658,6 +4808,32 @@ function resumeGame() {
   P.inv = Math.max(P.inv, 30);   // half-second grace so un-pausing never insta-kills
 }
 
+function hullHit() {
+  const damper = hasSkill('impact_damper');
+  P.inv = damper ? 210 : 130;
+  sfx.hull(); vibrate([50, 30, 50]);
+  shakeX = 9; shakeY = 7; timeScale = Math.min(timeScale, 0.3); fx.aberr = 1.1; fxFlash(0xff7a59, 0.4);
+  spawnSparks(P.x, P.y, 26, { vMin: 2, vMax: 8, color: [8, 25] });
+  pushBonus(P.x, P.y - 22, `HULL ${P.hp}/${hullMax}`, '#ff9a7a');
+  repairT = 0;
+  if (damper) {
+    spawnRing(P.x, P.y, 0xffc0a0, 0xff5a3a, 220);
+    for (const e of enemies) if (!e.dead && !e.reflected && Math.hypot(e.x - P.x, e.y - P.y) < 170) killEnemy(e, 'pulse');
+    sweepDeadEnemies();
+  }
+  if (hasSynergy('bulwark')) pulseCooldown = 0;
+  hullFx = 'hit';
+  Story.onHull();
+}
+function healHull(n, label) {
+  if (P.hp >= hullMax) return false;
+  P.hp = Math.min(hullMax, P.hp + n);
+  pushBonus(P.x, P.y - 22, `${label} ${P.hp}/${hullMax}`, '#ffc0a0');
+  spawnSparks(P.x, P.y, 14, { vMin: 1, vMax: 4, color: 0xffb08a });
+  sfx.repair();
+  Story.onRepair();
+  return true;
+}
 function die() {
   // SHIELD skill: first hit is absorbed (consumes the charge).
   if (shieldCharges > 0) {
@@ -4682,6 +4858,8 @@ function die() {
     Story.onShield();
     return;
   }
+  // HULL: each armour point soaks one hit
+  if (P.hp > 1) { P.hp--; hullHit(); return; }
   // PHOENIX skill: one-time per-run revive with 3s invulnerability.
   if ((hasSkill('phoenix') || hasSkill('last_stand')) && !phoenixUsed) {
     phoenixUsed = true;
@@ -4714,8 +4892,10 @@ function die() {
   wasRecord = s > prevHiScore && s > 0;
   if (s > hiScore) { hiScore = s; localStorage.setItem('hd_hi', s); }
   // Bank earned XP from this run
+  P.hp = 0;
   if (runXP > 0) {
     totalXP += Math.floor(runXP);
+    lifeXP += Math.floor(runXP);
     saveProgression();
   }
   shakeX = 14; shakeY = 10;
@@ -4769,7 +4949,14 @@ function update(dt) {
   }
 
   // Pulse cooldown + button visual (always)
-  if (pulseCooldown > 0) pulseCooldown -= dt;
+  if (pulseCooldown > 0) pulseCooldown -= dt * (adrenalOn() ? 2 : 1);
+  const drone = rank('repair_drone');
+  if (drone && P.hp < hullMax) {
+    repairT += dt;
+    if (repairT >= [0, 1800, 1200][drone]) { repairT = 0; healHull(1, 'REPAIR'); }
+  }
+  if (hullMax > 1 && P.hp === 1 && Math.random() < 0.12 * dt)
+    spawnSparks(P.x - 10, P.y, 1, { vMin: 0.5, vMax: 1.5, szMax: 2.2, color: [20, 30] });
   if (pulseCooldown <= 0) {
     pulseCooldown = 0;
     if (!pulseBtn.classList.contains('ready')) {
@@ -4821,6 +5008,7 @@ function update(dt) {
   curPhase = getPhase(score);
   if (curPhase !== lastPhase) {
     storyPhaseReached(curPhase);
+    if (lastPhase >= 0 && hasSkill('nano_frame')) healHull(hullMax, 'NANO');
     if (lastPhase >= 0) { Story.onZone(curPhase); phaseFlash = 90; showPhaseBanner(curPhase); fxFlash(0xffffff, 0.18); fx.aberr = Math.max(fx.aberr, 0.6); }
     runBestPhase = Math.max(runBestPhase, curPhase);
     if (curPhase === 3 && lastPhase < 3) {
@@ -5035,6 +5223,11 @@ function update(dt) {
     if (pullR && d < pullR) {
       const k = Math.min(1, (3 + (1 - d / pullR) * 9) * dt / Math.max(d, 1));
       o.x += dx * k; o.y += dy * k;
+    }
+    if (o.repair && d < P.r + 12) {
+      o.got = true;
+      if (!healHull(1, 'REPAIR KIT')) { addRunXP(10); pushBonus(o.x, o.y - 10, '+10 XP', '#ffc0a0'); sfx.orb(false); }
+      continue;
     }
     if (o.core && d < P.r + 14) {
       o.got = true;
@@ -5371,6 +5564,7 @@ function showPhaseBanner(p) {
 function refreshTitleInfo() {
   setText(document.getElementById('t-best'), hiScore > 0 ? `${hiScore}s` : '—');
   setText(document.getElementById('t-xp'), `${totalXP} XP`);
+  setText(document.getElementById('t-lv'), `Lv ${pilotLevel()}`);
   setText(document.getElementById('t-sound'), audioMuted ? 'OFF' : 'ON');
   const skin = SHIP_SKINS.find(x => x.id === currentSkinId) || SHIP_SKINS[0];
   document.getElementById('t-skin-dot').style.setProperty('--skin', skin.accent);
@@ -5401,6 +5595,15 @@ function fillResult() {
   setText(document.getElementById('r-kills'), killCount);
   setText(document.getElementById('r-near'), nearMissCount);
   setText(document.getElementById('r-xp'), `+${Math.floor(runXP)}`);
+  // pilot level bar: start from where the run began, sweep to the new total
+  const lp0 = levelProgress(lifeBefore), lp1 = levelProgress(lifeXP);
+  const fill = document.getElementById('r-lv-fill');
+  fill.classList.remove('anim'); fill.style.width = lp0.pct.toFixed(1) + '%';
+  setText(document.getElementById('r-lv'), `Lv ${lp0.L}`);
+  setText(document.getElementById('r-lv-next'), lp0.L >= MAX_LEVEL ? 'MAX' : `NEXT ${lp0.next} XP`);
+  document.getElementById('r-lvup').hidden = true;
+  document.getElementById('r-lv-rew').innerHTML = '';
+  levelAnim = { from: lp0, to: lp1 };
   document.getElementById('r-newrec').classList.toggle('on', wasRecord);
   resultAnim = { target: s, t0: 0 };
   document.getElementById('r-ray-face').innerHTML = RAY_FACE;
@@ -5408,11 +5611,55 @@ function fillResult() {
   document.getElementById('r-newlog').hidden = !logUnlocked().some(id => !logsBeforeRun.includes(id));
 }
 
+// Result: pilot level bar (+ LEVEL UP with the rewards earned)
+let levelAnim = null;
+function playLevelAnim() {
+  const { from, to } = levelAnim; levelAnim = null;
+  const fill = document.getElementById('r-lv-fill');
+  void fill.offsetWidth;
+  fill.classList.add('anim');
+  const nextTxt = to.L >= MAX_LEVEL ? 'MAX' : `NEXT ${to.next} XP`;
+  if (to.L === from.L) {
+    fill.style.width = to.pct.toFixed(1) + '%';
+    setText(document.getElementById('r-lv-next'), nextTxt);
+    return;
+  }
+  fill.style.width = '100%';
+  setTimeout(() => {
+    fill.classList.remove('anim'); fill.style.width = '0%'; void fill.offsetWidth;
+    fill.classList.add('anim'); fill.style.width = to.pct.toFixed(1) + '%';
+    setText(document.getElementById('r-lv'), `Lv ${to.L}`);
+    setText(document.getElementById('r-lv-next'), nextTxt);
+    const em = document.getElementById('r-lvup');
+    em.hidden = false; restartAnim(em, 'pop');
+    const rew = [];
+    for (let L = from.L + 1; L <= to.L; L++) rew.push(...levelRewards(L));
+    document.getElementById('r-lv-rew').innerHTML = rew.map((t, i) => `<span style="animation-delay:${0.15 + i * 0.08}s">${t}</span>`).join('');
+    ui.secret();
+    loadProgression();
+  }, 1150);
+}
+
 // Status chips (top-right) are keyed so each one animates in once and then
 // only its text updates.
 const chipEls = new Map();
+const hudHull = document.getElementById('hud-hull');
+let hullKey = '', hullFx = '';
+function syncHull() {
+  const key = `${P.hp}/${hullMax}`;
+  if (key !== hullKey) {
+    hullKey = key;
+    hudHull.hidden = hullMax <= 1;
+    hudHull.innerHTML = Array.from({ length: hullMax }, (_, i) => `<i class="${i < P.hp ? 'on' : ''}"></i>`).join('');
+    hudHull.classList.toggle('low', P.hp === 1 && hullMax > 1);
+  }
+  if (hullFx) { restartAnim(hudHull, hullFx); hullFx = ''; }
+}
 function syncChips() {
   const want = [];
+  if (adrenalOn()) want.push(['adrenal', '#ff8a5c', '♥ ADRENALINE · PULSE ×2']);
+  if (rank('repair_drone') && P.hp < hullMax)
+    want.push(['drone', '#ffc0a0', `✚ REPAIR ${Math.ceil(([0, 1800, 1200][rank('repair_drone')] - repairT) / 60)}s`]);
   if (hardcoreRun) want.push(['hardcore', '#ff5a6e', '☠ HARDCORE · XP ×2']);
   const regenOn = hasSkill('regen_shield') && shieldCharges < Math.max(1, shieldMax);
   if (shieldCharges > 0 || regenOn)
@@ -5478,8 +5725,10 @@ function syncUI(now) {
     setText(hudXp, `+${Math.floor(runXP)}`);
     hudMuted.hidden = !audioMuted;
     syncChips();
+    syncHull();
   }
 
+  if (st === 'dead' && levelAnim && resultAnim && resultAnim.t0 && now - resultAnim.t0 > 700) playLevelAnim();
   if (st === 'dead' && resultAnim) {
     if (!resultAnim.t0) resultAnim.t0 = now;
     const t = Math.min(1, (now - resultAnim.t0) / 900);
@@ -5684,6 +5933,8 @@ const CHAT = {
     { w: () => bossDone() >= 2, l: [['P', 'バイデント残党の掃討任務です。'], ['R', '残党でも許さない。'], ['P', 'その通りです。']] },
     { w: () => bossDone() >= 2, l: [['R', 'パイロット・レイ、出る。'], ['P', '……肩書きが気に入ったようですね。']] },
     { w: () => secCount() >= 5, l: [['P', '今日も隠し機能を探すのですか？'], ['R', '探してない。たまたま見つかるんだ。']] },
+    { w: () => pilotLevel() >= 10, l: [['P', () => `パイロットランク ${pilotLevel()}。順調です。`], ['R', 'まだまだ上がるぞ。']] },
+    { w: () => hullMax >= 3, l: [['P', () => `装甲 ${hullMax} 枚。前より頑丈です。`], ['R', '俺もな。'], ['P', '……そうですね。']] },
   ],
   zone1: [
     [['P', 'バイデントの前線に入ります。砲撃に注意。'], ['R', '見えてる。……たぶん。']],
@@ -5707,6 +5958,19 @@ const CHAT = {
     [['R', '今のはシールドの性能テストだ。'], ['P', 'テストは成功です。二度と必要ありません。']],
     [['P', '衝撃吸収。……痛くはないはずです。'], ['R', '痛くない。全然。']],
     { w: () => shieldCharges === 0, l: [['P', 'シールド残量なし。次はありません。'], ['R', '次は当たらない。']] },
+  ],
+  hull: [
+    [['P', () => `装甲損傷。残り耐久 ${P.hp}。`], ['R', 'かすり傷だ。']],
+    [['R', 'ぐっ……！'], ['P', '機体はまだ飛べます。あなたも。']],
+    [['P', '被弾。……装甲を厚くしておいて正解でした。'], ['R', 'だろ。']],
+    [['R', '今のは、装甲のテストだ。'], ['P', 'テストは毎回不合格ですね。']],
+    { w: () => P.hp === 1, p: 4, l: [['P', '耐久残り1。次は落ちます。'], ['R', '……わかってる。']] },
+    { w: () => P.hp === 1 && hasSkill('adrenaline'), p: 6, l: [['R', '……燃えてきた。'], ['P', 'アドレナリン上昇。出力最大です。']] },
+  ],
+  repair: [
+    [['P', '修理完了。'], ['R', '助かる。']],
+    [['P', '装甲を応急修理しました。'], ['R', 'さすがパラス。']],
+    [['R', '直った！'], ['P', '直したのは私です。']],
   ],
   revive: [
     [['R', '……まだだ。まだ終わってない。'], ['P', '再起動を確認。しぶといですね。']],
@@ -5888,6 +6152,8 @@ const Story = {
   onZone(p)    { say('zone' + p); },
   onShield()   { say('shield'); },
   onRevive()   { say('revive'); },
+  onHull()     { say('hull'); },
+  onRepair()   { say('repair', true); },
   onRecord()   { say('record'); },
   onCombo()    { if (!comboSaid) { comboSaid = true; say('combo'); } },
   onCombo10()  { if (!combo10Said) { combo10Said = true; say('combo10'); } },
@@ -6617,6 +6883,7 @@ function finishBoss() {
   timeScale = 1;
   if (idx + 1 > bossBest) { bossBest = idx + 1; localStorage.setItem('hd_boss', String(bossBest)); }
   cleanupBoss();
+  if (hasSkill('nano_frame')) healHull(hullMax, 'NANO');
   Music.setSection('p' + (curPhase + 1));
   if (idx === BOSS_DEFS.length - 1) Epilogue.play();
 }
