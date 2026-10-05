@@ -1,4 +1,4 @@
-const CACHE = 'hoverdodge-v1.8.4';
+const CACHE = 'hoverdodge-v1.9.0';
 const PRECACHE = [
   './',
   './index.html',
