@@ -830,6 +830,21 @@ button { font-family: var(--f-ui) }
   color: rgba(150, 180, 210, 0.55);
 }
 .t-foot b { font: 500 calc(10 * var(--px))/1 var(--f-disp); color: var(--c-ink); margin-left: calc(5 * var(--px)); letter-spacing: calc(1 * var(--px)); }
+.t-foot .snd, .p-sound .snd {
+  pointer-events: auto; cursor: pointer;
+  border: none; background: none; padding: calc(6 * var(--px)); margin: calc(-6 * var(--px));
+  font: inherit; letter-spacing: inherit; color: inherit;
+}
+.snd b { color: #7ff6ff !important; text-shadow: 0 0 calc(8 * var(--px)) rgba(0, 232, 255, 0.55); }
+.snd.off b { color: rgba(150, 180, 210, 0.45) !important; text-shadow: none; }
+.p-sound { margin-top: calc(18 * var(--px)); display: flex; gap: calc(12 * var(--px)); justify-content: center; }
+.p-sound .snd {
+  margin: 0; padding: calc(9 * var(--px)) calc(16 * var(--px));
+  border: 1px solid rgba(0, 232, 255, 0.35); background: rgba(0, 232, 255, 0.06);
+  font: 700 calc(10 * var(--px))/1 var(--f-ui); letter-spacing: calc(3 * var(--px)); color: var(--c-dim);
+}
+.p-sound .snd b { margin-left: calc(8 * var(--px)); font-family: var(--f-disp); }
+.p-sound .snd.off { border-color: rgba(150, 180, 210, 0.2); background: none; }
 .t-foot .best b { color: var(--c-gold); text-shadow: 0 0 calc(8 * var(--px)) rgba(255, 216, 74, 0.6); }
 
 /* Result */
@@ -1852,7 +1867,7 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
   </div>
 
   <p class="rot-secret" id="rot-secret" hidden>&gt; SPIN CYCLE DETECTED — 目が回った？ MIRROR MODE 解放</p>
-  <p class="rot-version">SYS_REV  1.9.1 · SECRETS <span id="rot-secrets">0/9</span></p>
+  <p class="rot-version">SYS_REV  1.9.2 · SECRETS <span id="rot-secrets">0/9</span></p>
 </div>
 
 <div id="shop-modal" class="modal">
@@ -1937,7 +1952,7 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
         <dt>タップ / SPACE</dt><dd>自機を上昇させる（重力で落下）</dd>
         <dt>Z / PULSE</dt><dd>範囲攻撃。CDあり (5秒)</dd>
         <dt>ESC / P / ⏸</dt><dd>一時停止 / 再開</dd>
-        <dt>M</dt><dd>音 (BGM/SE) ON / OFF</dd>
+        <dt>M</dt><dd>音 (BGM/SE) をまとめて ON / OFF。個別の切替はタイトル下部・一時停止画面の BGM / SE をタップ</dd>
         <dt>ESC</dt><dd>GAME OVER 画面からタイトルへ</dd>
       </dl>
     </section>
@@ -2130,9 +2145,10 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
       <div class="t-foot">
         <span class="pilot">PILOT<b id="t-lv">Lv 1</b></span>
         <span class="best">BEST<b id="t-best">—</b></span>
-        <span>SOUND<b id="t-sound">ON</b> [M]</span>
+        <button class="snd" id="t-bgm" type="button">BGM<b>ON</b></button>
+        <button class="snd" id="t-se" type="button">SE<b>ON</b></button>
         <span class="secret-count">SECRETS<b id="t-secrets">0/9</b></span>
-        <span class="ver" id="t-ver">VER<b>1.9.1</b></span>
+        <span class="ver" id="t-ver">VER<b>1.9.2</b></span>
       </div>
     </div>
 
@@ -2178,6 +2194,10 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
         <div class="p-actions">
           <button class="btn-primary" id="resume-btn" type="button">RESUME<kbd>ESC</kbd></button>
           <button class="btn" id="quit-btn" type="button">TITLE</button>
+        </div>
+        <div class="p-sound">
+          <button class="snd" id="p-bgm" type="button">BGM<b>ON</b></button>
+          <button class="snd" id="p-se" type="button">SE<b>ON</b></button>
         </div>
       </div>
     </div>
@@ -3014,12 +3034,28 @@ const anyModalOpen = () =>
   [shopModal, skinModal, howtoModal, document.getElementById('secrets-modal'), document.getElementById('credits'), document.getElementById('log-modal')]
     .some(m => m && m.classList.contains('open'));
 
-function toggleMute() {
-  audioMuted = !audioMuted;
-  localStorage.setItem('hd_mute', audioMuted ? 1 : 0);
-  Music.setMute(audioMuted);
-  refreshTitleInfo();
+function setSound(bgm, se) {
+  bgmOn = bgm; sfxOn = se;
+  localStorage.setItem('hd_bgm', bgmOn ? '1' : '0');
+  localStorage.setItem('hd_se', sfxOn ? '1' : '0');
+  localStorage.removeItem('hd_mute');
+  getAudio();
+  applyAudioPrefs();
+  refreshSoundUI();
+  if (sfxOn) ui.select();
 }
+// M key: everything off, or everything back on
+function toggleMute() { const on = !(bgmOn || sfxOn); setSound(on, on); }
+function refreshSoundUI() {
+  for (const [id, on, label] of [['t-bgm', bgmOn, 'BGM'], ['t-se', sfxOn, 'SE'], ['p-bgm', bgmOn, 'BGM'], ['p-se', sfxOn, 'SE']]) {
+    const el = document.getElementById(id);
+    if (!el) continue;
+    el.classList.toggle('off', !on);
+    el.innerHTML = `${label}<b>${on ? 'ON' : 'OFF'}</b>`;
+  }
+}
+for (const id of ['t-bgm', 'p-bgm']) onTap(document.getElementById(id), () => setSound(!bgmOn, sfxOn));
+for (const id of ['t-se', 'p-se'])   onTap(document.getElementById(id), () => setSound(bgmOn, !sfxOn));
 
 renderer.domElement.addEventListener('click', flap);
 renderer.domElement.addEventListener('touchstart', e => { e.preventDefault(); flap(); }, { passive: false });
@@ -3543,7 +3579,18 @@ addEventListener('keydown', e => {
 // musicFilter is the "interactive" low-pass: pause muffles it, slow-motion
 // drags it down with the time scale, death sweeps it shut.
 let audioCtx = null;
-let audioMuted = +localStorage.getItem('hd_mute') === 1;
+// BGM / SE toggles (a pre-1.9.2 global mute turns both off)
+let bgmOn = localStorage.getItem('hd_bgm') != null ? localStorage.getItem('hd_bgm') !== '0' : +localStorage.getItem('hd_mute') !== 1;
+let sfxOn = localStorage.getItem('hd_se')  != null ? localStorage.getItem('hd_se')  !== '0' : +localStorage.getItem('hd_mute') !== 1;
+let audioMuted = !bgmOn && !sfxOn;
+function applyAudioPrefs() {
+  audioMuted = !bgmOn && !sfxOn;
+  if (!AU.master) return;
+  const t = audioCtx.currentTime;
+  AU.bgmGain.gain.setTargetAtTime(bgmOn ? 1 : 0, t, 0.05);
+  AU.sfxBus.gain.setTargetAtTime(sfxOn ? 1 : 0, t, 0.05);
+  AU.sfxSend.gain.setTargetAtTime(sfxOn ? 1 : 0, t, 0.05);
+}
 const AU = {};
 const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
 
@@ -3559,7 +3606,7 @@ function getAudio() {
 
 function buildAudioGraph(a) {
   AU.master = a.createGain();
-  AU.master.gain.value = audioMuted ? 0 : 0.9;
+  AU.master.gain.value = 0.9;
   const comp = a.createDynamicsCompressor();
   comp.threshold.value = -10; comp.knee.value = 8; comp.ratio.value = 4;
   comp.attack.value = 0.003; comp.release.value = 0.2;
@@ -3569,14 +3616,19 @@ function buildAudioGraph(a) {
   AU.musicFilter.type = 'lowpass';
   AU.musicFilter.frequency.value = 20000;
   AU.musicFilter.Q.value = 0.9;
-  AU.musicFilter.connect(AU.master);
+  AU.bgmGain = a.createGain();
+  AU.bgmGain.gain.value = bgmOn ? 1 : 0;
+  AU.musicFilter.connect(AU.bgmGain).connect(AU.master);
   AU.musicBus = a.createGain();
   AU.musicBus.gain.value = 0;
   AU.musicBus.connect(AU.musicFilter);
   AU.pulseDuck = a.createGain(); AU.pulseDuck.connect(AU.musicBus);
   AU.kickDuck  = a.createGain(); AU.kickDuck.connect(AU.pulseDuck);
   AU.sfxBus = a.createGain();
+  AU.sfxBus.gain.value = sfxOn ? 1 : 0;
   AU.sfxBus.connect(AU.master);
+  AU.sfxSend = a.createGain();             // SE reverb/delay sends: gated by the SE toggle,
+  AU.sfxSend.gain.value = sfxOn ? 1 : 0;   // returned through their own reverb so BGM-off keeps SE tails
 
   // Reverb: synthetic stereo impulse (decaying noise)
   const len = Math.floor(a.sampleRate * 2.6);
@@ -3589,6 +3641,9 @@ function buildAudioGraph(a) {
   AU.rev.buffer = ir;
   const revOut = a.createGain(); revOut.gain.value = 0.55;
   AU.rev.connect(revOut).connect(AU.musicFilter);
+  const rev2 = a.createConvolver(); rev2.buffer = ir;
+  const rev2Out = a.createGain(); rev2Out.gain.value = 0.55;
+  AU.sfxSend.connect(rev2); rev2.connect(rev2Out).connect(AU.sfxBus);
 
   // Tempo-synced dotted-8th delay with a darkening feedback loop
   AU.dly = a.createDelay(2);
@@ -3617,8 +3672,9 @@ function buildAudioGraph(a) {
 // Route a voice's output to its destination plus optional reverb / delay sends
 function sendTo(node, out, rev, dly) {
   node.connect(out);
-  if (rev) { const s = audioCtx.createGain(); s.gain.value = rev; node.connect(s).connect(AU.rev); }
-  if (dly) { const s = audioCtx.createGain(); s.gain.value = dly; node.connect(s).connect(AU.dly); }
+  const se = out === AU.sfxBus;
+  if (rev) { const s = audioCtx.createGain(); s.gain.value = rev; node.connect(s).connect(se ? AU.sfxSend : AU.rev); }
+  if (dly) { const s = audioCtx.createGain(); s.gain.value = dly * (se ? 0.6 : 1); node.connect(s).connect(se ? AU.sfxSend : AU.dly); }
 }
 
 // One oscillator note with an AD envelope and optional filter / pan sweep.
@@ -3965,10 +4021,7 @@ const Music = {
     }, 1700);
   },
   setMuffle(on) { this.muffled = on; },
-  setMute(m) {
-    if (!AU.master) return;
-    AU.master.gain.setTargetAtTime(m ? 0 : 0.9, audioCtx.currentTime, 0.05);
-  },
+  setMute() { applyAudioPrefs(); },
 
   levelTarget(k) {
     const sec = SECTIONS[this.section];
@@ -4007,7 +4060,7 @@ const Music = {
 // Gameplay SFX are pitched to the live chord where it makes sense, so the
 // player's actions play along with the music.
 const sfx = {
-  ok() { return !!getAudio() && !audioMuted; },
+  ok() { return !!getAudio() && sfxOn; },
   now() { return audioCtx.currentTime; },
   // Flap = playable instrument: altitude picks a chord tone (top = high).
   shot() {
@@ -5583,7 +5636,7 @@ function refreshTitleInfo() {
   setText(document.getElementById('t-best'), hiScore > 0 ? `${hiScore}s` : '—');
   setText(document.getElementById('t-xp'), `${totalXP} XP`);
   setText(document.getElementById('t-lv'), `Lv ${pilotLevel()}`);
-  setText(document.getElementById('t-sound'), audioMuted ? 'OFF' : 'ON');
+  refreshSoundUI();
   const skin = SHIP_SKINS.find(x => x.id === currentSkinId) || SHIP_SKINS[0];
   document.getElementById('t-skin-dot').style.setProperty('--skin', skin.accent);
   // Secrets: only the count is public; the SECRETS menu appears after the first find

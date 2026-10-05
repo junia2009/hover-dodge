@@ -4,7 +4,7 @@
 
 Three.js + WebGL で描画する一画面・タップで遊べるアーケードシューターです。ブラウザだけで動き、PWA としてホーム画面に追加すればオフラインでもプレイできます。フェーズに応じて重厚化する手続き合成 BGM 付き。
 
-[![Play](https://img.shields.io/badge/play-online-00e8ff?style=flat-square)](#) ![Version](https://img.shields.io/badge/version-1.9.1-aa44ff?style=flat-square)
+[![Play](https://img.shields.io/badge/play-online-00e8ff?style=flat-square)](#) ![Version](https://img.shields.io/badge/version-1.9.2-aa44ff?style=flat-square)
 
 ---
 
@@ -240,7 +240,7 @@ Three.js + WebGL で描画する一画面・タップで遊べるアーケード
 - **Service Worker** — オフライン / PWA 対応（`hoverdodge-vX.Y.Z` キャッシュキーで自動更新）
 - **localStorage**:
   - `hd_hi` — 自己ベスト（秒）
-  - `hd_mute` — 音設定
+  - `hd_bgm` / `hd_se` — BGM・効果音の ON/OFF
   - `hd_xp` / `hd_xp_life` — 累積 XP
   - `hd_owned` — 所持スキル ID 配列
   - `hd_equip` — 装備スキル ID 配列
@@ -330,6 +330,7 @@ SW キャッシュキーを上げることで、既存 PWA ユーザーに新版
 | **1.8.4**  | 効果音調整：タップ（フラップ）音を廃止。会話にキャラ別の「しゃべり声」ブリップ（レイ／パラス／ステュクス／アケロン）と無線の開始音を追加（プレイ中・プロローグ・エピローグ） |
 | **1.9.0**  | パイロットレベル（累計XP・最大Lv30）：装備枠がLvで2→6枠、基本耐久+1（Lv5/14/25）、XPボーナス。HULL（耐久）制を導入。新系統 VITAL 6スキル（HULL PLATING / REPAIR DRONE / NANO FRAME / IMPACT DAMPER / ADRENALINE / REPAIR KIT）とシナジー BULWARK。XP購入スロットは廃止・返金 |
 | **1.9.1**  | 縦画面（ROTATE）表示の上部切れを修正：セーフエリア余白、画面の高さに応じたコンパクト表示 |
+| **1.9.2**  | BGM / 効果音（SE）を個別に ON/OFF：タイトル下部と一時停止画面にトグル、M キーで一括切替 |
 | **1.6.0**  | ストーリー導入：主人公レイ（3D モデル）・相棒 AI パラス、3D プロローグ、プレイ中の無線、リザルトの一言、航海日誌 10 ページ、区間名 |
 | **1.5.2**  | 壁の隙間が物理的に届かない位置に出る問題を修正（前の隙間から人間が余裕をもって届く範囲にだけ出現）。フェーズ切替時の難易度を 8 秒かけてなだらかに移行 |
 | **1.5.1**  | ショップのリスペック（スキル振り直し）機能を削除 |
