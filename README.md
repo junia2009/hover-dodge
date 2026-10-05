@@ -4,7 +4,7 @@
 
 Three.js + WebGL で描画する一画面・タップで遊べるアーケードシューターです。ブラウザだけで動き、PWA としてホーム画面に追加すればオフラインでもプレイできます。フェーズに応じて重厚化する手続き合成 BGM 付き。
 
-[![Play](https://img.shields.io/badge/play-online-00e8ff?style=flat-square)](#) ![Version](https://img.shields.io/badge/version-2.2.0-aa44ff?style=flat-square)
+[![Play](https://img.shields.io/badge/play-online-00e8ff?style=flat-square)](#) ![Version](https://img.shields.io/badge/version-2.2.1-aa44ff?style=flat-square)
 
 ---
 
@@ -345,6 +345,7 @@ SW キャッシュキーを上げることで、既存 PWA ユーザーに新版
 | **2.0.1**  | プロローグの古い機体：灰色ではなく色あせた塗装で登場し、「推進器、点火。」で本来の色と発光が戻る演出に。点火前はエンジンも消灯 |
 | **2.1.0**  | パイロットレベルを Lv60 まで拡張：称号（CADET〜LEGEND）、装備枠 最大8（Lv45/60）、基本耐久 +1（Lv38/52）、新スキル5種（TWIN PULSE / SECOND WIND / IMMORTAL / TREASURE HUNTER / ★TITAN FRAME）、レベル限定スキン（NEBULA / AEGIS / LEGEND）、Lv31以降の XP ボーナスは +1%/Lv |
 | **2.2.0**  | SHOP と装備を分離：SHOP はスキルツリーで解放のみ、新しい LOADOUT 画面で所持スキルをタップして装備／解除・ランクアップ（系統タブ＋ALL、装備枠・シナジー表示）。タイトル・縦画面に LOADOUT ボタン |
+| **2.2.1**  | 更新が届かない問題を修正：Service Worker の登録がエラーで止まっていた（v1.9.3〜）のを修正、ページ本体はネット優先で取得、3D モデルは専用キャッシュで再ダウンロード不要に、アプリ復帰時に新バージョンがあればタイトルに更新ボタンを表示 |
 | **1.6.0**  | ストーリー導入：主人公レイ（3D モデル）・相棒 AI パラス、3D プロローグ、プレイ中の無線、リザルトの一言、航海日誌 10 ページ、区間名 |
 | **1.5.2**  | 壁の隙間が物理的に届かない位置に出る問題を修正（前の隙間から人間が余裕をもって届く範囲にだけ出現）。フェーズ切替時の難易度を 8 秒かけてなだらかに移行 |
 | **1.5.1**  | ショップのリスペック（スキル振り直し）機能を削除 |

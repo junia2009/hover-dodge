@@ -845,6 +845,15 @@ button { font-family: var(--f-ui) }
 }
 .p-sound .snd b { margin-left: calc(8 * var(--px)); font-family: var(--f-disp); }
 .p-sound .snd.off { border-color: rgba(150, 180, 210, 0.2); background: none; }
+.t-update {
+  position: absolute; top: calc(14 * var(--px)); left: 50%; transform: translateX(-50%); z-index: 5;
+  pointer-events: auto; cursor: pointer; padding: calc(7 * var(--px)) calc(14 * var(--px));
+  border: 1px solid rgba(127, 246, 255, 0.6); background: rgba(0, 40, 60, 0.75);
+  font: 700 calc(10 * var(--px))/1 var(--f-ui); letter-spacing: calc(2 * var(--px)); color: #bff8ff;
+  box-shadow: 0 0 calc(12 * var(--px)) rgba(0, 232, 255, 0.4); animation: avail 1.6s ease-in-out infinite; --tk: #00e8ff;
+}
+.t-update[hidden] { display: none; }
+.t-update b { color: #fff; font-family: var(--f-disp); }
 .t-foot .best b { color: var(--c-gold); text-shadow: 0 0 calc(8 * var(--px)) rgba(255, 216, 74, 0.6); }
 
 /* Result */
@@ -2182,6 +2191,7 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
 
     <!-- Title -->
     <div class="screen" id="title-screen">
+      <button class="t-update" id="t-update" type="button" hidden>NEW VERSION <b id="t-update-v"></b> — タップで更新</button>
       <div class="t-col stagger">
         <div class="t-eyebrow">NEON EVASION ARCADE</div>
         <h1 class="t-logo"><span>HOVER</span><span class="l2">DODGE</span></h1>
@@ -2278,7 +2288,7 @@ import { GLTFLoader }      from 'three/addons/loaders/GLTFLoader.js';
 
 // Single source of truth for the version: shown on the title / portrait
 // screens and passed to the service worker, which names its cache after it.
-const VERSION = '2.2.0';
+const VERSION = '2.2.1';
 
 // ── 3D models (glTF). The ship, Ray and PALLAS are waited for (briefly) before
 // the scene is built; the two flagships stream in the background — they are
@@ -7839,6 +7849,25 @@ function loop(now) {
 _refreshRotXp();
 refreshSkinSwatchPreview();
 refreshTitleInfo();
+// ── Service worker + update notice (needs VERSION, so it lives in the module) ──
+if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+  navigator.serviceWorker.register(`./sw.js?v=${VERSION}`).catch(e => console.warn('SW:', e));
+}
+{
+  // A home-screen app can stay alive in the background for days: when it comes
+  // back, check whether a newer build is online and offer a one-tap update.
+  const updBtn = document.getElementById('t-update');
+  const checkUpdate = () => {
+    if (!navigator.onLine || location.protocol === 'file:') return;
+    fetch('./index.html', { cache: 'no-store' }).then(r => r.ok ? r.text() : '').then(t => {
+      const m = t.match(/const VERSION = '([\d.]+)'/);
+      if (m && m[1] !== VERSION) { setText(document.getElementById('t-update-v'), m[1]); updBtn.hidden = false; }
+    }).catch(() => {});
+  };
+  onTap(updBtn, () => location.reload());
+  setTimeout(checkUpdate, 5000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) checkUpdate(); });
+}
 requestAnimationFrame(loop);
 </script>
 <script>
@@ -7891,9 +7920,6 @@ if (location.protocol !== 'file:') {
   ic2.rel = 'apple-touch-icon'; ic2.setAttribute('sizes', '192x192'); ic2.href = 'icon-192.png';
   document.head.appendChild(ic2);
 
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register(`./sw.js?v=${VERSION}`).catch(e => console.warn('SW:', e));
-  }
 }
 </script>
 </body>
