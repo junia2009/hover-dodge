@@ -1524,6 +1524,33 @@ body.retro #ui { filter: grayscale(1) sepia(1) hue-rotate(70deg) saturate(2.6) b
 }
 
 /* Loadout + detail */
+.lo-grid {
+  flex: 1; min-height: 0; overflow-y: auto; margin-top: 14px; padding: 2px 2px 10px;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); grid-auto-rows: max-content; gap: 8px;
+}
+.lo-card {
+  position: relative; display: flex; align-items: center; gap: 10px; min-height: 58px; padding: 8px 10px;
+  border: 1px solid rgba(160, 200, 255, 0.12); background: rgba(255, 255, 255, 0.03);
+  color: var(--c-ink); text-align: left; cursor: pointer;
+  transition: background .15s, border-color .15s, transform .1s;
+  animation: node-in .35s cubic-bezier(.2,.8,.2,1) both;
+}
+.lo-card:active { transform: scale(.97); }
+.lo-card svg { flex: none; width: 26px; height: 26px; fill: none; stroke: var(--sk); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.lo-card .t { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.lo-card .t b { font: 700 10px/1.2 var(--f-ui); letter-spacing: 1.5px; color: var(--c-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lo-card .up { font: 500 9px/1 var(--f-disp); letter-spacing: 1px; color: rgba(255, 216, 74, 0.55); }
+.lo-card .up.ok { color: var(--c-gold); }
+.lo-card.eq { border-color: var(--sk); background: linear-gradient(90deg, color-mix(in srgb, var(--sk) 22%, transparent), rgba(255, 255, 255, 0.03)); }
+.lo-card.eq::after { content: 'EQUIP'; position: absolute; top: -7px; right: 8px; padding: 2px 5px; font: 900 7px/1 var(--f-disp); letter-spacing: 1.5px; color: #1a1000; background: var(--c-gold); }
+.lo-card.sel { box-shadow: 0 0 0 2px #fff inset; }
+.lo-card.ult .t b::before { content: '★ '; color: var(--c-gold); }
+.lo-empty { grid-column: 1 / -1; padding: 30px 10px; text-align: center; color: var(--c-dim); font: 600 13px/1.8 var(--f-ui); }
+.slots.full-flash { animation: slots-flash .5s ease-out; }
+@keyframes slots-flash { 0%, 60% { filter: drop-shadow(0 0 8px #ff5a6e); } }
+.t-menu .tag.lo { color: #7ff6ff; }
+.rot-menu-row { flex-wrap: wrap; justify-content: center; }
+.rot-lo-btn { color: #7ff6ff; border-color: rgba(127, 246, 255, 0.55); }
 .loadout { flex: none; padding: 14px 16px; border-bottom: 1px solid rgba(160, 200, 255, 0.09); }
 .side-label {
   display: flex; justify-content: space-between;
@@ -1862,6 +1889,9 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
       SHOP
       <span class="xp"><span id="rot-xp">0</span> XP</span>
     </button>
+    <button class="rot-skin-btn rot-lo-btn" id="rot-lo-btn" type="button">
+      LOADOUT
+    </button>
     <button class="rot-skin-btn" id="rot-skin-btn" type="button">
       SKIN
       <span class="swatch" id="rot-skin-swatch"></span>
@@ -1875,7 +1905,7 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
 <div id="shop-modal" class="modal">
   <div class="m-panel">
     <header class="m-head">
-      <div><div class="m-title">SHOP</div><div class="m-sub">SKILL TREE &amp; LOADOUT</div></div>
+      <div><div class="m-title">SHOP</div><div class="m-sub">UNLOCK SKILLS</div></div>
       <div class="m-spacer"></div>
       <div class="pilot-badge" id="shop-pilot"></div>
       <div class="wallet"><span>XP</span><b id="shop-xp">0</b></div>
@@ -1887,12 +1917,33 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
         <div class="tree" id="shop-tree"></div>
       </div>
       <aside class="shop-side">
-        <div class="loadout">
-          <div class="side-label">LOADOUT <b id="shop-slots">0/2</b></div>
-          <div class="slots" id="shop-slot-list"></div>
-          <div class="syn-list" id="shop-syn"></div>
-        </div>
         <div class="detail" id="shop-detail"></div>
+      </aside>
+    </div>
+  </div>
+</div>
+
+<div id="loadout-modal" class="modal">
+  <div class="m-panel">
+    <header class="m-head">
+      <div><div class="m-title">LOADOUT</div><div class="m-sub">EQUIP &amp; UPGRADE</div></div>
+      <div class="m-spacer"></div>
+      <div class="pilot-badge" id="lo-pilot"></div>
+      <div class="wallet"><span>XP</span><b id="lo-xp">0</b></div>
+      <button class="m-close" id="lo-close" type="button" aria-label="Close">×</button>
+    </header>
+    <div class="m-body shop-body">
+      <div class="shop-main">
+        <nav class="tabs" id="lo-tabs"></nav>
+        <div class="lo-grid" id="lo-grid"></div>
+      </div>
+      <aside class="shop-side">
+        <div class="loadout">
+          <div class="side-label">EQUIPPED <b id="lo-slots">0/2</b></div>
+          <div class="slots" id="lo-slot-list"></div>
+          <div class="syn-list" id="lo-syn"></div>
+        </div>
+        <div class="detail" id="lo-detail"></div>
       </aside>
     </div>
   </div>
@@ -1987,7 +2038,7 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
 
     <section class="howto-sec">
       <h3>XP & スキルツリー (SHOP)</h3>
-      <p>プレイ中に XP を獲得 → タイトル画面の <b>SHOP</b> でスキルを解放・強化・装備。全 36 スキル（ATTACK / DEFENSE / PASSIVE / VITAL）、各系統の最深部には <b>★ULTIMATE</b>。</p>
+      <p>プレイ中に XP を獲得 → タイトル画面の <b>SHOP</b> でスキルを解放し、<b>LOADOUT</b> で装備・ランクアップ。全 36 スキル（ATTACK / DEFENSE / PASSIVE / VITAL）、各系統の最深部には <b>★ULTIMATE</b>。</p>
       <dl>
         <dt>ランク</dt><dd>取得済みスキルは Lv2〜3 に強化できる（●●○ で表示）</dd>
         <dt>装備枠</dt><dd>最初は 2 枠。パイロット Lv3 / 7 / 12 / 20 / 45 / 60 で最大 8 枠に拡張</dd>
@@ -2139,6 +2190,7 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
         <div class="t-modes" id="t-modes"></div>
         <div class="t-menu">
           <button class="btn" id="t-howto-btn" type="button">HOW TO PLAY</button>
+          <button class="btn" id="t-lo-btn" type="button">LOADOUT <span class="tag lo" id="t-lo">0/2</span></button>
           <button class="btn" id="t-shop-btn" type="button">SHOP <span class="tag" id="t-xp">0 XP</span></button>
           <button class="btn" id="t-skin-btn" type="button">SKIN <span class="dot" id="t-skin-dot"></span></button>
           <button class="btn log" id="t-log-btn" type="button">LOG <span class="new" id="t-log-new" hidden>NEW</span></button>
@@ -2226,7 +2278,7 @@ import { GLTFLoader }      from 'three/addons/loaders/GLTFLoader.js';
 
 // Single source of truth for the version: shown on the title / portrait
 // screens and passed to the service worker, which names its cache after it.
-const VERSION = '2.1.0';
+const VERSION = '2.2.0';
 
 // ── 3D models (glTF). The ship, Ray and PALLAS are waited for (briefly) before
 // the scene is built; the two flagships stream in the background — they are
@@ -3137,7 +3189,7 @@ function onTap(el, fn) {
   el.addEventListener('touchstart', e => { e.preventDefault(); e.stopPropagation(); fn(e); }, { passive: false });
 }
 const anyModalOpen = () =>
-  [shopModal, skinModal, howtoModal, document.getElementById('secrets-modal'), document.getElementById('credits'), document.getElementById('log-modal')]
+  [shopModal, document.getElementById('loadout-modal'), skinModal, howtoModal, document.getElementById('secrets-modal'), document.getElementById('credits'), document.getElementById('log-modal')]
     .some(m => m && m.classList.contains('open'));
 
 function setSound(bgm, se) {
@@ -3220,11 +3272,8 @@ onTap(document.getElementById('t-skin-btn'),  () => openSkin());
 const shopModal   = document.getElementById('shop-modal');
 const shopTabsEl     = document.getElementById('shop-tabs');
 const shopTreeEl     = document.getElementById('shop-tree');
-const shopSlotListEl = document.getElementById('shop-slot-list');
 const shopDetailEl   = document.getElementById('shop-detail');
-const shopSynEl      = document.getElementById('shop-syn');
 const shopXpEl    = document.getElementById('shop-xp');
-const shopSlotsEl = document.getElementById('shop-slots');
 const shopCloseBtn= document.getElementById('shop-close');
 const rotShopBtn  = document.getElementById('rot-shop-btn');
 const rotXpEl     = document.getElementById('rot-xp');
@@ -3337,7 +3386,6 @@ function renderShopUI() {
   const lp = levelProgress();
   document.getElementById('shop-pilot').innerHTML = `<span>${rankName(lp.L)}</span><b>Lv ${lp.L}</b><span class="pb"><i><u style="width:${lp.pct.toFixed(1)}%"></u></i>` +
     `<small>${lp.L >= MAX_LEVEL ? 'MAX LEVEL' : `NEXT ${lp.next} XP`}</small></span>`;
-  if (shopSlotsEl) shopSlotsEl.textContent = `${equippedSkills.length}/${equipSlots}`;
   if (rotXpEl)     rotXpEl.textContent = totalXP;
 
   // Tabs
@@ -3395,8 +3443,57 @@ function renderShopUI() {
     shopTreeEl.appendChild(b);
   }
 
-  // Loadout slots (+ the next one, opened by pilot level)
-  shopSlotListEl.innerHTML = '';
+  renderShopDetail();
+  shopJust = null;
+}
+
+// ── LOADOUT: equip + rank up (owned skills only) ──
+const loModal = document.getElementById('loadout-modal');
+const loTabsEl = document.getElementById('lo-tabs'), loGridEl = document.getElementById('lo-grid');
+const loSlotListEl = document.getElementById('lo-slot-list'), loSynEl = document.getElementById('lo-syn');
+const loDetailEl = document.getElementById('lo-detail'), loXpEl = document.getElementById('lo-xp');
+let loTab = 'ALL', loSel = null;
+function renderLoadoutUI() {
+  loadProgression();
+  loXpEl.textContent = totalXP;
+  const lp = levelProgress();
+  document.getElementById('lo-pilot').innerHTML = `<span>${rankName(lp.L)}</span><b>Lv ${lp.L}</b>`;
+  setText(document.getElementById('lo-slots'), `${equippedSkills.length}/${equipSlots}`);
+  // tabs: ALL + kinds that have owned skills
+  loTabsEl.innerHTML = '';
+  for (const kind of ['ALL', ...KINDS]) {
+    const n = SKILL_DEFS.filter(s => (kind === 'ALL' || s.kind === kind) && ownedSkills.includes(s.id)).length;
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'tab' + (kind === loTab ? ' on' : '');
+    b.style.setProperty('--tk', kind === 'ALL' ? '#7ff6ff' : KIND_COLOR[kind]);
+    b.innerHTML = `${kind}<span class="cnt">${n}</span>`;
+    b.addEventListener('click', () => { if (loTab !== kind) { loTab = kind; ui.select(); renderLoadoutUI(); } });
+    loTabsEl.appendChild(b);
+  }
+  // owned skill cards — tap to equip / unequip (and select for details)
+  const list = SKILL_DEFS.filter(s => (loTab === 'ALL' || s.kind === loTab) && ownedSkills.includes(s.id));
+  loGridEl.innerHTML = '';
+  if (!list.length) {
+    loGridEl.innerHTML = `<div class="lo-empty">まだスキルを持っていません。<br><b>SHOP</b> で解放しよう。</div>`;
+  }
+  list.forEach((sk, n) => {
+    const eq = equippedSkills.includes(sk.id), r = ownedRank(sk.id), max = maxRank(sk), up = nextRankCost(sk);
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'lo-card' + (eq ? ' eq' : '') + (sk.id === loSel ? ' sel' : '') + (sk.ult ? ' ult' : '');
+    b.style.setProperty('--sk', KIND_COLOR[sk.kind]); b.style.animationDelay = (n * 0.02) + 's';
+    b.innerHTML = `${icon(sk.id, '')}<span class="t"><b>${sk.name}</b>${pipsHtml(r, max)}` +
+      (up != null ? `<span class="up${totalXP >= up ? ' ok' : ''}">▲ ${up} XP</span>` : max > 1 ? '<span class="up ok">MAX RANK</span>' : '') + `</span>`;
+    b.addEventListener('click', () => {
+      loSel = sk.id;
+      if (!eq && equippedSkills.length >= equipSlots) { restartAnim(loSlotListEl, 'full-flash'); ui.select(); renderLoadoutUI(); return; }
+      toggleEquip(sk.id); ui.equip(); vibrate(10);
+      renderLoadoutUI();
+    });
+    loGridEl.appendChild(b);
+  });
+  // equipped slots (tap = unequip)
+  loSlotListEl.innerHTML = '';
   for (let i = 0; i < Math.min(MAX_SLOTS, equipSlots + 1); i++) {
     const id = equippedSkills[i];
     const b = document.createElement('button');
@@ -3410,28 +3507,70 @@ function renderShopUI() {
       b.className = 'slot filled';
       b.style.setProperty('--sk', KIND_COLOR[sk.kind]);
       b.innerHTML = `${icon(id, '')}<span>${sk.name}</span>`;
-      b.addEventListener('click', () => {
-        shopTab = sk.kind; shopSel = id; shopJust = null;
-        ui.select();
-        renderShopUI();
-      });
+      b.addEventListener('click', () => { loSel = id; toggleEquip(id); ui.equip(); vibrate(10); renderLoadoutUI(); });
     } else {
       b.className = 'slot';
       b.innerHTML = `<span>SLOT ${i + 1}<br>EMPTY</span>`;
       b.disabled = true;
     }
-    shopSlotListEl.appendChild(b);
+    loSlotListEl.appendChild(b);
   }
-
-  // Active synergies
   const act = SYNERGIES.filter(x => hasSkill(x.a) && hasSkill(x.b));
-  shopSynEl.innerHTML = act.length
+  loSynEl.innerHTML = act.length
     ? act.map(x => `<div class="syn on"><b>⟡ ${x.name}</b><span>${x.desc}</span></div>`).join('')
     : '<div class="syn-hint">特定の2スキルを同時装備で SYNERGY 発動</div>';
-
-  renderShopDetail();
-  shopJust = null;
+  renderLoDetail();
+  setText(document.getElementById('t-lo'), `${equippedSkills.length}/${equipSlots}`);
 }
+function renderLoDetail() {
+  const sk = loSel && skillById(loSel);
+  if (!sk || !ownedSkills.includes(sk.id)) {
+    loDetailEl.innerHTML = '<div class="d-desc" style="margin-top:4px">スキルをタップで装備 / 解除。装備中のスキルはここでランクアップできる。</div>';
+    return;
+  }
+  const st = skillState(sk), tk = KIND_COLOR[sk.kind], up = nextRankCost(sk);
+  loDetailEl.style.setProperty('--tk', tk);
+  const slotsFull = equippedSkills.length >= equipSlots;
+  const btns = [];
+  let hint = '';
+  if (up != null) btns.push(`<button class="act buy" type="button" data-do="rank"${totalXP < up ? ' disabled' : ''}>RANK UP · ${up} XP</button>`);
+  if (st.equipped) btns.push('<button class="act unequip" type="button" data-do="equip">UNEQUIP</button>');
+  else btns.push(`<button class="act equip" type="button" data-do="equip"${slotsFull ? ' disabled' : ''}>EQUIP</button>`);
+  if (!st.equipped && slotsFull) hint = equipSlots < MAX_SLOTS
+    ? `装備枠がいっぱい — 外すか、パイロット Lv${SLOT_LEVELS[equipSlots]} で枠が増える` : '装備枠がいっぱい — どれかを外そう';
+  else if (up != null && totalXP < up) hint = `次のランクまで あと ${up - totalXP} XP`;
+  const lvRows = sk.lv ? `<div class="lv">${sk.lv.map((t, i) =>
+    `<span class="${i < st.rank ? 'on' : ''}${i === st.rank - 1 ? ' cur' : ''}">Lv${i + 1} ${t}</span>`).join('')}</div>` : '';
+  const syns = SYNERGIES.filter(x => x.a === sk.id || x.b === sk.id).map(x => {
+    const other = skillById(x.a === sk.id ? x.b : x.a), on = hasSkill(x.a) && hasSkill(x.b);
+    return `<div class="syn${on ? ' on' : ''}"><b>⟡ ${x.name}</b><span>+ ${other.name}: ${x.desc}</span></div>`;
+  }).join('');
+  loDetailEl.innerHTML = `
+    <div class="d-top">
+      <span class="node ${st.cls}" style="--tk:${tk}">${nodeHtml(sk, st)}</span>
+      <div><span class="d-kind">${sk.ult ? '★ ULTIMATE' : sk.kind}</span><div class="d-name">${sk.name}</div>${pipsHtml(st.rank, st.max)}</div>
+    </div>
+    <div class="d-desc">${sk.desc}</div>
+    ${lvRows}
+    ${syns ? `<div class="d-syn"><div class="side-label">SYNERGY</div>${syns}</div>` : ''}
+    <div class="d-act"><div class="act-row">${btns.join('')}</div><div class="d-hint">${hint}</div></div>`;
+  for (const btn of loDetailEl.querySelectorAll('[data-do]')) btn.addEventListener('click', () => {
+    if (btn.dataset.do === 'rank') { if (!rankUp(sk.id)) return; ui.buy(); vibrate(25); restartAnim(loXpEl, 'bump'); }
+    else { toggleEquip(sk.id); ui.equip(); vibrate(10); }
+    renderLoadoutUI();
+  });
+}
+function openLoadout(sel) {
+  ui.open(); loadProgression();
+  loSel = sel || equippedSkills[0] || ownedSkills[0] || null;
+  if (sel) { const k = skillById(sel).kind; if (loTab !== 'ALL' && loTab !== k) loTab = k; }
+  renderLoadoutUI(); loModal.classList.add('open');
+}
+function closeLoadout() { ui.back(); loModal.classList.remove('open'); refreshTitleInfo(); }
+onTap(document.getElementById('lo-close'), closeLoadout);
+onTap(document.getElementById('t-lo-btn'), () => openLoadout());
+onTap(document.getElementById('rot-lo-btn'), () => openLoadout());
+addEventListener('keydown', e => { if (e.code === 'Escape' && loModal.classList.contains('open')) { e.preventDefault(); closeLoadout(); } });
 
 function renderShopDetail() {
   const sk = skillById(shopSel);
@@ -3440,19 +3579,12 @@ function renderShopDetail() {
   const tk = KIND_COLOR[sk.kind];
   shopDetailEl.style.setProperty('--tk', tk);
   const reqs = (sk.requires || []).map(skillById).filter(Boolean);
-  const slotsFull = equippedSkills.length >= equipSlots;
-  const upCost = nextRankCost(sk);
 
   const btns = [];
   let hint = '';
   if (st.owned) {
-    if (upCost != null) btns.push(`<button class="act buy" type="button" data-do="rank"${totalXP < upCost ? ' disabled' : ''}>RANK UP · ${upCost} XP</button>`);
-    if (st.equipped) btns.push('<button class="act unequip" type="button" data-do="equip">UNEQUIP</button>');
-    else btns.push(`<button class="act equip" type="button" data-do="equip"${slotsFull ? ' disabled' : ''}>EQUIP</button>`);
-    if (!st.equipped && slotsFull) hint = equipSlots < MAX_SLOTS
-      ? `装備枠がいっぱい — LOADOUT から外すか、パイロット Lv${SLOT_LEVELS[equipSlots]} で枠が増える`
-      : '装備枠がいっぱい — LOADOUT から外そう';
-    else if (upCost != null && totalXP < upCost) hint = `次のランクまで あと ${upCost - totalXP} XP`;
+    btns.push('<button class="act equip" type="button" data-do="loadout">LOADOUT で装備・強化 ▶</button>');
+    hint = st.equipped ? '装備中' : '解放済み — 装備とランクアップは LOADOUT で';
   } else if (lvLocked(sk)) {
     btns.push(`<button class="act" type="button" disabled>PILOT Lv ${sk.lvReq}</button>`);
     hint = `パイロット Lv${sk.lvReq} で解放（あと ${lvXP(sk.lvReq) - lifeXP} XP）`;
@@ -3506,13 +3638,10 @@ function renderShopDetail() {
       if (!buySkill(sk.id)) return;
       ui.buy(); vibrate(25);
       restartAnim(shopXpEl, 'bump');
-    } else if (what === 'rank') {
-      if (!rankUp(sk.id)) return;
-      ui.buy(); vibrate(25);
-      restartAnim(shopXpEl, 'bump');
-    } else {
-      toggleEquip(sk.id);
-      ui.equip(); vibrate(10);
+    } else if (what === 'loadout') {
+      shopModal.classList.remove('open');
+      openLoadout(sk.id);
+      return;
     }
     shopJust = sk.id;
     renderShopUI();
@@ -5780,6 +5909,7 @@ function showPhaseBanner(p) {
 function refreshTitleInfo() {
   setText(document.getElementById('t-best'), hiScore > 0 ? `${hiScore}s` : '—');
   setText(document.getElementById('t-xp'), `${totalXP} XP`);
+  setText(document.getElementById('t-lo'), `${equippedSkills.length}/${equipSlots}`);
   setText(document.getElementById('t-lv'), `Lv ${pilotLevel()}`);
   setText(document.getElementById('t-rank'), rankName(pilotLevel()));
   refreshSoundUI();
