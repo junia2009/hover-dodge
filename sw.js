@@ -1,9 +1,12 @@
-const CACHE = 'hoverdodge-v1.9.2';
+// The page registers sw.js?v=<VERSION>; a new version means a new script URL
+// (so the worker updates) and a fresh cache name.
+const CACHE = 'hoverdodge-v' + (new URL(self.location).searchParams.get('v') || 'dev');
 const PRECACHE = [
   './',
   './index.html',
   './manifest.json',
   './icon.svg',
+  './icon-180.png',
   './icon-192.png',
   './icon-512.png',
 ];
@@ -39,8 +42,11 @@ self.addEventListener('fetch', e => {
       url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
     e.respondWith(
       caches.match(e.request).then(hit => hit || fetch(e.request).then(res => {
-        const clone = res.clone();
-        caches.open(CACHE).then(c => c.put(e.request, clone));
+        // only keep good responses (opaque cross-origin font files report status 0)
+        if (res.ok || res.type === 'opaque') {
+          const clone = res.clone();
+          caches.open(CACHE).then(c => c.put(e.request, clone));
+        }
         return res;
       }))
     );
@@ -53,7 +59,7 @@ self.addEventListener('fetch', e => {
       caches.open(CACHE).then(cache =>
         cache.match(e.request).then(hit => {
           const fresh = fetch(e.request).then(res => {
-            cache.put(e.request, res.clone());
+            if (res.ok) cache.put(e.request, res.clone());
             return res;
           }).catch(() => null);
           return hit || fresh;
