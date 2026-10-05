@@ -2223,7 +2223,7 @@ import { GLTFLoader }      from 'three/addons/loaders/GLTFLoader.js';
 
 // Single source of truth for the version: shown on the title / portrait
 // screens and passed to the service worker, which names its cache after it.
-const VERSION = '2.0.0';
+const VERSION = '2.0.1';
 
 // ── 3D models (glTF). The ship, Ray and PALLAS are waited for (briefly) before
 // the scene is built; the two flagships stream in the background — they are
@@ -6508,12 +6508,25 @@ const Prologue = (() => {
   }
   // the old ship, half-buried in the ruins (a second, unregistered build)
   const oldShip = buildShipGroup(false);
-  // weathered: grey hull, no glow
+  // weathered: faded, dusty paint and no glow — the paint comes back to life on ignition
+  const paint = [];                                  // [material, original colour, faded colour, original emissive]
+  const DUST = new THREE.Color(0x5d6b78);
   oldShip.traverse(o => { if (o.material && o.material.color) {
     o.material = o.material.clone();
-    o.material.color.setHex(o.name === 'engine' || o.name === 'flame' ? 0x332a2a : 0x5d6b78);
-    if (o.material.emissive) o.material.emissive.setHex(0x05080a);
+    if (o.name === 'engine' || o.name === 'flame') { o.material.color.setHex(0x332a2a); if (o.material.emissive) o.material.emissive.setHex(0); return; }
+    const c0 = o.material.color.clone(), e0 = o.material.emissive ? o.material.emissive.clone() : null;
+    const faded = c0.clone().lerp(DUST, 0.5).multiplyScalar(0.8);
+    paint.push([o.material, c0, faded, e0]);
   } });
+  let revive = 0;
+  function setRevive(k) {
+    revive = k;
+    for (const [m, c0, faded, e0] of paint) {
+      m.color.copy(faded).lerp(c0, k);
+      if (m.emissive) { if (e0) m.emissive.copy(e0).multiplyScalar(k); else m.emissive.setHex(0); }
+    }
+  }
+  setRevive(0);
   const SHIP_X = -62, SHIP_Z = -48;
   oldShip.scale.setScalar(2.4);
   oldShip.position.set(SHIP_X, groundY(SHIP_X, SHIP_Z) + 5, SHIP_Z);
@@ -6545,8 +6558,10 @@ const Prologue = (() => {
   let ignited = false, cine = false, ct = 0, liftSaid = false, glintSaid = false, flashed = false;
   function setIgnition(on) {
     ignited = on;
+    if (!on) setRevive(0);
     for (const [m, hex, name, o] of shipMats) {
       m.color.setHex(on ? (name === 'flame' ? 0x7ff6ff : 0x44aaff) : hex);
+      if (m.emissive) m.emissive.setHex(on ? (name === 'flame' ? 0x55ccff : 0x44aaff) : 0);   // dead engine until ignition
       if (name === 'flame') { o.visible = on; o.scale.set(1, 1, 1); }
     }
     thrust.material.opacity = 0; thrust.scale.setScalar(26);
@@ -6688,6 +6703,7 @@ const Prologue = (() => {
       camTarget.set(SHIP_X + 10, oldShip.position.y + 10, SHIP_Z);
       ray.visible = li < 1;                                   // Ray climbs in after the first line
       if (ignited) {
+        if (revive < 1) setRevive(Math.min(1, revive + s / 1.4));   // power flows back into the old paint
         thrust.material.opacity = Math.min(0.9, thrust.material.opacity + s * 1.5) * (0.85 + Math.random() * 0.15);
         const fl = oldShip.getObjectByName('flame'); if (fl) fl.scale.set(1, 0.8 + Math.random() * 0.4, 1);
         shake = Math.max(shake, 0.15);
@@ -6695,6 +6711,7 @@ const Prologue = (() => {
     } else {
       // ── take-off cinematic ──
       ct += s;
+      if (revive < 1) setRevive(1);
       ray.visible = false;
       const fl = oldShip.getObjectByName('flame');
       if (ct < 0.7) {                                         // spool up: flame swells, ground shakes
