@@ -9,6 +9,11 @@ const PRECACHE = [
   './icon-180.png',
   './icon-192.png',
   './icon-512.png',
+  './models/ship.glb',
+  './models/ray.glb',
+  './models/pallas.glb',
+  './models/styx.glb',
+  './models/acheron.glb',
 ];
 
 self.addEventListener('install', e => {
