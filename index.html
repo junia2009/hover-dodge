@@ -2314,7 +2314,7 @@ import { GLTFLoader }      from 'three/addons/loaders/GLTFLoader.js';
 
 // Single source of truth for the version: shown on the title / portrait
 // screens and passed to the service worker, which names its cache after it.
-const VERSION = '2.4.0';
+const VERSION = '2.4.1';
 
 // ── 3D models (glTF). The ship, Ray and PALLAS are waited for (briefly) before
 // the scene is built; the flagships stream in the background — they are
@@ -8275,8 +8275,9 @@ const Prologue2 = {
   panels: [
     { mood: 'camp', lines: ['バイデント陥落から、数週間。', 'レイとパラスは、焼けた丘で夜を明かしていた。', 'R:……静かだな。', 'P:はい。静かすぎるくらいです。'] },
     { mood: 'signal', lines: ['!ザ……ザザ……ッ', 'X:……穂先は折れた。だが槍は、主の手にある。', 'R:っ……！ 葉っぱが……光ってる？', 'P:……今の反応、記録しました。',
-      'P:発信源を特定。バイデント残党の艦隊——そして、その奥にもう一つ。', 'R:槍の、主……。行くぞ、パラス。'],
-      on: { 1: S => { S.glow = true; fxFlash(0x8dff9a, 0.35); } } },
+      'P:発信源を特定。バイデント残党の艦隊——そして、その奥にもう一つ。', 'R:槍の、主……。', 'R:……火、消すぞ。',
+      'P:消火を確認。……几帳面ですね。', 'R:山火事なんか起こしたら、ばあちゃんに怒られる。', 'R:行くぞ、パラス。'],
+      on: { 1: S => { S.glow = true; fxFlash(0x8dff9a, 0.35); }, 6: S => { S.fireOut = 0.001; sfx.shield(); } } },
   ],
   build(S) {
     Object.assign(S, cineStage(0x050a20)); cineHill(S); cineShip(S);
@@ -8286,9 +8287,12 @@ const Prologue2 = {
     S.fire = glowSprite(0xff8a3a, 40, 0.9); S.E.add(S.fire);
     S.fireLight = new THREE.PointLight(0xff8a3a, 2.2, 140); S.E.add(S.fireLight);
     S.leafGlow = glowSprite(0x8dff9a, 22, 0); S.E.add(S.leafGlow);
+    S.steam = [];                                     // smoke from the doused campfire
+    for (let i = 0; i < 14; i++) { const g = glowSprite(0x8a8f9a, 26, 0); g.material.blending = THREE.NormalBlending; g.visible = false; S.E.add(g); S.steam.push({ g, life: 0 }); }
   },
   reset(S) {
-    S.glow = false; S.lifted = S.veiled = false; S.vel.set(0, 0, 0);
+    S.glow = false; S.fireOut = 0; S.lifted = S.veiled = false; S.vel.set(0, 0, 0);
+    for (const p of S.steam) { p.life = 0; p.g.visible = false; }
     S.hero.position.set(-62, S.groundY(-62, -36) + 6, -36); S.hero.rotation.set(0, 0.5, 0.03);
     S.ray.visible = true; if (S.pallas) S.pallas.visible = true;
     for (const p of S.trail) { p.life = 0; p.g.visible = false; }
@@ -8296,14 +8300,23 @@ const Prologue2 = {
   mood(S, m) {},
   update(S, m, t, s, li) {
     const G = S.groundY, fx = -4, fz = 36;
-    S.fire.position.set(fx, G(fx, fz) + 5, fz); S.fire.material.opacity = 0.75 + Math.random() * 0.2; S.fire.scale.setScalar(38 + Math.random() * 8);
-    S.fireLight.position.set(fx, G(fx, fz) + 10, fz); S.fireLight.intensity = 1.8 + Math.random() * 0.8;
+    // the campfire — doused before take-off: it shrinks, hisses and leaves a curl of smoke
+    if (S.fireOut > 0 && S.fireOut < 1) {
+      S.fireOut = Math.min(1, S.fireOut + s / 0.9);
+      if (Math.random() < 0.5) { const p = S.steam.find(q => q.life <= 0); if (p) { p.life = 1; p.g.visible = true; p.g.position.set(fx + (Math.random() - 0.5) * 6, G(fx, fz) + 4, fz); } }
+    }
+    const lit = 1 - S.fireOut;
+    S.fire.position.set(fx, G(fx, fz) + 5, fz); S.fire.material.opacity = (0.75 + Math.random() * 0.2) * lit; S.fire.scale.setScalar((38 + Math.random() * 8) * (0.3 + 0.7 * lit));
+    S.fireLight.position.set(fx, G(fx, fz) + 10, fz); S.fireLight.intensity = (1.8 + Math.random() * 0.8) * lit;
+    for (const p of S.steam) { if (p.life <= 0) continue; p.life -= s * 0.45; p.g.position.y += s * 14; p.g.position.x += s * 3;
+      p.g.material.opacity = Math.max(0, p.life) * 0.35; p.g.scale.setScalar(20 + (1 - p.life) * 40); if (p.life <= 0) p.g.visible = false; }
     const rx = 16, rz = 30;
     S.ray.position.set(rx, G(rx, rz) + 11 + Math.sin(t * 2) * 0.3, rz);
-    S.ray.rotation.y = m === 'signal' && li >= 2 ? 0.4 : -1.1;   // gazing at the fire, then at the sky
-    S.ray.rotation.x = m === 'signal' && li >= 2 ? -0.25 : 0;
+    const sky = m === 'signal' && li >= 2 && li < 6;               // gazing at the fire, at the sky, then dousing the fire
+    S.ray.rotation.y = sky ? 0.4 : -1.1;
+    S.ray.rotation.x = sky ? -0.25 : 0;
     const lf = cineLeaf(S.ray, t);
-    if (lf) { lf.getWorldPosition(S.leafGlow.position); S.leafGlow.material.opacity = S.glow ? 0.6 + Math.sin(t * 7) * 0.3 : 0; S.leafGlow.scale.setScalar(S.glow ? 24 + Math.sin(t * 7) * 6 : 22); }
+    if (lf) { lf.getWorldPosition(S.leafGlow.position); S.leafGlow.material.opacity = S.glow && S.ray.visible ? 0.6 + Math.sin(t * 7) * 0.3 : 0; S.leafGlow.scale.setScalar(S.glow ? 24 + Math.sin(t * 7) * 6 : 22); }
     if (S.pallas) { S.pallas.position.set(rx + 26, G(rx, rz) + 30 + Math.sin(t * 2.2) * 1.5, rz - 8); cinePallasTick(S.pallas, t, S.ray.position, m === 'signal' && li === 0 ? (Math.random() < 0.5 ? 0.2 : 1) : 1); }
     if (!S.cine) {
       cineEngine(S, false);
