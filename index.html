@@ -7902,7 +7902,7 @@ const Epilogue = (() => {
     active = true; replay = fromLog; pi = 0; li = 0; t = 0; fade = 1; shake = 0;
     cine = false; el.classList.remove('cine', 'titled');
     gstate = fromLog ? 'story' : 'cut';
-    if (!fromLog) commClear();
+    if (!fromLog) { commClear(); bonusPopups = []; }
     setMood('wreck');
     renderPass.scene = E; renderPass.camera = cam;
     el.style.setProperty('--fade', '1');
@@ -8083,7 +8083,7 @@ const Cine = (() => {
     if (!c.built) { c.S = {}; c.build(c.S); c.built = true; }
     cfg = c; opts = o; cine = false; ct = 0; shake = 0;
     gstate = o.live ? 'cut' : 'story';
-    if (o.live) commClear();
+    if (o.live) { commClear(); bonusPopups = []; }
     el.classList.remove('cine', 'titled');
     if (c.title) titleEl.innerHTML = `<b>${c.title[0]}</b><span>${c.title[1]}</span>`;
     renderPass.scene = c.S.E; renderPass.camera = c.S.cam;
@@ -8371,7 +8371,7 @@ const Confession = {
     cineTrail(S, s);
     if (m === 'pods') {
       // the hulk drifts away; the pods fly in formation behind the hero, towards camera-left
-      S.wreck.w.position.set(260, -60 - t * 6, -520); S.wreck.w.rotation.set(0.1, -0.7, -0.08 - t * 0.02);
+      S.wreck.w.position.set(480, -80 - t * 6, -1150); S.wreck.w.rotation.set(0.1, -0.7, -0.08 - t * 0.02);
       cinePops(S, S.wreck.g, s * 0.5);
       cineEngine(S, true);
       S.hero.position.set(-120 - t * 18, 30 + Math.sin(t * 1.4) * 3, 60); S.hero.rotation.set(0, 0.35, 0);
