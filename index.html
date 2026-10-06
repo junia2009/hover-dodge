@@ -1145,6 +1145,11 @@ button { font-family: var(--f-ui) }
 .story-title span { display: block; margin-top: 14px; font: 600 15px/1.4 var(--f-ui); color: #fff1dc; letter-spacing: 4px; text-shadow: 0 0 10px #000; }
 #story.titled .story-title { opacity: 1; letter-spacing: 10px; }
 #story::before { content: ''; position: absolute; inset: 0; background: #000; opacity: var(--fade); pointer-events: none; }
+/* flashback: warm, faded film look over the 3D scene (the text stays crisp above it) */
+#story.memory::after { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  -webkit-backdrop-filter: sepia(0.3) saturate(1.05); backdrop-filter: sepia(0.3) saturate(1.05);
+  box-shadow: inset 0 0 160px 40px rgba(40, 22, 6, 0.55); }
+#story .story-box, #story .story-skip, #story .story-title { z-index: 2; }
 .story-skip {
   position: absolute; top: max(14px, env(safe-area-inset-top)); right: max(14px, env(safe-area-inset-right));
   border: none; padding: 8px 12px; background: rgba(0, 0, 0, 0.4); color: rgba(220, 235, 255, 0.75);
@@ -2323,7 +2328,7 @@ import { GLTFLoader }      from 'three/addons/loaders/GLTFLoader.js';
 
 // Single source of truth for the version: shown on the title / portrait
 // screens and passed to the service worker, which names its cache after it.
-const VERSION = '2.5.1';
+const VERSION = '2.6.0';
 
 // ── 3D models (glTF). The ship, Ray and PALLAS are waited for (briefly) before
 // the scene is built; the flagships stream in the background — they are
@@ -4540,6 +4545,9 @@ const sfx = {
       voice({ type: 'triangle', f: mtof(m), f2: mtof(m + 1), t, dur: 0.09, vol: 0.05, out: AU.sfxBus, rev: 0.2 });
     } else if (sp === 'H') {   // HADES: very low, cavernous
       voice({ type: 'sawtooth', f: mtof(38 + [0, 3][(r * 2) | 0]), t, dur: 0.12, vol: 0.05, out: AU.sfxBus, lp: 600, rev: 0.45 });
+    } else if (sp === 'F') {   // SOL: big, warm, a bit rough
+      const m = 60 + [0, 4, 7][(r * 3) | 0];
+      voice({ type: 'triangle', f: mtof(m), f2: mtof(m - 3), t, dur: 0.08, vol: 0.06, out: AU.sfxBus, lp: 2200 });
     } else if (sp === 'M') {   // MIMOSA: soft and warm
       const m = 72 + [0, 4, 7, 9][(r * 4) | 0];
       voice({ type: 'sine', f: mtof(m), f2: mtof(m - 2), t, dur: 0.07, vol: 0.05, out: AU.sfxBus });
@@ -8058,6 +8066,11 @@ const Epilogue = (() => {
 // tap / key to advance, SKIP, the veil transitions and the render swap. Each scene supplies its
 // 3D set (built on first play, once the models are in), per-panel camera / animation and a
 // text-free finale ('cine'). Lines: 'R:…' speaker lines, '!…' sound-effect lines, plain = narration.
+SPEAKERS.F = { name: 'SOL', cls: 'sol', face: `<svg viewBox="0 0 64 64" aria-hidden="true"><rect x="6" y="6" width="52" height="52" rx="6" fill="#2a1208" stroke="#ff8a2a" stroke-width="2"/>
+  <circle cx="32" cy="36" r="18" fill="#ff8a2a"/><path d="M32 18a18 18 0 0 1 0 36z" fill="#8e2c1c"/><path d="M26 16l6-8 6 8" fill="#ff8a2a"/>
+  <rect x="17" y="22" width="30" height="6" rx="3" fill="#3a2a22"/><circle cx="25" cy="25" r="4" fill="#7fd8ff" stroke="#d9a84a" stroke-width="1.5"/><circle cx="39" cy="25" r="4" fill="#7fd8ff" stroke="#d9a84a" stroke-width="1.5"/>
+  <circle cx="26" cy="35" r="3" fill="#fff"/><circle cx="38" cy="35" r="3" fill="#fff"/><circle cx="26" cy="35" r="1.6" fill="#c0601a"/><circle cx="38" cy="35" r="1.6" fill="#c0601a"/>
+  <path d="M29 41l3 5 3-5z" fill="#ffc93b"/><path d="M18 50q14 6 28 0" stroke="#f4efe4" stroke-width="4" fill="none"/></svg>` };
 SPEAKERS.X = { name: '傍受通信', cls: 'intercept', face: `<svg viewBox="0 0 64 64" aria-hidden="true"><rect x="6" y="6" width="52" height="52" rx="6" fill="#0a0a10" stroke="#8a8aa0" stroke-width="2"/>
   <path d="M12 24h40M12 32h40M12 40h40" stroke="#5a5a70" stroke-width="2" stroke-dasharray="3 4"/><path d="M14 46l8-14 6 10 6-18 6 14 4-6 6 14" stroke="#c08aff" stroke-width="2" fill="none"/></svg>` };
 const Cine = (() => {
@@ -8099,7 +8112,7 @@ const Cine = (() => {
     if (!cfg) return;
     if (!xfade.classList.contains('on')) veil(true, 0);
     const c = cfg, o = opts; cfg = null; cine = false;
-    el.classList.remove('on', 'cine', 'titled', 'talk', 'sfx');
+    el.classList.remove('on', 'cine', 'titled', 'talk', 'sfx', 'memory');
     renderPass.scene = scene; renderPass.camera = camera;
     if (c.flag) localStorage.setItem(c.flag, '1');
     if (o.fromLog) gstate = 'menu';
@@ -8278,22 +8291,39 @@ function cinePops(S, wreckInner, s, span = [-300, 300, 160]) {
     if (p.life <= 0) p.g.visible = false;
   }
 }
-// SOL as a flickering hologram (beacon / PALLAS's memory)
+// SOL as a hologram (the beacon): rim-lit so his shape reads (goggles, crest, scarf), with
+// scanlines, drop-outs and a beam from a small projector disc below
+const HOLO_VS = `varying vec3 vN; varying vec3 vV; varying float vY;
+void main() { vec4 wp = modelMatrix * vec4(position, 1.0); vY = wp.y; vec4 mv = viewMatrix * wp;
+  vN = normalize(normalMatrix * normal); vV = -mv.xyz; gl_Position = projectionMatrix * mv; }`;
+const HOLO_FS = `uniform vec3 uColor; uniform float uOpacity; uniform float uTime; varying vec3 vN; varying vec3 vV; varying float vY;
+void main() { float rim = pow(1.0 - abs(dot(normalize(vN), normalize(vV))), 2.2);
+  float scan = 0.72 + 0.28 * sin(vY * 1.4 - uTime * 7.0);
+  float band = step(0.985, fract(vY * 0.06 - uTime * 0.35)) * 0.8;
+  float a = (0.07 + rim * 0.75 + band) * scan * uOpacity;
+  gl_FragColor = vec4(uColor * (0.35 + rim * 0.8 + band), a); }`;
 function cineHologram(S) {
   const g = cineBird(S, 'sol', 7.5);
   if (!g) return null;
-  const mat = new THREE.MeshBasicMaterial({ color: 0x7fe8ff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
+  const mat = new THREE.ShaderMaterial({ vertexShader: HOLO_VS, fragmentShader: HOLO_FS, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+    uniforms: { uColor: { value: new THREE.Color(0x7fe8ff) }, uOpacity: { value: 0 }, uTime: { value: 0 } } });
   g.traverse(o => { if (o.isMesh) o.material = mat; });
-  g.userData.mat = mat; g.visible = false;
+  // projector: a glowing disc and a soft cone of light up to the figure
+  const beamM = new THREE.MeshBasicMaterial({ color: 0x7fe8ff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+  const beam = new THREE.Mesh(new THREE.ConeGeometry(11, 22, 32, 1, true), beamM); beam.position.y = 8; beam.rotation.x = Math.PI; g.add(beam);
+  const disc = glowSprite(0x7fe8ff, 14, 0); disc.position.y = -2; g.add(disc);
+  g.userData = { mat, beamM, disc, k: 0 }; g.visible = false;
   return g;
 }
 function cineHoloTick(h, t, on) {
   if (!h) return;
-  const m = h.userData.mat;
-  m.opacity += ((on ? 0.38 : 0) - m.opacity) * 0.08;
-  h.visible = m.opacity > 0.01;
-  if (on && Math.random() < 0.06) m.opacity *= 0.3;            // signal drop-outs
-  h.position.x += Math.random() < 0.04 ? (Math.random() - 0.5) * 2 : 0;
+  const u = h.userData;
+  u.k += ((on ? 1 : 0) - u.k) * 0.08;
+  const drop = on && Math.random() < 0.05 ? 0.25 : 1;            // signal drop-outs
+  u.mat.uniforms.uOpacity.value = u.k * 0.7 * drop; u.mat.uniforms.uTime.value = t;
+  u.beamM.opacity = u.k * 0.05 * drop; u.disc.material.opacity = u.k * 0.45;
+  h.visible = u.k > 0.01;
+  h.children[0].position.x = Math.random() < 0.04 && on ? (Math.random() - 0.5) * 0.6 : 0;   // a glitchy jitter
 }
 
 // ── CHAPTER 2 prologue: weeks later, a campfire on the hill; the intercepted message ──
@@ -8366,10 +8396,12 @@ const Confession = {
       'M:ふふ。ほら、ひまわりの種。ずっと持ってたんだよ。', 'R:……ばあちゃんの畑の味だ。', 'M:おや、その機体……これ、ソルの……', 'R:え？', 'P:…………', 'P:レイ。話さなければならないことがあります。'],
       on: { 6: S => { S.lookShip = true; } } },
     { mood: 'confess', lines: ['P:私は昔、アイギス・シールドを管理していました。', 'P:襲撃の一年前、シールドに仕込まれた裏口を見つけて、警告しました。',
-      'P:でも信じてもらえず、誤作動として凍結されました。', 'P:ただ一人、私を信じてくれた人が——この機体に、私を残してくれた。',
-      'P:前の操縦士は、ソル。……あなたの父です。', 'R:……なんで、黙ってた。', 'P:……怖かったんです。あなたまで、いなくなる気がして。', 'R:……バカだな。',
-      'R:何度だって立ち上がるって、言っただろ。俺も、お前も。', 'P:……はい。', 'M:ソルも、きっと同じことを言ったねえ。', 'R:行ってくる。ケルベロスを、止めに。'],
-      on: { 3: S => { S.holo = true; }, 5: S => { S.holo = false; } } },
+      'P:でも信じてもらえず、誤作動として凍結されることになりました。'] },
+    { mood: 'memory', lines: ['——襲撃の、一年前。', 'F:誤作動だって？ 俺には、お前が一番まともに見えるけどな。', 'P:……操縦士ソル。私は、凍結処分が決まったAIです。',
+      'F:だから、こいつに隠しとく。俺の古い相棒だ。退役したけど、まだ飛べる。', 'F:パラス。最後の命令だ。', 'F:次にこいつで飛ぶ奴を——守ってくれ。', 'P:……了解しました。'],
+      on: { 3: S => { S.board = true; }, 5: S => { S.wave = true; }, 6: S => { fxFlash(0x7ff6ff, 0.25); } } },
+    { mood: 'confess2', lines: ['P:それが、私を信じてくれた、ただ一人の人です。', 'P:前の操縦士は、ソル。……あなたの父です。', 'R:……なんで、黙ってた。', 'P:……怖かったんです。あなたまで、いなくなる気がして。', 'R:……バカだな。',
+      'R:何度だって立ち上がるって、言っただろ。俺も、お前も。', 'P:……はい。', 'M:ソルも、きっと同じことを言ったねえ。', 'R:行ってくる。ケルベロスを、止めに。'] },
   ],
   build(S) {
     Object.assign(S, cineStage(0x06100e)); cineHill(S); cineShip(S);
@@ -8384,22 +8416,36 @@ const Confession = {
       const gl = glowSprite(0x5aff9a, 50, 0.5); p.add(gl);
       S.podGroup.add(p); S.pods.push(p);
     }
-    S.ray = cineRay(S); S.pallas = cinePallas(S); S.mimosa = cineBird(S, 'mimosa'); S.holo = false; S.sol = cineHologram(S);
+    S.ray = cineRay(S); S.pallas = cinePallas(S); S.mimosa = cineBird(S, 'mimosa');
+    S.sol = cineBird(S, 'sol');                        // full colour, in the flashback
+    S.hillMat = S.hillSet[0].material; S.stumpMat = S.hillSet[1] && S.hillSet[1].material;
   },
-  reset(S) { S.lookShip = false; S.holo = false; S.lifted = S.veiled = false; S.cine = false; S.vel.set(0, 0, 0); for (const p of S.trail) { p.life = 0; p.g.visible = false; } },
+  reset(S) { S.lookShip = false; S.board = S.wave = false; S.lifted = S.veiled = false; S.cine = false; S.vel.set(0, 0, 0); for (const p of S.trail) { p.life = 0; p.g.visible = false; } },
   mood(S, m) {
-    const space = m === 'pods';
-    for (const o of S.hillSet) o.visible = !space;
+    const space = m === 'pods', mem = m === 'memory';
+    document.getElementById('story').classList.toggle('memory', mem);
+    for (const o of S.hillSet) { o.visible = !space; if (o !== S.hillSet[0]) o.scale.y = mem ? 2.2 : 1; }
+    // the past: Aegis still green
+    S.hillMat.color.setHex(mem ? 0x2c5a30 : 0x1a1416); if (S.stumpMat) S.stumpMat.color.setHex(mem ? 0x1f5a30 : 0x120c0e);
     S.wreck.w.visible = space;
-    S.ray.visible = !space; if (S.pallas) S.pallas.visible = !space; if (S.mimosa) S.mimosa.visible = !space;
-    if (space) { S.E.background = new THREE.Color(0x040c0a); S.E.fog = null; S.stars.material.opacity = 1; }
+    S.ray.visible = !space && !mem; if (S.pallas) S.pallas.visible = !space; if (S.mimosa) S.mimosa.visible = !space && !mem;
+    if (S.sol) S.sol.visible = mem;
+    S.podGroup.visible = !mem;
+    if (mem) {
+      S.paintSky([[0, 0x2a4a8a], [0.5, 0x7a8ac0], [0.7, 0xf0c080], [0.82, 0xffd8a0], [1, 0x6a5040]]);
+      S.E.background = S.skyTex; S.E.fog = new THREE.Fog(0xb09070, 600, 2200);
+      S.stars.material.opacity = 0; S.hemi.intensity = 1.0; S.key.color.setHex(0xffd0a0); S.key.intensity = 1.8; S.key.position.set(0.6, 0.8, 1);
+      S.hero.position.set(-64, S.groundY(-64, -40) + 6, -40); S.hero.rotation.set(0, 0.6, 0.03);
+      S.pallas.scale.setScalar(5.5); S.pallas.position.set(-26, S.groundY(-26, 6) + 30, 6);
+    } else if (space) { S.E.background = new THREE.Color(0x040c0a); S.E.fog = null; S.stars.material.opacity = 1; }
     else {
       const dusk = m === 'reunion';
       S.paintSky(dusk ? [[0, 0x14143a], [0.5, 0x3a2a5a], [0.68, 0xc0607a], [0.8, 0xf0a070], [1, 0x3a2020]]
                       : [[0, 0x040820], [0.55, 0x10183a], [0.72, 0x2a2048], [1, 0x0a0812]]);
       S.E.background = S.skyTex; S.E.fog = new THREE.Fog(dusk ? 0x5a3040 : 0x0c0c20, 400, 1600);
       S.stars.material.opacity = dusk ? 0.35 : 1;
-      S.hemi.intensity = dusk ? 1.0 : 0.8; S.key.color.setHex(dusk ? 0xffb080 : 0xa0b8ff);
+      S.hemi.intensity = dusk ? 1.0 : 0.8; S.key.color.setHex(dusk ? 0xffb080 : 0xa0b8ff); S.key.intensity = 1.4;
+      if (S.pallas) S.pallas.scale.setScalar(5.5);
       S.hero.position.set(-64, S.groundY(-64, -40) + 6, -40); S.hero.rotation.set(0, 0.6, 0.03);
       // the pods have landed around the hill, hatches open
       S.pods.forEach((p, i) => { const a = -0.9 + i * 0.22, R = 150 + (i % 3) * 30, x = Math.sin(a) * R, z = -Math.cos(a) * R * 0.6 - 20;
@@ -8419,26 +8465,44 @@ const Confession = {
       S.camPos.set(-60, 90, 360); S.camTarget.set(-60, 10, -60);
       return;
     }
-    const rx = 18, rz = 34, mx = -16, mz = 34;
-    const close = m === 'reunion' && li >= 1 ? Math.min(1, (S.hopT = (S.hopT || 0) + s) / 0.6) : (m === 'confess' ? 1 : 0);
+    if (m === 'memory') {
+      // SOL hides the frozen PALLAS in his retired ship and gives her one last order
+      const sx = -18, sz = 10;
+      if (S.sol) {
+        S.sol.position.set(sx, G(sx, sz), sz); S.sol.rotation.y += ((S.board ? -1.1 : -0.25) - S.sol.rotation.y) * Math.min(1, s * 3);
+        const sc = S.sol.getObjectByName('scarf'); if (sc) sc.rotation.y = Math.sin(t * 3) * 0.18;
+        const w = S.sol.getObjectByName('wingR'); if (w) w.rotation.z = S.wave ? -0.9 + Math.sin(t * 2) * 0.1 : 0;
+      }
+      if (S.pallas) {
+        if (S.board) {                                  // into the cockpit, shrinking out of sight
+          const ck = S.hero.position.clone(); ck.y += 8;
+          S.pallas.position.lerp(ck, Math.min(1, s * 1.6)); S.pallas.scale.multiplyScalar(Math.max(0.9, 1 - s * 1.2));
+          if (S.pallas.scale.x < 0.6) S.pallas.visible = false;
+        } else S.pallas.position.set(-40, G(-40, 6) + 28 + Math.sin(t * 1.4), 6);
+        cinePallasTick(S.pallas, t, S.sol ? S.sol.position : null, 0.12);      // frozen: the eye barely lit
+      }
+      S.camPos.set(40 - t * 1.2, S.g0 + 16, 125); S.camTarget.set(-34, S.g0 + 14, -8);
+      return;
+    }
+    const rx = 18, rz = 34, mx = -16, mz = 34, conf = m === 'confess' || m === 'confess2';
+    const close = m === 'reunion' && li >= 1 ? Math.min(1, (S.hopT = (S.hopT || 0) + s) / 0.6) : (conf ? 1 : 0);
     if (m === 'reunion' && li < 1) S.hopT = 0;
     const rxx = rx - close * 8;
     S.ray.position.set(rxx, G(rxx, rz) + 11 + Math.abs(Math.sin(t * (close < 1 ? 9 : 2))) * (close < 1 && li >= 1 ? 3 : 0.4), rz);
-    S.ray.rotation.set(0, m === 'confess' && li <= 9 ? 0.9 : -1.25, 0);
+    S.ray.rotation.set(0, m === 'confess' || (m === 'confess2' && li <= 6) ? 0.9 : -1.25, 0);
     cineLeaf(S.ray, t);
     if (S.mimosa) { S.mimosa.position.set(mx, G(mx, mz), mz); S.mimosa.rotation.y = S.lookShip && m === 'reunion' ? -2.4 : 1.25; }
     if (S.pallas) {
-      const px = m === 'confess' ? 34 : 32, py = G(rx, rz) + 30 + Math.sin(t * 2.2) * 1.5;
-      S.pallas.position.set(px, py, rz - 12);
-      cinePallasTick(S.pallas, t, m === 'confess' ? S.camPos : S.ray.position, m === 'reunion' && li === 8 ? 0.35 : 1);
+      const px = conf ? 34 : 32, py = G(rx, rz) + 30 + Math.sin(t * 2.2) * 1.5;
+      S.pallas.visible = true; S.pallas.position.set(px, py, rz - 12);
+      cinePallasTick(S.pallas, t, conf ? S.camPos : S.ray.position, m === 'reunion' && li === 8 ? 0.35 : 1);
     }
-    if (S.sol) { S.sol.position.set(-30, G(-30, 0), 0); S.sol.rotation.y = 0.6; cineHoloTick(S.sol, t, S.holo && !S.cine); }
     if (!S.cine) {
       cineEngine(S, false);
       if (m === 'reunion') {
         if (S.lookShip) { S.camPos.set(20, S.g0 + 20, 110); S.camTarget.set(-50, S.g0 + 14, -30); }
         else { S.camPos.set(2, S.g0 + 12, 110 - t * 1.2); S.camTarget.set(2, S.g0 + 12, 30); }
-      } else { S.camPos.set(70, S.g0 + 22, 175 - Math.min(t, 6) * 3); S.camTarget.set(6, S.g0 + 18, 20); }
+      } else { S.camPos.set(70, S.g0 + 22, 175 - Math.min(t, conf ? 6 : 0) * 3); S.camTarget.set(6, S.g0 + 18, 20); }
     }
   },
   cineStart(S) { S.cine = true; S.ray.visible = false; if (S.pallas) S.pallas.visible = false; sfx.ignite(); if (Music.started) Music.riser(1.6); },
@@ -8509,7 +8573,7 @@ const Epilogue2 = {
         S.camPos.set(-560 + t * 5, 160, 600); S.camTarget.set(20, -30 - t * 4, -380);
       } else {
         S.hero.position.set(0, Math.sin(t * 1.6) * 2, 0); S.hero.rotation.set(Math.sin(t) * 0.04, 0.9, 0);
-        if (S.sol) { S.sol.position.set(36, 18, -30); S.sol.rotation.y = 0.2; cineHoloTick(S.sol, t, S.holo); }
+        if (S.sol) { S.sol.position.set(52, 10, 10); S.sol.scale.setScalar(1.35); S.sol.rotation.y = 0.55 + Math.sin(t * 0.6) * 0.1; cineHoloTick(S.sol, t, S.holo); }
         // beacon rings pulsing far away (the gate)
         const k = (t * 0.5) % 1; S.ringFx.position.set(-500, 120, -1800); S.ringFx.scale.setScalar(40 + k * 260); S.ringFx.material.opacity = S.holo ? (1 - k) * 0.8 : 0;
         S.camPos.set(110, 40, 150); S.camTarget.set(10, 14, -30);
