@@ -7132,7 +7132,7 @@ const BOSS_DEFS2 = [
     cannon: 20, reflect: 9, bullet: 0.6, rail: 3, xp: 400,
     cycle: ['cores', 'twin', 'plasma', 'jaws', 'cores', 'fan', 'twin', 'plasma'], every: 92, rageEvery: 70 },
   { id: 'charon', name: 'CHARON', title: '冥界の渡し守', color: 0x4affa0, css: '#5affaa', hull: 0x0c2018,
-    cannon: 14, reflect: 7, bullet: 0.45, rail: 2.5, xp: 600,
+    cannon: 14, reflect: 7, bullet: 0.45, rail: 2.5, xp: 600, coreGlow: 90,
     cycle: ['cores', 'ring', 'gates', 'plasma', 'cores', 'mines', 'sweep', 'ring'], every: 100, rageEvery: 78 },
   { id: 'cerberus', name: 'CERBERUS', title: '冥王ハデス旗艦', color: 0xb070ff, css: '#c08aff', hull: 0x14101c,
     cannon: 12, reflect: 6, bullet: 0.35, rail: 2, xp: 1200, every: 96, rageEvery: 74,
@@ -7290,7 +7290,7 @@ function buildBossShip(def, second) {
     }
     for (const n of ['engine_L', 'engine_R']) { const p = at(n); if (p) { const sp = glowSprite(def.color, 130, 0.7); sp.position.copy(p); g.add(sp); } }
     const c = at('core');
-    if (c) { const cg = glowSprite(def.color, 200, 0.55); cg.position.copy(c); cg.name = 'coreGlow'; g.add(cg); }
+    if (c) { const cg = glowSprite(def.color, def.coreGlow || 200, 0.55); cg.position.copy(c); cg.name = 'coreGlow'; g.add(cg); }
     let hull = null; m.traverse(o => { if (o.isMesh && o.material.name === 'hull') hull = o.material; });
     g.userData.hullMat = hull || new THREE.MeshStandardMaterial();
     Object.assign(g.userData, { bossX: BM.bossX, tipDX: g.userData.tipDX ?? BM.tipDX, tipDY: g.userData.tipDY ?? BM.tipDY });
@@ -8446,6 +8446,7 @@ const Epilogue2 = {
     const space = m !== 'seed';
     for (const o of S.hillSet) o.visible = !space;
     S.wreck.w.visible = m === 'fall';
+    for (const p of S.pops) { p.life = 0; p.g.visible = false; }
     for (const o of [S.ray, S.pallas, S.mimosa, S.sprout, S.dome, S.sun]) if (o) o.visible = !space;
     S.hero.visible = true;
     if (space) { S.E.background = new THREE.Color(0x07041a); S.E.fog = null; S.stars.material.opacity = 1; S.hemi.intensity = 1; S.key.intensity = 1.4; S.key.color.setHex(0xc8b8ff); }
@@ -8500,7 +8501,7 @@ const Epilogue2 = {
     S.E.fog.color.set(new THREE.Color(0x3a2030).lerp(new THREE.Color(0x7a4a58), e));
     const d = Math.max(0, ct - 2.2);
     S.dome.position.copy(S.sprout.position); S.dome.scale.setScalar(10 + d * 260);
-    S.dome.material.opacity = d > 0 ? Math.max(0, 0.5 - d * 0.18) : 0;
+    S.dome.material.opacity = d > 0 ? Math.max(0, 0.22 - d * 0.09) : 0;
     if (d > 0 && !S.domeSaid) { S.domeSaid = true; sfx.shield(); fxFlash(0x7fe8ff, 0.3); }
     S.camPos.set(10 + e * 60, S.g0 + 12 + e * 40, 120 + e * 110); S.camTarget.set(-20, S.g0 + 14 + e * 30, -200);
     if (ct > 3.2 && !S.titled) { S.titled = true; return 'title'; }
