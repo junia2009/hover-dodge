@@ -420,10 +420,18 @@ button { font-family: var(--f-ui) }
   margin-left: 4px;
 }
 
+.rot-pilot { z-index: 3; font: 600 11px/1 var(--f-ui); letter-spacing: 3px; color: rgba(200, 220, 255, 0.6); }
+.rot-pilot b { color: #ffb066; font-family: var(--f-disp); letter-spacing: 1px; margin: 0 2px; }
+.rot-pilot .rank { color: #9ff8ff; }
+/* story progress: the flagships (Ⅰ / Ⅱ) */
+.rot-phase-timeline > div.ch2.reached { color: rgba(200, 160, 255, 0.95); }
+.rot-phase-timeline > div.ch2.reached::before { background: #c08aff; box-shadow: 0 0 6px rgba(192, 138, 255, 0.5); }
+.rot-phase-timeline > div.ch2.reached::after { background: #c08aff; border-color: #c08aff; box-shadow: 0 0 8px #c08aff; }
+
 /* Phase progression timeline */
 .rot-phase-timeline {
   display: flex;
-  width: min(320px, calc(100vw - 80px));
+  width: min(360px, calc(100vw - 48px));
   position: relative;
   z-index: 3;
   font-variant-numeric: tabular-nums;
@@ -431,8 +439,8 @@ button { font-family: var(--f-ui) }
 .rot-phase-timeline > div {
   flex: 1;
   text-align: center;
-  font: bold 10px/1.4 var(--f-ui);
-  letter-spacing: 1px;
+  font: bold 9px/1.4 var(--f-ui);
+  letter-spacing: 0.5px;
   color: rgba(140,170,200,0.4);
   padding-top: 22px;
   position: relative;
@@ -1909,12 +1917,9 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
 
   <p class="rot-stats-label">─── BEST RECORD ───</p>
   <p class="rot-stats-best" id="rot-best"><span class="nodata">— NO DATA —</span></p>
-  <div class="rot-phase-timeline" id="rot-timeline">
-    <div data-phase="1">PHASE 1<span class="sub">WALLS</span></div>
-    <div data-phase="2">PHASE 2<span class="sub">BULLETS</span></div>
-    <div data-phase="3">PHASE 3<span class="sub">SEEKERS</span></div>
-    <div data-phase="4">PHASE 4<span class="sub">CHAOS</span></div>
-  </div>
+  <p class="rot-pilot" id="rot-pilot"></p>
+  <p class="rot-stats-label">─── STORY ───</p>
+  <div class="rot-phase-timeline" id="rot-timeline"></div>
 
   <button class="rot-howto-btn" id="rot-howto-btn" type="button">HOW TO PLAY</button>
 
@@ -2318,7 +2323,7 @@ import { GLTFLoader }      from 'three/addons/loaders/GLTFLoader.js';
 
 // Single source of truth for the version: shown on the title / portrait
 // screens and passed to the service worker, which names its cache after it.
-const VERSION = '2.5.0';
+const VERSION = '2.5.1';
 
 // ── 3D models (glTF). The ship, Ray and PALLAS are waited for (briefly) before
 // the scene is built; the flagships stream in the background — they are
@@ -3754,6 +3759,23 @@ const _refreshRotXp = () => {
     }
   }
 };
+// portrait stats: best time, pilot level, and the story so far (flagships beaten, chapter Ⅱ once open)
+function refreshRotStats() {
+  const bestEl = document.getElementById('rot-best'), tl = document.getElementById('rot-timeline');
+  if (!bestEl || !tl) return;
+  const hi = +localStorage.getItem('hd_hi') || 0;
+  bestEl.innerHTML = hi > 0 ? `${hi}<span class="unit">SEC</span>` : '<span class="nodata">— NO DATA —</span>';
+  const lv = pilotLevel();
+  document.getElementById('rot-pilot').innerHTML = `<b>Lv ${lv}</b> · <span class="rank">${rankName(lv)}</span>`;
+  const b1 = +localStorage.getItem('hd_boss') || 0, b2 = +localStorage.getItem('hd_boss2') || 0, open2 = b1 >= 2;
+  const nodes = [['STYX', 'Ⅰ', b1 >= 1], ['ACHERON', 'Ⅰ', b1 >= 2],
+    [open2 ? 'ORTHROS' : '???', 'Ⅱ', b2 >= 1], [open2 ? 'CHARON' : '???', 'Ⅱ', b2 >= 2], [open2 ? 'CERBERUS' : '???', 'Ⅱ', b2 >= 3]];
+  const cur = nodes.findIndex(n => !n[2]);
+  tl.innerHTML = nodes.map(([name, ch, done], i) =>
+    `<div class="${ch === 'Ⅱ' ? 'ch2' : ''}${done ? ' reached' : ''}${i === cur ? ' current' : ''}">${name}<span class="sub">CHAPTER ${ch}</span></div>`).join('');
+  setText(document.querySelector('.rot-tagline'), chapter === 2 ? '冥王ハデスの影を追え' : '宇宙海賊団バイデントを追え');
+}
+_shopMQ.addEventListener ? _shopMQ.addEventListener('change', () => refreshRotStats()) : _shopMQ.addListener(() => refreshRotStats());
 if (_shopMQ.addEventListener) _shopMQ.addEventListener('change', _refreshRotXp);
 else if (_shopMQ.addListener) _shopMQ.addListener(_refreshRotXp);
 
@@ -5997,6 +6019,7 @@ function refreshTitleInfo() {
                  secOpts.midnight && 'MIDNIGHT', secOpts.size !== 'normal' && secOpts.size.toUpperCase() + ' SHIP'].filter(Boolean);
   setText(document.getElementById('t-modes'), modes.join(' · '));
   refreshChapterUI();
+  refreshRotStats();
 }
 // CHAPTER select: appears once ACHERON has fallen
 function refreshChapterUI() {
@@ -9084,40 +9107,6 @@ requestAnimationFrame(loop);
 </script>
 <script>
 // Rotate-screen: show the player's best record + best phase reached.
-// Reads localStorage and refreshes when the orientation changes back to portrait
-// (so a fresh high score from a landscape session shows up immediately).
-(function () {
-  const bestEl = document.getElementById('rot-best');
-  const tl = document.getElementById('rot-timeline');
-  if (!bestEl || !tl) return;
-
-  function bestPhase(hi) {
-    if (hi >= 100) return 4;
-    if (hi >=  50) return 3;
-    if (hi >=  20) return 2;
-    if (hi >    0) return 1;
-    return 0;
-  }
-  function refresh() {
-    const hi = +localStorage.getItem('hd_hi') || 0;
-    if (hi > 0) {
-      bestEl.innerHTML = `${hi}<span class="unit">SEC</span>`;
-    } else {
-      bestEl.innerHTML = '<span class="nodata">— NO DATA —</span>';
-    }
-    const bp = bestPhase(hi);
-    [...tl.children].forEach((c, i) => {
-      const p = i + 1;
-      c.classList.toggle('reached', p <= bp);
-      c.classList.toggle('current', p === bp);
-    });
-  }
-  refresh();
-  // Refresh whenever we (re)enter portrait orientation.
-  const mq = matchMedia('(orientation: portrait)');
-  if (mq.addEventListener) mq.addEventListener('change', refresh);
-  else if (mq.addListener) mq.addListener(refresh);
-})();
 </script>
 <script>
 if (location.protocol !== 'file:') {
