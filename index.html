@@ -1084,6 +1084,9 @@ button { font-family: var(--f-ui) }
   font: 700 10px/1 var(--f-disp) !important; letter-spacing: 2px;
   clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
 }
+.log-replay { display: flex; gap: 6px; padding: 8px 20px; overflow-x: auto; border-bottom: 1px solid rgba(95, 208, 255, 0.12); flex: none; }
+.log-replay .btn-mini { white-space: nowrap; flex: none; }
+.log-replay .btn-mini.ch2 { background: rgba(192, 138, 255, 0.16); color: #e2ccff; }
 .log-body { display: grid; grid-template-columns: minmax(200px, 34%) 1fr; }
 .log-list { overflow-y: auto; padding: 12px; display: grid; gap: 6px; align-content: start; border-right: 1px solid rgba(160, 200, 255, 0.09); }
 .log-item {
@@ -1171,6 +1174,18 @@ button { font-family: var(--f-ui) }
 .t-foot .ver { pointer-events: auto; cursor: default; padding: calc(6 * var(--px)); margin: calc(-6 * var(--px)); }
 .t-foot .secret-count b { color: #d8b4ff; text-shadow: 0 0 calc(8 * var(--px)) rgba(200, 160, 255, 0.6); }
 .t-eyebrow.titled { color: var(--c-gold); text-shadow: 0 0 calc(8 * var(--px)) rgba(255, 216, 74, 0.6); }
+/* chapter select (after ACHERON) */
+.t-chapter { display: flex; gap: calc(8 * var(--px)); margin-top: calc(18 * var(--px)); justify-content: center; }
+.t-chapter[hidden] { display: none; }
+.t-chapter button {
+  padding: calc(6 * var(--px)) calc(14 * var(--px)); border: 1px solid rgba(160, 200, 255, 0.25); background: rgba(10, 16, 40, 0.55);
+  color: rgba(200, 220, 255, 0.55); font: 700 calc(10 * var(--px))/1.2 var(--f-disp); letter-spacing: calc(2 * var(--px)); cursor: pointer;
+  clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+}
+.t-chapter button small { display: block; margin-top: 2px; font: 600 calc(8 * var(--px))/1 var(--f-ui); letter-spacing: calc(3 * var(--px)); opacity: 0.8; }
+.t-chapter button.on { color: #fff; border-color: var(--ch-c, #00e8ff); background: rgba(20, 30, 70, 0.8); box-shadow: 0 0 14px var(--ch-c, #00e8ff); }
+.t-chapter button[data-ch="2"] { --ch-c: #c08aff; }
+.t-chapter + .t-start { margin-top: calc(12 * var(--px)); }
 .t-modes {
   margin-top: calc(8 * var(--px)); min-height: calc(10 * var(--px));
   font: 700 calc(9 * var(--px))/1 var(--f-ui); letter-spacing: calc(3 * var(--px));
@@ -2122,10 +2137,9 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
     <header class="m-head">
       <div><div class="m-title">FLIGHT LOG</div><div class="m-sub" id="log-count">航海日誌</div></div>
       <div class="m-spacer"></div>
-      <button class="btn-mini" id="log-prologue" type="button">PROLOGUE ▶</button>
-      <button class="btn-mini" id="log-epilogue" type="button" hidden>EPILOGUE ▶</button>
       <button class="m-close" id="log-close" type="button" aria-label="Close">×</button>
     </header>
+    <div class="log-replay" id="log-replay"></div>
     <div class="m-body log-body">
       <div class="log-list" id="log-list"></div>
       <div class="log-page" id="log-page"></div>
@@ -2204,6 +2218,10 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
         <div class="t-eyebrow">NEON EVASION ARCADE</div>
         <h1 class="t-logo"><span>HOVER</span><span class="l2">DODGE</span></h1>
         <div class="t-tag">宇宙海賊団バイデントを追え</div>
+        <div class="t-chapter" id="t-chapter" hidden>
+          <button type="button" data-ch="1">CHAPTER Ⅰ<small>BIDENT</small></button>
+          <button type="button" data-ch="2">CHAPTER Ⅱ<small>CERBERUS</small></button>
+        </div>
         <button class="btn-primary t-start" id="start-btn" type="button">START<kbd>SPACE</kbd></button>
         <div class="t-modes" id="t-modes"></div>
         <div class="t-menu">
@@ -2296,10 +2314,10 @@ import { GLTFLoader }      from 'three/addons/loaders/GLTFLoader.js';
 
 // Single source of truth for the version: shown on the title / portrait
 // screens and passed to the service worker, which names its cache after it.
-const VERSION = '2.3.1';
+const VERSION = '2.4.0';
 
 // ── 3D models (glTF). The ship, Ray and PALLAS are waited for (briefly) before
-// the scene is built; the two flagships stream in the background — they are
+// the scene is built; the flagships stream in the background — they are
 // first needed 120 s into a run. Any model that fails to load falls back to
 // the procedural build, so the game always runs.
 const MODELS = {};
@@ -2309,6 +2327,13 @@ const loadModel = (k, url) => gltfLoader.loadAsync(url)
   .catch(e => console.warn('model', k, e && e.message));
 const coreModels = Promise.all([loadModel('ship', 'models/ship.glb'), loadModel('ray', 'models/ray.glb'), loadModel('pallas', 'models/pallas.glb')]);
 loadModel('styx', 'models/styx.glb'); loadModel('acheron', 'models/acheron.glb');
+// CHAPTER 2 cast — only fetched once the player can reach it (ACHERON beaten)
+let part2Models = null;
+function loadPart2Models() {
+  if (!part2Models) part2Models = Promise.all(['orthros', 'charon', 'cerberus', 'mimosa', 'sol'].map(k => loadModel(k, `models/${k}.glb`)));
+  return part2Models;
+}
+if ((+localStorage.getItem('hd_boss') || 0) >= 2) loadPart2Models();
 await Promise.race([coreModels, new Promise(r => setTimeout(r, 6000))]);
 // deep clone with private materials (so skins / flashes don't leak between copies)
 function cloneModel(src) {
@@ -3236,6 +3261,11 @@ for (const id of ['t-se', 'p-se'])   onTap(document.getElementById(id), () => se
 renderer.domElement.addEventListener('pointerdown', e => { if (e.button === 0 || e.pointerType !== 'mouse') flap(); });
 renderer.domElement.addEventListener('touchstart', e => e.preventDefault(), { passive: false });   // no scroll / zoom
 addEventListener('keydown', e => {
+  if (Cine.active) {
+    if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); if (!e.repeat) Cine.advance(); }
+    if (e.code === 'Escape') { e.preventDefault(); Cine.finish(); }
+    return;
+  }
   if (Epilogue.active) {
     if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); if (!e.repeat) Epilogue.advance(); }
     if (e.code === 'Escape') { e.preventDefault(); Epilogue.finish(); }
@@ -4476,6 +4506,17 @@ const sfx = {
     } else if (sp === 'A') {   // ACHERON: smooth, cold, a little reverb
       const m = 62 + [0, 3, 7][(r * 3) | 0];
       voice({ type: 'sine', f: mtof(m), f2: mtof(m - 1), t, dur: 0.08, vol: 0.05, out: AU.sfxBus, rev: 0.25 });
+    } else if (sp === 'O') {   // ORTHROS: short, snarling barks
+      const m = 57 + [0, 2, 5][(r * 3) | 0];
+      voice({ type: 'sawtooth', f: mtof(m + 5), f2: mtof(m), t, dur: 0.05, vol: 0.04, out: AU.sfxBus, lp: 1400 });
+    } else if (sp === 'C') {   // CHARON: oily, wavering
+      const m = 55 + [0, 4, 7][(r * 3) | 0];
+      voice({ type: 'triangle', f: mtof(m), f2: mtof(m + 1), t, dur: 0.09, vol: 0.05, out: AU.sfxBus, rev: 0.2 });
+    } else if (sp === 'H') {   // HADES: very low, cavernous
+      voice({ type: 'sawtooth', f: mtof(38 + [0, 3][(r * 2) | 0]), t, dur: 0.12, vol: 0.05, out: AU.sfxBus, lp: 600, rev: 0.45 });
+    } else if (sp === 'M') {   // MIMOSA: soft and warm
+      const m = 72 + [0, 4, 7, 9][(r * 4) | 0];
+      voice({ type: 'sine', f: mtof(m), f2: mtof(m - 2), t, dur: 0.07, vol: 0.05, out: AU.sfxBus });
     }
   },
   comm(sp) {
@@ -4484,7 +4525,7 @@ const sfx = {
     // radio channel opening: static burst + two-tone chirp
     noiseHit({ t, dur: 0.09, vol: 0.06, out: AU.sfxBus, type: 'bandpass', f: 2200, q: 1.5 });
     if (sp === 'P') { voice({ type: 'sine', f: 1320, t, dur: 0.05, vol: 0.05, out: AU.sfxBus }); voice({ type: 'sine', f: 1760, t: t + 0.06, dur: 0.06, vol: 0.045, out: AU.sfxBus }); }
-    else if (sp === 'S' || sp === 'A') { voice({ type: 'square', f: 440, t, dur: 0.06, vol: 0.04, out: AU.sfxBus, lp: 1800 }); voice({ type: 'square', f: 330, t: t + 0.07, dur: 0.08, vol: 0.04, out: AU.sfxBus, lp: 1800 }); }
+    else if ('SAOCH'.includes(sp)) { voice({ type: 'square', f: 440, t, dur: 0.06, vol: 0.04, out: AU.sfxBus, lp: 1800 }); voice({ type: 'square', f: 330, t: t + 0.07, dur: 0.08, vol: 0.04, out: AU.sfxBus, lp: 1800 }); }
     else voice({ type: 'triangle', f: 900, f2: 1500, t, dur: 0.09, vol: 0.06, out: AU.sfxBus });
   },
   // ── boss SFX ──
@@ -5557,6 +5598,7 @@ function update(dt) {
       if (e.dead) continue;
       const dist = Math.hypot(pr.x - e.x, pr.y - e.y);
       if (dist > pr.r + e.r || dist < pr.prevR - e.r) continue;
+      if (e.type === 'p' && e.dark) { killEnemy(e, 'pulse'); continue; }
       if (e.type === 'p') {
         if (!e.reflected) { e.reflected = true; e.life = 400; sfx.reflect(); Story.onReflect(); pushBonus(e.x, e.y - 14, 'REFLECT', '#7ff6ff'); spawnSparks(e.x, e.y, 10, { color: 0x7ff6ff }); }
         continue;
@@ -5799,6 +5841,7 @@ function syncScene() {
     if (e.type === 'p') {
       const ring = grp.getObjectByName('pring'), core = grp.getObjectByName('pcore');
       ring.rotation.set(e.spin * 0.6, e.spin, 0);
+      if (e.dark && !e._recol) { e._recol = true; core.material.color.setHex(0x2a0a4a); ring.material.color.setHex(0x8a3aff); grp.children[2].material.color.setHex(0x6a20e0); }
       if (e.reflected && !e._recol) { e._recol = true; core.material.color.setHex(0x7ff6ff); ring.material.color.setHex(0xd0fbff); grp.children[2].material.color.setHex(0x00e8ff); }
       grp.scale.setScalar(1.25 + Math.sin(e.spin * 2) * 0.08);
     } else if (e.type === 'b') {
@@ -5949,7 +5992,23 @@ function refreshTitleInfo() {
   const modes = [secOpts.hardcore && '☠ HARDCORE', secOpts.mirror && 'MIRROR', secOpts.retro && 'RETRO',
                  secOpts.midnight && 'MIDNIGHT', secOpts.size !== 'normal' && secOpts.size.toUpperCase() + ' SHIP'].filter(Boolean);
   setText(document.getElementById('t-modes'), modes.join(' · '));
+  refreshChapterUI();
 }
+// CHAPTER select: appears once ACHERON has fallen
+function refreshChapterUI() {
+  const open = bossBest >= BOSS_DEFS.length;
+  if (!open) chapter = 1;
+  document.getElementById('t-chapter').hidden = !open;
+  for (const b of document.querySelectorAll('#t-chapter [data-ch]')) b.classList.toggle('on', +b.dataset.ch === chapter);
+  setText(document.querySelector('.t-tag'), chapter === 2 ? '冥王ハデスの影を追え' : '宇宙海賊団バイデントを追え');
+}
+function setChapter(ch) {
+  if (ch === chapter) return;
+  chapter = ch; localStorage.setItem('hd_chapter', String(ch));
+  if (ch === 2) loadPart2Models();
+  ui.select(); refreshChapterUI();
+}
+for (const b of document.querySelectorAll('#t-chapter [data-ch]')) onTap(b, () => setChapter(+b.dataset.ch));
 
 // Result screen values are written once at death; the score counts up when
 // the screen appears.
@@ -6271,6 +6330,7 @@ const hourNow = () => new Date().getHours();
 const isLate = () => { const h = hourNow(); return h >= 23 || h < 5; };
 const isMorning = () => { const h = hourNow(); return h >= 5 && h < 10; };
 const bossDone = () => (typeof bossBest === 'number' ? bossBest : 0);
+const bossDone2 = () => (typeof bossBest2 === 'number' ? bossBest2 : 0);
 const secCount = () => (typeof secretsFound !== 'undefined' ? secretsFound.length : 0);
 
 const CHAT = {
@@ -6306,13 +6366,21 @@ const CHAT = {
     { w: () => storyRuns >= 100 && storyRuns % 25 === 0, p: 20, l: [['P', () => `通算${storyRuns}回目の出撃。`], ['R', '何度だって飛ぶって言っただろ。']] },
     { w: () => hardcoreRun, p: 6, l: [['P', '全スキル停止を確認。正気ですか？'], ['R', '素の俺で十分だ。']] },
     { w: () => !hardcoreRun && equippedSkills.length === 0 && storyRuns > 3, l: [['P', 'スキル未装備です。'], ['R', '身軽な方が速い。'], ['P', 'そういう問題では……']] },
-    { w: () => bossDone() === 0 && hiScore >= 80, l: [['P', 'バイデント旗艦の反応は、120秒地点です。'], ['R', 'そこまで行けばいいんだな。']] },
-    { w: () => bossDone() === 1, l: [['R', 'あと一本。アケロンだ。'], ['P', '240秒地点です。集中して。']] },
+    { ch: 1, w: () => bossDone() === 0 && hiScore >= 80, l: [['P', 'バイデント旗艦の反応は、120秒地点です。'], ['R', 'そこまで行けばいいんだな。']] },
+    { ch: 1, w: () => bossDone() === 1, l: [['R', 'あと一本。アケロンだ。'], ['P', '240秒地点です。集中して。']] },
     { w: () => bossDone() >= 2, l: [['P', 'バイデント残党の掃討任務です。'], ['R', '残党でも許さない。'], ['P', 'その通りです。']] },
     { w: () => bossDone() >= 2, l: [['R', 'パイロット・レイ、出る。'], ['P', '……肩書きが気に入ったようですね。']] },
     { w: () => secCount() >= 5, l: [['P', '今日も隠し機能を探すのですか？'], ['R', '探してない。たまたま見つかるんだ。']] },
     { w: () => pilotLevel() >= 10, l: [['P', () => `パイロットランク ${pilotLevel()}。順調です。`], ['R', 'まだまだ上がるぞ。']] },
     { w: () => hullMax >= 3, l: [['P', () => `装甲 ${hullMax} 枚。前より頑丈です。`], ['R', '俺もな。'], ['P', '……そうですね。']] },
+    // CHAPTER 2
+    { ch: 2, p: 3, l: [['R', 'ハデス……待ってろ。'], ['P', 'まずは前方の壁を待ってください。']] },
+    { ch: 2, w: () => bossDone2() === 0, p: 6, l: [['P', '猟犬の反応は90秒地点です。'], ['R', '犬か。……鳥は犬に強いんだ。'], ['P', '根拠は？'], ['R', 'ない。']] },
+    { ch: 2, w: () => bossDone2() === 1, p: 6, l: [['P', '輸送要塞カロンは180秒地点。捕虜が乗っています。'], ['R', '……絶対に助ける。']] },
+    { ch: 2, w: () => bossDone2() === 2, p: 6, l: [['P', 'ケルベロスは270秒地点です。'], ['R', '行こう、パラス。'], ['P', 'はい。……一緒に。']] },
+    { ch: 2, w: () => bossDone2() >= 2, l: [['R', 'ばあちゃん、元気かな。'], ['P', 'ひまわりの世話をしているそうです。'], ['R', '……そっか。']] },
+    { ch: 2, w: () => bossDone2() >= 2, l: [['P', '……レイ。今まで、黙っていてすみませんでした。'], ['R', 'もういいって。相棒だろ。']] },
+    { ch: 2, w: () => bossDone2() >= 3, l: [['P', 'ビーコンの解析、続けています。'], ['R', '……父さん。'], ['P', '必ず、見つけます。']] },
   ],
   zone1: [
     [['P', 'バイデントの前線に入ります。砲撃に注意。'], ['R', '見えてる。……たぶん。']],
@@ -6423,9 +6491,11 @@ const CHAT = {
   ],
   m30:  [[['P', '30秒経過。'], ['R', 'まだまだ。']], [['R', '体が温まってきた。'], ['P', '機体もです。']]],
   m60:  [[['P', '1分経過。悪くないペースです。'], ['R', '悪くない、じゃなくて最高、だろ。']], [['R', '1分か。腹が減ってきた。'], ['P', '早すぎます。']]],
-  m90:  [{ w: () => bossDone() === 0, l: [['P', '大型艦の反応が近づいています。'], ['R', '……来るなら来い。']] },
+  m90:  [{ ch: 2, l: [['P', '猟犬の反応、接近。'], ['R', '来い、ワンコロ。']] },
+         { ch: 1, w: () => bossDone() === 0, l: [['P', '大型艦の反応が近づいています。'], ['R', '……来るなら来い。']] },
          [['P', '90秒。集中力、維持してください。'], ['R', '維持どころか上がってる。']]],
-  m180: [[['R', '3分……翼がしびれてきた。'], ['P', 'あと少しです。たぶん。']], { w: () => bossNext === 1, l: [['P', '3分経過。'], ['R', 'アケロンまで、あと1分か。']] }],
+  m180: [[['R', '3分……翼がしびれてきた。'], ['P', 'あと少しです。たぶん。']], { ch: 1, w: () => bossNext === 1, l: [['P', '3分経過。'], ['R', 'アケロンまで、あと1分か。']] },
+         { ch: 2, w: () => bossNext === 2, l: [['P', '3分経過。カロンの反応、消失。'], ['R', 'みんな……無事でいてくれ。']] }],
   m300: [[['P', '5分経過。驚異的です。'], ['R', '知ってた。']]],
   m420: [[['P', '7分。もはや伝説です。'], ['R', '伝説の鳥、レイ。いい響きだ。']]],
   m600: [[['P', '10分。……あなたは本当に、パイロットです。'], ['R', '……知ってるよ。']]],
@@ -6454,6 +6524,11 @@ const CHAT = {
     { w: () => hardcoreRun, l: [['P', 'スキルなしで、よくここまで。'], ['R', '翼ひとつで十分だ。']] },
     { w: () => secCount() >= 3, l: [['R', 'この機体、まだ隠し機能あるだろ。'], ['P', 'ノーコメントです。']] },
     { w: () => storyRuns >= 50, l: [['P', () => `出撃回数、通算${storyRuns}回。`], ['R', '数えるな。'], ['P', '趣味です。']] },
+    { ch: 2, l: [['R', 'なあパラス、俺の葉っぱ、なんで光ったんだ？'], ['P', '解析中です。……盾の樹と関係があるかもしれません。']] },
+    { ch: 2, l: [['P', 'ハデス。冥界の王の名です。'], ['R', '王様だろうが関係ない。']] },
+    { ch: 2, l: [['R', '俺の葉っぱ、狙われてるんだよな。'], ['P', 'はい。'], ['R', '……ちょっと誇らしい。'], ['P', '危機感を持ってください。']] },
+    { ch: 2, w: () => bossDone2() >= 2, l: [['R', 'ばあちゃんのひまわりの種、うまかったな。'], ['P', '非常食に加えておきました。'], ['R', 'さすが。']] },
+    { ch: 2, w: () => bossDone2() >= 2, l: [['R', '父さんも、この機体で飛んでたんだよな。'], ['P', 'はい。……あなたの方が、少しだけ丁寧です。']] },
   ],
 };
 
@@ -6492,6 +6567,7 @@ function chat(cat) {
   const ok = [];
   pool.forEach((e, i) => {
     const en = Array.isArray(e) ? { l: e } : e;
+    if (en.ch && en.ch !== chapter) return;
     if (!en.w || en.w()) ok.push({ ...en, i });
   });
   if (!ok.length) return null;
@@ -6638,6 +6714,14 @@ const LOGS = [
     text: 'ステュクスを落とした。でかい図体で、でかい声で、最後まで仲間の名前を呼んでいた。\nアケロン。もう一本の穂先。あいつがアイギスを焼く作戦を立てたらしい。\nパラスが「今のは良い操縦でした」と言った。二回目だ。数えてる。' },
   { id: 'ending', title: 'パイロット', hint: 'アケロンを撃破', ok: () => bossBest >= 2,
     text: 'バイデントは終わった。アイギスの空は、もう戻らない。\nでも丘の上で見上げていたあの星の海を、俺は今、自分の翼で飛んでいる。\nパラスが言った。「あなたはパイロットです、レイ」。……知ってるよ。ずっと前から決めてたんだ。' },
+  { id: 'hound', title: '芽', hint: 'CHAPTER Ⅱ：オルトロスを撃破', ok: () => bossBest2 >= 1,
+    text: '葉っぱが光った夜から、ずっと誰かに追われてる。\nオルトロスとかいう双頭の犬が言ってた。「その芽を寄こせ」。\n芽ってなんだ。俺の葉っぱは、ヒナの頃に頭に落ちてきた盾の樹の種が……あ。' },
+  { id: 'mimosa', title: 'ばあちゃん', hint: 'CHAPTER Ⅱ：カロンを撃破', ok: () => bossBest2 >= 2,
+    text: 'ばあちゃんが生きてた。カロンの船の中で、ずっとひまわりの種を握りしめてたらしい。\n「大きくなったねえ」って。数週間で大きくなるわけない。……なるわけないのに、泣きそうになった。\nパラスが「記録しました」って言った。今回は、許す。' },
+  { id: 'father', title: '父さん', hint: 'CHAPTER Ⅱ：パラスの話を聞く', ok: () => bossBest2 >= 2,
+    text: 'この機体は、父さんのだった。パラスは、父さんが残した相棒だった。\n「次にこいつで飛ぶ奴を、守ってくれ」——それが父さんの最後の命令だって。\n……ずるいよな。そんなの、守られるに決まってる。だから今度は、俺が守る番だ。' },
+  { id: 'gate', title: '門', hint: 'CHAPTER Ⅱ：ケルベロスを撃破', ok: () => bossBest2 >= 3,
+    text: '丘に、盾の樹の種を植えた。ばあちゃんがひまわりの隣で水をやってる。\nケルベロスの残骸から、父さんのビーコンが届いた。発信源は銀河の果て、「門」の向こう。\n何度だって飛ぶって決めたんだ。待ってろよ、父さん。' },
   { id: 'secrets', title: '隠し機能', hint: 'SECRETS を5つ発見', ok: () => secretsFound.length >= 5,
     text: 'この機体、隠し機能が多すぎる。ロゴを叩くと画面が緑になるし、逆さに回すと世界が反転する。\nパラスに聞いたら「設計者の趣味です」とだけ返ってきた。\nアイギスの技術者、たぶん俺と気が合う。' },
 ];
@@ -6675,12 +6759,23 @@ function renderLogUI() {
     logSel = b.dataset.log; ui.select(); renderLogUI();
   });
 }
-function openLog()  { ui.open(); renderLogUI(); document.getElementById('log-epilogue').hidden = bossBest < BOSS_DEFS.length; logModal.classList.add('open'); }
+// story scenes that can be watched again from the LOG
+const REPLAYS = [
+  { k: 'Ⅰ PROLOGUE', ok: () => true, go: () => Prologue.play(null) },
+  { k: 'Ⅰ EPILOGUE', ok: () => bossBest >= BOSS_DEFS.length, go: () => Epilogue.play(true) },
+  { k: 'Ⅱ PROLOGUE', ch2: true, ok: () => !!localStorage.getItem('hd_prologue2'), go: () => Prologue2.play({ fromLog: true }) },
+  { k: 'Ⅱ 告白', ch2: true, ok: () => bossBest2 >= 2, go: () => Confession.play({ fromLog: true }) },
+  { k: 'Ⅱ EPILOGUE', ch2: true, ok: () => bossBest2 >= BOSS_DEFS2.length, go: () => Epilogue2.play({ fromLog: true }) },
+];
+function renderReplays() {
+  const row = document.getElementById('log-replay');
+  row.innerHTML = REPLAYS.map((r, i) => r.ok() ? `<button class="btn-mini${r.ch2 ? ' ch2' : ''}" type="button" data-rp="${i}">${r.k} ▶</button>` : '').join('');
+  for (const b of row.querySelectorAll('[data-rp]')) onTap(b, () => { closeLog(); REPLAYS[+b.dataset.rp].go(); });
+}
+function openLog()  { ui.open(); renderLogUI(); renderReplays(); logModal.classList.add('open'); }
 function closeLog() { ui.back(); logModal.classList.remove('open'); refreshTitleInfo(); }
 onTap(document.getElementById('t-log-btn'), openLog);
 onTap(document.getElementById('log-close'), closeLog);
-onTap(document.getElementById('log-prologue'), () => { closeLog(); Prologue.play(null); });
-onTap(document.getElementById('log-epilogue'), () => { closeLog(); Epilogue.play(true); });   // unlocked by beating ACHERON
 addEventListener('keydown', e => {
   if (e.code === 'Escape' && logModal.classList.contains('open')) { e.preventDefault(); closeLog(); }
 });
@@ -7006,6 +7101,11 @@ const Prologue = (() => {
 })();
 // START from the title: the first time, the prologue plays before the run
 function requestStart() {
+  if (chapter === 2) {                       // CHAPTER 2: its own prologue the first time
+    if (!localStorage.getItem('hd_prologue2')) Prologue2.play({ onDone: () => startGame({ intro: true }) });
+    else startGame();
+    return;
+  }
   if (!localStorage.getItem('hd_prologue')) Prologue.play(() => startGame({ intro: true }));
   else startGame();
 }
@@ -7024,6 +7124,29 @@ const BOSS_DEFS = [
     cannon: 14, reflect: 7, bullet: 0.45, rail: 2.5, xp: 300,
     cycle: ['cores', 'gates', 'plasma', 'sweep', 'cores', 'mines', 'laser', 'gates'], every: 105, rageEvery: 80 },
 ];
+// CHAPTER 2 (unlocked by beating ACHERON): HADES's hound, the ferryman, and CERBERUS — three heads
+// broken one by one (flame → ice → darkness). Bosses at 90 / 180 / 270 s.
+const BOSS_AT2 = [90, 180, 270];
+const BOSS_DEFS2 = [
+  { id: 'orthros', name: 'ORTHROS', title: 'ハデスの猟犬', color: 0xff8a2a, css: '#ff9a3c', hull: 0x2a1408,
+    cannon: 20, reflect: 9, bullet: 0.6, rail: 3, xp: 400,
+    cycle: ['cores', 'twin', 'plasma', 'jaws', 'cores', 'fan', 'twin', 'plasma'], every: 92, rageEvery: 70 },
+  { id: 'charon', name: 'CHARON', title: '冥界の渡し守', color: 0x4affa0, css: '#5affaa', hull: 0x0c2018,
+    cannon: 14, reflect: 7, bullet: 0.45, rail: 2.5, xp: 600,
+    cycle: ['cores', 'ring', 'gates', 'plasma', 'cores', 'mines', 'sweep', 'ring'], every: 100, rageEvery: 78 },
+  { id: 'cerberus', name: 'CERBERUS', title: '冥王ハデス旗艦', color: 0xb070ff, css: '#c08aff', hull: 0x14101c,
+    cannon: 12, reflect: 6, bullet: 0.35, rail: 2, xp: 1200, every: 96, rageEvery: 74,
+    stages: [
+      { head: 'L', label: '炎の首', color: 0xff7a2a, cycle: ['cores', 'flame', 'plasma', 'fan', 'cores', 'flame', 'laser', 'plasma'] },
+      { head: 'R', label: '氷の首', color: 0x6ae0ff, cycle: ['cores', 'curtain', 'plasma', 'sweep', 'cores', 'curtain', 'mines', 'plasma'] },
+      { head: 'C', label: '闇の首', color: 0xb070ff, cycle: ['cores', 'dark', 'plasma', 'jaws', 'cores', 'dark', 'gates', 'laser', 'plasma'] },
+    ] },
+];
+let chapter = localStorage.getItem('hd_chapter') === '2' ? 2 : 1;   // chapter played by the current / next run
+let bossBest2 = +localStorage.getItem('hd_boss2') || 0;            // CHAPTER 2 bosses ever defeated
+const chBossDefs = () => chapter === 2 ? BOSS_DEFS2 : BOSS_DEFS;
+const chBossAt   = () => chapter === 2 ? BOSS_AT2 : BOSS_AT;
+const chBossBest = () => chapter === 2 ? bossBest2 : bossBest;
 let boss = null;                 // active fight
 let bossNext = 0;                // next boss index this run
 let bossLasers = [];
@@ -7039,6 +7162,24 @@ const ACHERON_FACE = `<svg viewBox="0 0 64 64" aria-hidden="true"><rect x="6" y=
   <path d="M24 34h6M34 34h6" stroke="#d2b8ff" stroke-width="2.5"/><path d="M28 43q4 2 8 0" stroke="#9a6cff" stroke-width="1.5" fill="none"/></svg>`;
 SPEAKERS.S = { name: 'STYX', face: STYX_FACE, cls: 'styx' };
 SPEAKERS.A = { name: 'ACHERON', face: ACHERON_FACE, cls: 'acheron' };
+const ORTHROS_FACE = `<svg viewBox="0 0 64 64" aria-hidden="true"><rect x="6" y="6" width="52" height="52" rx="6" fill="#1c0c06" stroke="#ff9a3c" stroke-width="2"/>
+  <path d="M14 22l6-10 5 12M50 22l-6-10-5 12" fill="#6a2e1c" stroke="#ff9a3c" stroke-width="1.5"/><path d="M16 50c0-16 7-24 16-24s16 8 16 24z" fill="#3a1a14"/>
+  <path d="M20 34l7 2M44 34l-7 2" stroke="#ffd060" stroke-width="3" stroke-linecap="round"/><path d="M26 44l3 4 3-4 3 4 3-4" stroke="#e8d8c8" stroke-width="1.5" fill="none"/></svg>`;
+const CHARON_FACE = `<svg viewBox="0 0 64 64" aria-hidden="true"><rect x="6" y="6" width="52" height="52" rx="6" fill="#06120e" stroke="#5affaa" stroke-width="2"/>
+  <path d="M12 54c2-24 9-38 20-38s18 14 20 38z" fill="#1a1424"/><ellipse cx="32" cy="36" rx="10" ry="12" fill="#050808"/>
+  <circle cx="28" cy="34" r="2.2" fill="#d8ffe0"/><circle cx="36" cy="34" r="2.2" fill="#d8ffe0"/><circle cx="50" cy="16" r="3" fill="#7affb0"/></svg>`;
+const HADES_FACE = `<svg viewBox="0 0 64 64" aria-hidden="true"><rect x="6" y="6" width="52" height="52" rx="6" fill="#08060c" stroke="#c08aff" stroke-width="2"/>
+  <path d="M18 22l4-10 5 7 5-9 5 9 5-7 4 10z" fill="#c9a24a"/><path d="M14 54c0-20 8-30 18-30s18 10 18 30z" fill="#16141c"/>
+  <path d="M22 36l7 1M42 36l-7 1" stroke="#b070ff" stroke-width="3" stroke-linecap="round"/><path d="M27 46h10" stroke="#6a20e0" stroke-width="2"/></svg>`;
+const MIMOSA_FACE = `<svg viewBox="0 0 64 64" aria-hidden="true"><rect x="6" y="6" width="52" height="52" rx="6" fill="#2a2010" stroke="#ffd25a" stroke-width="2"/>
+  <circle cx="32" cy="36" r="18" fill="#f7d55c"/><path d="M32 18a18 18 0 0 1 0 36z" fill="#d8913c"/>
+  <circle cx="25" cy="33" r="5" fill="none" stroke="#b08a3a" stroke-width="1.5"/><circle cx="39" cy="33" r="5" fill="none" stroke="#b08a3a" stroke-width="1.5"/>
+  <path d="M22 33q3-3 6 0M36 33q3-3 6 0" stroke="#3a2a1a" stroke-width="1.5" fill="none"/><path d="M29 40l3 5 3-5z" fill="#ffb43b"/>
+  <circle cx="45" cy="16" r="5" fill="#5a3418"/><g fill="#ffd21e"><circle cx="45" cy="9" r="2.5"/><circle cx="52" cy="16" r="2.5"/><circle cx="38" cy="16" r="2.5"/><circle cx="45" cy="23" r="2.5"/></g></svg>`;
+SPEAKERS.O = { name: 'ORTHROS', face: ORTHROS_FACE, cls: 'orthros' };
+SPEAKERS.C = { name: 'CHARON', face: CHARON_FACE, cls: 'charon' };
+SPEAKERS.H = { name: 'HADES', face: HADES_FACE, cls: 'hades' };
+SPEAKERS.M = { name: 'MIMOSA', face: MIMOSA_FACE, cls: 'mimosa' };
 
 const BOSS_LINES = {
   styx: {
@@ -7072,12 +7213,58 @@ const BOSS_LINES = {
     ],
   },
 };
+Object.assign(BOSS_LINES, {
+  orthros: {
+    intro:  [['O', '……匂うぞ。盾の樹の匂いだ。'], ['R', '誰だ、お前。'], ['O', '主の猟犬、オルトロス。その芽を寄こせ。'], ['P', '双頭の高速艦です。二つの首から挟み撃ちに来ます。']],
+    rage:   [['O', '逃がすか……！ 噛み砕いてやる！'], ['R', 'しつこさなら、俺も負けてない。']],
+    defeat: [['O', '主よ……芽は……本物です……'], ['R', '芽？ ……俺の葉っぱのことか？'], ['P', '……解析します。']],
+    again: [
+      [['O', 'また会ったな、芽の鳥。'], ['R', '変なあだ名つけるな。']],
+      [['O', '今度こそ、その芽を主に届ける。'], ['P', '宛先不明で返送してください。']],
+      [['O', '匂いで分かっていた。お前はまた来ると。'], ['R', '鼻がいいな。']],
+    ],
+    defeatAgain: [
+      [['O', 'く……主よ……'], ['R', 'お前の主に伝えとけ。葉っぱはやらない。']],
+      [['O', '次は……逃がさん……'], ['P', 'その台詞、記録済みです。']],
+    ],
+  },
+  charon: {
+    intro:  [['C', 'おや、お客様ですか。渡し賃は、いただきますよ。'], ['R', 'その船に乗せてるのは……アイギスのみんなか！'], ['C', '積み荷です。傷がつくと困るのですがねえ。'], ['P', '捕虜ポッドを確認。本体だけを狙います。']],
+    rage:   [['C', '困りますねえ……追加料金をいただきましょう。'], ['R', '払うのはお前だ！']],
+    defeat: [['C', 'やれやれ……大赤字です……'], ['P', '捕虜ポッド、切り離しを確認。生体反応、多数。'], ['R', 'みんな……！']],
+    again: [
+      [['C', 'またのご利用、ありがとうございます。'], ['R', '利用してない。']],
+      [['C', '今回は前払いでお願いしますよ。'], ['P', 'お断りします。']],
+      [['C', 'あなたのせいで商売あがったりです。'], ['R', 'やめればいいだろ。']],
+    ],
+    defeatAgain: [
+      [['C', '赤字……また赤字……'], ['R', '毎度あり。']],
+      [['C', '請求書は……ハデス様に……'], ['P', '受け取りを拒否します。']],
+    ],
+  },
+  cerberus: {
+    intro:  [['H', '……来たか。盾の芽を持つ鳥よ。'], ['R', 'お前が……ハデス。'], ['H', '芽を渡せ。それは盾だ。お前には過ぎた盾だ。'], ['R', 'やらない。これは、アイギスの最後の緑だ。'], ['P', '三つ首を確認。一本ずつ折ります。まずは炎の首。']],
+    stage1: [['H', '炎の首を折ったか。……では、凍えるがいい。'], ['P', '氷の首です。弾はゆっくり来ます。隙間を探して。']],
+    stage2: [['H', '……ソルと、同じ目だ。'], ['R', '……父さんを知ってるのか！？'], ['P', '闇の首です！ 闇の弾は反射できません。PULSE で消して。']],
+    rage:   [['H', '……我が首を、二本も。']],
+    defeat: [['H', '我が……盾が……'], ['R', '……これで、終わりだ。'], ['P', 'ケルベロス、沈黙。……レイ。']],
+    again: [
+      [['H', 'また来たか、芽の鳥よ。'], ['R', '何度でも来る。']],
+      [['H', 'その芽、今度こそ我が盾に。'], ['R', 'やらないって言ってるだろ。'], ['P', '三つ首、一本ずつです。']],
+    ],
+    defeatAgain: [
+      [['H', '……なぜ、折れぬ……'], ['R', '何度だって立ち上がるからだ。']],
+      [['H', 'あの男と……同じだ……'], ['R', '……父さん。']],
+    ],
+  },
+});
 const sayOnce = (b, key, lines) => { if (!b.said[key]) { b.said[key] = true; commSay(lines); } };
 
 // ── Flagship model ──
 // flagship models: where the prongs fire from (relative to the boss centre) and
 // where the ship parks — the models are ~2× the old procedural ones
-const BOSS_MODEL = { styx: { tipDX: 324, tipDY: 80, bossX: VW + 10 }, acheron: { tipDX: 324, tipDY: 80, bossX: VW - 20 } };
+const BOSS_MODEL = { styx: { tipDX: 324, tipDY: 80, bossX: VW + 10 }, acheron: { tipDX: 324, tipDY: 80, bossX: VW - 20 },
+  orthros: { scale: 0.9, bossX: VW - 10 }, charon: { scale: 0.85, bossX: VW + 30 }, cerberus: { scale: 0.7, bossX: VW + 50, heads: true } };
 function buildBossShip(def, second) {
   const g = new THREE.Group();
   if (MODELS[def.id]) {
@@ -7087,17 +7274,26 @@ function buildBossShip(def, second) {
       o.material.metalness = Math.min(o.material.metalness, 0.3);
       if (o.material.emissiveIntensity > 1) o.material.emissiveIntensity *= 0.45;   // bloom does the rest
     });
-    m.scale.z = 0.5;                                   // seen from above: keep the camera-side depth shallow
+    const BM = BOSS_MODEL[def.id] || {}, sc = BM.scale || 1;
+    m.scale.set(sc, sc, sc * 0.5);                     // seen from above: keep the camera-side depth shallow
     g.add(m);
     const at = n => { const o = m.getObjectByName(n); return o ? o.getWorldPosition(new THREE.Vector3()) : null; };
     m.updateMatrixWorld(true);
-    for (const n of ['prongTip_L', 'prongTip_R']) { const p = at(n); if (p) { const sp = glowSprite(def.color, 90, 0.9); sp.position.copy(p); g.add(sp); } }
+    for (const side of ['L', 'C', 'R']) {
+      const p = at('prongTip_' + side); if (!p) continue;
+      const st = def.stages && def.stages.find(x => x.head === side);
+      const sp = glowSprite(st ? st.color : def.color, 90, 0.9); sp.position.copy(p); sp.name = 'tipGlow_' + side; g.add(sp);
+    }
+    if (BM.scale) {                                    // fire points straight from the model's anchors (canvas offsets)
+      const tl = at('prongTip_L'); if (tl) { g.userData.tipDX = -tl.x; g.userData.tipDY = Math.abs(tl.y); }
+      if (BM.heads) { g.userData.heads = {}; for (const side of ['L', 'C', 'R']) { const p = at('prongTip_' + side); if (p) g.userData.heads[side] = [p.x, -p.y]; } }
+    }
     for (const n of ['engine_L', 'engine_R']) { const p = at(n); if (p) { const sp = glowSprite(def.color, 130, 0.7); sp.position.copy(p); g.add(sp); } }
     const c = at('core');
     if (c) { const cg = glowSprite(def.color, 200, 0.55); cg.position.copy(c); cg.name = 'coreGlow'; g.add(cg); }
     let hull = null; m.traverse(o => { if (o.isMesh && o.material.name === 'hull') hull = o.material; });
     g.userData.hullMat = hull || new THREE.MeshStandardMaterial();
-    Object.assign(g.userData, BOSS_MODEL[def.id]);
+    Object.assign(g.userData, { bossX: BM.bossX, tipDX: g.userData.tipDX ?? BM.tipDX, tipDY: g.userData.tipDY ?? BM.tipDY });
     scene.add(g);
     return g;
   }
@@ -7135,16 +7331,17 @@ function buildBossShip(def, second) {
 
 // ── Lifecycle ──
 function startBoss(idx) {
-  const def = BOSS_DEFS[idx];
+  const def = chBossDefs()[idx];
   boss = { idx, def, hp: 100, state: 'intro', t: 0, x: VW + 260, y: VH / 2, patT: 60, pi: 0,
-           rage: false, charge: 0, flash: 0, said: {}, mesh: buildBossShip(def, idx === 1) };
+           rage: false, charge: 0, flash: 0, said: {}, mesh: buildBossShip(def, idx === 1),
+           stage: 0, cycle: def.stages ? def.stages[0].cycle : def.cycle, broken: {}, queue: [] };
   bossLasers = [];
   showBossBanner(def);
   Music.setSection('boss');
   sfx.warning();
   commClear();
   const met = lsJSON('hd_boss_met', {});
-  boss.again = (met[def.id] || 0) > 0 || bossBest > idx;
+  boss.again = (met[def.id] || 0) > 0 || chBossBest() > idx;
   met[def.id] = (met[def.id] || 0) + 1;
   try { localStorage.setItem('hd_boss_met', JSON.stringify(met)); } catch (e) {}
   const BL = BOSS_LINES[def.id];
@@ -7164,15 +7361,40 @@ function bossHit(dmg, x, y) {
   boss.hp = Math.max(0, boss.hp - dmg);
   boss.flash = 1;
   spawnSparks(x ?? boss.x - 60, y ?? boss.y, Math.min(24, 4 + dmg * 1.5), { vMin: 2, vMax: 8, color: [0, 15, 40] });
-  if (!boss.rage && boss.hp <= 50) {
+  if (boss.def.stages) {                     // CERBERUS: a head breaks at each third of the bar
+    const st = boss.hp > 66.7 ? 0 : boss.hp > 33.4 ? 1 : 2;
+    if (st > boss.stage && boss.hp > 0) {
+      breakHead(boss.def.stages[boss.stage].head);
+      boss.stage = st; boss.cycle = boss.def.stages[st].cycle; boss.pi = 0; boss.patT = 80;
+      if (st === 2) boss.rage = true;
+      commSay(BOSS_LINES[boss.def.id]['stage' + st]);
+    }
+  } else if (!boss.rage && boss.hp <= 50) {
     boss.rage = true;
     commSay(BOSS_LINES[boss.def.id].rage);
     fxFlash(boss.def.color, 0.25);
   }
   if (boss.hp <= 0) bossDefeat();
 }
+// CERBERUS: blow one head off (hidden, with its glow) — the patterns then use the heads left
+function bossHeadXY(side) {
+  const h = boss.mesh.userData.heads && boss.mesh.userData.heads[side];
+  return h ? [boss.x + h[0], boss.y + h[1]] : [TIP_X(), boss.y];
+}
+function breakHead(side) {
+  boss.broken[side] = true;
+  const [x, y] = bossHeadXY(side);
+  for (const n of ['head_' + side, 'tipGlow_' + side]) { const o = boss.mesh.getObjectByName(n); if (o) o.visible = false; }
+  const st = boss.def.stages.find(s => s.head === side);
+  for (let i = 0; i < 4; i++) spawnSparks(x + (Math.random() - 0.5) * 60, y + (Math.random() - 0.5) * 50, 22, { vMin: 2, vMax: 11, szMax: 4, color: [0, 20, 40] });
+  shakeX = 14; shakeY = 10; fx.aberr = 1.2; fxFlash(st ? st.color : 0xffffff, 0.45);
+  sfx.bossDown();
+  pushBonus(x, y - 30, `${st ? st.label : ''} BREAK!`, '#ffffff');
+  for (const L of bossLasers) removeLaserMesh(L);
+  bossLasers = []; boss.queue = [];
+}
 function bossDefeat() {
-  boss.state = 'dying'; boss.t = 0;
+  boss.state = 'dying'; boss.t = 0; boss.queue = [];
   for (const e of enemies) if (e.boss) killEnemy(e, 'boss');
   sweepDeadEnemies();
   for (const L of bossLasers) removeLaserMesh(L);
@@ -7185,8 +7407,19 @@ function bossDefeat() {
 }
 
 // ── Patterns ──
-const tipY = s => boss.y + s * (boss.mesh.userData.tipDY || 40);
-const TIP_X = () => boss.x - (boss.mesh.userData.tipDX || 200);
+// fire points: s = +1 / -1 picks the upper / lower prong (CERBERUS: the outermost heads still standing)
+function tipPt(s = 1) {
+  const u = boss.mesh.userData;
+  if (u.heads) {
+    const live = ['L', 'C', 'R'].filter(k => u.heads[k] && !boss.broken[k]);
+    const k = live.length ? (s > 0 ? live[0] : live[live.length - 1]) : 'C';
+    return bossHeadXY(k);
+  }
+  return [boss.x - (u.tipDX || 200), boss.y + s * (u.tipDY || 40)];
+}
+const tipY = s => tipPt(s)[1];
+const TIP_X = (s = 1) => tipPt(s)[0];
+const bossLater = (t, fn) => boss.queue.push({ t, fn });
 function bossShot(x, y, ang, speed, type = 'b') {
   enemies.push({ x, y, vx: Math.cos(ang) * speed, vy: Math.sin(ang) * speed, r: type === 'p' ? 11 : 5,
                  type, spin: 0, life: 700, boss: true });
@@ -7206,13 +7439,13 @@ const PATTERNS = {
   fan() {
     const n = boss.rage ? 11 : 7, sp = boss.rage ? 5.2 : 4.4;
     for (const s of [1, -1]) {
-      const x = TIP_X(), y = tipY(s), base = Math.atan2(P.y - y, P.x - x);
+      const x = TIP_X(s), y = tipY(s), base = Math.atan2(P.y - y, P.x - x);
       for (let i = 0; i < n; i++) bossShot(x, y, base + (i / (n - 1) - 0.5) * 0.9, sp);
     }
     sfx.bossFire();
   },
   plasma() {
-    const s = Math.random() < 0.5 ? 1 : -1, x = TIP_X(), y = tipY(s);
+    const s = Math.random() < 0.5 ? 1 : -1, x = TIP_X(s), y = tipY(s);
     bossShot(x, y, Math.atan2(P.y - y, P.x - x), boss.rage ? 3.4 : 2.8, 'p');
     sfx.bossFire(true);
     sayOnce(boss, 'plasma', [['P', '大型弾。PULSE で跳ね返せます。']]);
@@ -7241,9 +7474,59 @@ const PATTERNS = {
     const n = boss.rage ? 3 : 2;
     for (let i = 0; i < n; i++) {
       const s = i % 2 ? 1 : -1;
-      enemies.push({ x: TIP_X(), y: tipY(s), vx: -3, vy: 0, r: 5, type: 's', pulse: 0, facing: Math.PI, spin: 0, life: 420, boss: true });
+      enemies.push({ x: TIP_X(s), y: tipY(s), vx: -3, vy: 0, r: 5, type: 's', pulse: 0, facing: Math.PI, spin: 0, life: 420, boss: true });
     }
     sfx.bossFire();
+  },
+  // ── CHAPTER 2 ──
+  twin() {                                   // ORTHROS: the two heads snap in turn
+    const n = boss.rage ? 8 : 6, gap = boss.rage ? 8 : 11;
+    for (let i = 0; i < n; i++) bossLater(i * gap, () => {
+      const s = i % 2 ? -1 : 1, x = TIP_X(s), y = tipY(s);
+      bossShot(x, y, Math.atan2(P.y - y, P.x - x) + (Math.random() - 0.5) * 0.12, boss.rage ? 5.6 : 4.8);
+      sfx.bossFire();
+    });
+  },
+  jaws() {                                   // two bands close in above and below — hold the line
+    const warn = boss.rage ? 60 : 74, gap = boss.rage ? 120 : 140, h = 150;
+    const c = Math.max(gap / 2 + 20, Math.min(VH - gap / 2 - 20, P.y));
+    addLaser(c - gap / 2 - h / 2, h, warn); addLaser(c + gap / 2 + h / 2, h, warn);
+    sayOnce(boss, 'jaws', [['P', '上下から挟まれます。動かないで！']]);
+  },
+  ring() {                                   // CHARON's lantern: a slow ring of ghost fire
+    const n = boss.rage ? 20 : 16, waves = boss.rage ? 2 : 1;
+    for (let w = 0; w < waves; w++) bossLater(w * 34, () => {
+      const c = boss.mesh.getObjectByName('core'), p = c ? c.getWorldPosition(new THREE.Vector3()) : null;
+      const x = p ? p.x + VW / 2 : TIP_X(), y = p ? VH / 2 - p.y : boss.y;
+      for (let i = 0; i < n; i++) { const a = (i + w * 0.5) / n * Math.PI * 2; if (Math.cos(a) < 0.3) bossShot(x, y, a, 2.6); }
+      sfx.bossFire(true);
+    });
+  },
+  flame() {                                  // CERBERUS flame head: three spreading waves
+    const [x, y] = bossHeadXY('L');
+    for (let w = 0; w < 3; w++) bossLater(w * 14, () => {
+      const base = Math.atan2(P.y - y, P.x - x), n = 9;
+      for (let i = 0; i < n; i++) bossShot(x, y, base + (i / (n - 1) - 0.5) * 1.15 + (w - 1) * 0.06, 3.8 + w * 0.3);
+      sfx.bossFire();
+    });
+  },
+  curtain() {                                // ice head: a slow wall of shards with one gap
+    const walls = boss.rage ? 2 : 1;
+    for (let w = 0; w < walls; w++) bossLater(w * 70, () => {
+      const [x] = bossHeadXY('R'), gc = 70 + Math.random() * (VH - 140), gap = 64;
+      for (let y = 12; y < VH; y += 24) if (Math.abs(y - gc) > gap) bossShot(x, y, Math.PI, 2.3);
+      sfx.bossFire(true);
+    });
+    sayOnce(boss, 'curtain', [['P', '氷の壁です。隙間を通って。']]);
+  },
+  dark() {                                   // darkness head: plasma that cannot be reflected
+    const [x, y] = bossHeadXY('C'), n = boss.rage ? 3 : 2;
+    for (let i = 0; i < n; i++) bossLater(i * 22, () => {
+      enemies.push({ x, y, vx: 0, vy: 0, r: 11, type: 'p', dark: true, spin: 0, life: 700, boss: true });
+      const e = enemies[enemies.length - 1], a = Math.atan2(P.y - y, P.x - x) + (i - (n - 1) / 2) * 0.25;
+      e.vx = Math.cos(a) * 2.7; e.vy = Math.sin(a) * 2.7;
+      sfx.bossFire(true);
+    });
   },
 };
 
@@ -7271,7 +7554,8 @@ function fireCannon() {
 // ── Per-frame (called from update while playing) ──
 function bossTick(dt) {
   const runT = frame / 60;
-  if (!boss && bossNext < BOSS_AT.length && runT >= BOSS_AT[bossNext]) { startBoss(bossNext); bossNext++; }
+  const AT = chBossAt();
+  if (!boss && bossNext < AT.length && runT >= AT[bossNext]) { startBoss(bossNext); bossNext++; }
   if (!boss) return;
   boss.t += dt;
   boss.flash = Math.max(0, boss.flash - dt * 0.08);
@@ -7295,10 +7579,12 @@ function bossTick(dt) {
   // pattern scheduler
   boss.patT -= dt;
   if (boss.patT <= 0) {
-    const name = boss.def.cycle[boss.pi++ % boss.def.cycle.length];
+    const name = boss.cycle[boss.pi++ % boss.cycle.length];
     PATTERNS[name]();
     boss.patT = boss.rage ? boss.def.rageEvery : boss.def.every;
   }
+  for (const q of boss.queue) { q.t -= dt; if (q.t <= 0 && !q.done) { q.done = true; q.fn(); } }
+  if (boss && boss.queue.length) boss.queue = boss.queue.filter(q => !q.done);
   // lasers: telegraph → fire
   for (const L of bossLasers) {
     if (L.delay > 0) { L.delay -= dt; continue; }
@@ -7323,11 +7609,14 @@ function finishBoss() {
   pushBonus(P.x, P.y - 30, `+${def.xp} XP`, '#ffd84a');
   pushBonus(P.x, P.y - 50, `${def.name} DEFEATED`, def.css);
   timeScale = 1;
-  if (idx + 1 > bossBest) { bossBest = idx + 1; localStorage.setItem('hd_boss', String(bossBest)); }
+  if (chapter === 2) { if (idx + 1 > bossBest2) { bossBest2 = idx + 1; localStorage.setItem('hd_boss2', String(bossBest2)); } }
+  else if (idx + 1 > bossBest) { bossBest = idx + 1; localStorage.setItem('hd_boss', String(bossBest)); }
   cleanupBoss();
   if (hasSkill('nano_frame')) healHull(hullMax, 'NANO');
   Music.setSection('p' + (curPhase + 1));
-  if (idx === BOSS_DEFS.length - 1) Epilogue.play();
+  if (chapter === 1 && idx === BOSS_DEFS.length - 1) { loadPart2Models(); Epilogue.play(); }
+  if (chapter === 2 && idx === 1) Confession.play({ live: true });
+  if (chapter === 2 && idx === BOSS_DEFS2.length - 1) Epilogue2.play({ live: true });
 }
 // laser hit test (called from the collision section)
 function bossLaserHits() {
@@ -7392,7 +7681,7 @@ function syncBossHUD() {
   if (!on) return;
   bossBarEl.style.setProperty('--bc', boss.def.css);
   setText(document.getElementById('bb-name'), boss.def.name);
-  setText(document.getElementById('bb-title'), boss.def.title);
+  setText(document.getElementById('bb-title'), boss.def.stages ? `${boss.def.title} — ${boss.def.stages[boss.stage].label}` : boss.def.title);
   document.getElementById('bb-fill').style.width = boss.hp.toFixed(1) + '%';
   bossBarEl.classList.toggle('rage', boss.rage);
   setText(document.getElementById('bb-pips'), '◆'.repeat(boss.charge) + '◇'.repeat(3 - boss.charge));
@@ -7609,6 +7898,7 @@ const Epilogue = (() => {
   }
   function play(fromLog = false) {
     ensureAcheron();
+    el.querySelector('.story-title').innerHTML = '<b>BIDENT FALLS</b><span>アイギスの空に、朝が来た。</span>';
     active = true; replay = fromLog; pi = 0; li = 0; t = 0; fade = 1; shake = 0;
     cine = false; el.classList.remove('cine', 'titled');
     gstate = fromLog ? 'story' : 'cut';
@@ -7736,6 +8026,500 @@ const Epilogue = (() => {
   return { play, advance, finish, update, get active() { return active; } };
 })();
 
+// ══ CHAPTER 2 cutscenes ═══════════════════════════════════════════════════════
+// A small engine shared by the three chapter-2 scenes: the story overlay (lines, faces, typewriter),
+// tap / key to advance, SKIP, the veil transitions and the render swap. Each scene supplies its
+// 3D set (built on first play, once the models are in), per-panel camera / animation and a
+// text-free finale ('cine'). Lines: 'R:…' speaker lines, '!…' sound-effect lines, plain = narration.
+SPEAKERS.X = { name: '傍受通信', cls: 'intercept', face: `<svg viewBox="0 0 64 64" aria-hidden="true"><rect x="6" y="6" width="52" height="52" rx="6" fill="#0a0a10" stroke="#8a8aa0" stroke-width="2"/>
+  <path d="M12 24h40M12 32h40M12 40h40" stroke="#5a5a70" stroke-width="2" stroke-dasharray="3 4"/><path d="M14 46l8-14 6 10 6-18 6 14 4-6 6 14" stroke="#c08aff" stroke-width="2" fill="none"/></svg>` };
+const Cine = (() => {
+  const el = document.getElementById('story');
+  const elName = document.getElementById('story-name'), elText = document.getElementById('story-text'), elFace = document.getElementById('story-face');
+  const titleEl = el.querySelector('.story-title');
+  const xfade = document.getElementById('xfade');
+  const veil = (on, secs) => { xfade.style.setProperty('--xd', secs + 's'); xfade.classList.toggle('on', on); };
+  let cfg = null, opts = {}, pi = 0, li = 0, shown = 0, t = 0, ct = 0, fade = 0, shake = 0, cine = false;
+  function showLine() {
+    const raw = cfg.panels[pi].lines[li];
+    let who = null, text = raw;
+    if (/^[A-Z]:/.test(raw)) { who = SPEAKERS[raw[0]]; text = raw.slice(2); }
+    const fx = raw.startsWith('!');
+    if (fx) { text = raw.slice(1); sfx.comm('H'); shake = 0.6; }
+    elText._sp = who ? raw[0] : null;
+    el.classList.toggle('talk', !!who); el.classList.toggle('sfx', fx);
+    elFace.innerHTML = who ? who.face : '';
+    setText(elName, who ? who.name : '');
+    elText._full = text; shown = 0; elText.textContent = '';
+    const ev = cfg.panels[pi].on && cfg.panels[pi].on[li];
+    if (ev) ev(cfg.S);
+  }
+  function setPanel(i) {
+    pi = i; li = 0; t = 0; fade = 1;
+    cfg.mood(cfg.S, cfg.panels[i].mood);
+  }
+  function advance() {
+    if (!cfg || cine) return;
+    if (shown < elText._full.length) { shown = elText._full.length; elText.textContent = elText._full; return; }
+    ui.select();
+    if (++li >= cfg.panels[pi].lines.length) {
+      if (pi + 1 >= cfg.panels.length) { li--; cine = true; ct = 0; el.classList.add('cine'); if (cfg.cineStart) cfg.cineStart(cfg.S); return; }
+      setPanel(pi + 1);
+    }
+    showLine();
+  }
+  function finish() {
+    if (!cfg) return;
+    if (!xfade.classList.contains('on')) veil(true, 0);
+    const c = cfg, o = opts; cfg = null; cine = false;
+    el.classList.remove('on', 'cine', 'titled', 'talk', 'sfx');
+    renderPass.scene = scene; renderPass.camera = camera;
+    if (c.flag) localStorage.setItem(c.flag, '1');
+    if (o.fromLog) gstate = 'menu';
+    c.end(o);
+    requestAnimationFrame(() => requestAnimationFrame(() => veil(false, 1.2)));
+  }
+  function play(c, o = {}) {
+    if (!c.built) { c.S = {}; c.build(c.S); c.built = true; }
+    cfg = c; opts = o; cine = false; ct = 0; shake = 0;
+    gstate = o.live ? 'cut' : 'story';
+    if (o.live) commClear();
+    el.classList.remove('cine', 'titled');
+    if (c.title) titleEl.innerHTML = `<b>${c.title[0]}</b><span>${c.title[1]}</span>`;
+    renderPass.scene = c.S.E; renderPass.camera = c.S.cam;
+    if (c.reset) c.reset(c.S);
+    setPanel(0);
+    el.style.setProperty('--fade', '1');
+    el.classList.add('on');
+    if (Music.started) Music.setSection(c.music || 'menu');
+    showLine();
+  }
+  function update(realDt) {
+    if (!cfg) return;
+    const s = realDt / 60, S = cfg.S;
+    t += s;
+    if (shown < (elText._full || '').length) {
+      const prev = shown;
+      shown = Math.min(elText._full.length, shown + s * 26);
+      if (elText._sp) talkBlips(elText._sp, prev, shown, elText._full);
+      elText.textContent = elText._full.slice(0, Math.floor(shown));
+    }
+    fade = Math.max(0, fade - s * 1.4);
+    el.style.setProperty('--fade', fade.toFixed(3));
+    shake = Math.max(0, shake - s * 2);
+    S.shake = 0;
+    cfg.update(S, cfg.panels[pi].mood, t, s, li);
+    if (cine) {
+      ct += s;
+      const r = cfg.cine(S, ct, s);
+      if (r === 'title') { el.classList.add('titled'); sfx.record(); }
+      else if (r === 'veil') veil(true, 0.9);
+      else if (r === 'done') { finish(); return; }
+    }
+    const cam = S.cam;
+    cam.position.lerp(S.camPos, Math.min(1, s * 3));
+    if (fade > 0.95) cam.position.copy(S.camPos);
+    const sh = Math.max(shake, S.shake);
+    cam.position.x += (Math.random() - 0.5) * sh * 4;
+    cam.position.y += (Math.random() - 0.5) * sh * 4;
+    cam.lookAt(S.camTarget);
+  }
+  onTap(el, () => { if (cfg) advance(); });
+  onTap(document.getElementById('story-skip'), () => { if (cfg) { ui.back(); finish(); } });
+  return { play, advance, finish, update, veil, get active() { return !!cfg; } };
+})();
+
+// ── shared set pieces ──
+function cineStage(bg = 0x040a26) {
+  const E = new THREE.Scene(); E.background = new THREE.Color(bg);
+  const cam = new THREE.PerspectiveCamera(42, VW / VH, 1, 6000);
+  const hemi = new THREE.HemisphereLight(0x6a7ad0, 0x0a0814, 1.0);
+  const key = new THREE.DirectionalLight(0xb8c8ff, 1.4); key.position.set(-1, 1.4, 1.2);
+  const fill = new THREE.DirectionalLight(0x9aa8d8, 0.6); fill.position.set(0.6, 0.5, 1);
+  E.add(hemi, key, fill);
+  const sp = [];
+  for (let i = 0; i < 2200; i++) { const v = new THREE.Vector3().randomDirection().multiplyScalar(2600); sp.push(v.x, v.y, v.z); }
+  const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.Float32BufferAttribute(sp, 3));
+  const stars = new THREE.Points(sg, new THREE.PointsMaterial({ color: 0xaab4d0, size: 1.2, sizeAttenuation: false, fog: false, transparent: true }));
+  E.add(stars);
+  return { E, cam, hemi, key, fill, stars, camPos: new THREE.Vector3(), camTarget: new THREE.Vector3(), shake: 0 };
+}
+// the burnt hill (same ground as the prologue), with a painted sky
+function cineHill(S) {
+  const HC = new THREE.Vector3(0, -905, -150), HR = 900;
+  const hill = new THREE.Mesh(new THREE.SphereGeometry(HR, 64, 32), new THREE.MeshLambertMaterial({ color: 0x1a1416 }));
+  hill.position.copy(HC); S.E.add(hill);
+  S.groundY = (x, z) => HC.y + Math.sqrt(Math.max(0, HR * HR - x * x - (z - HC.z) * (z - HC.z)));
+  S.g0 = S.groundY(0, 0);
+  S.hillSet = [hill];
+  const stump = new THREE.MeshLambertMaterial({ color: 0x120c0e });
+  for (let i = 0; i < 40; i++) {
+    const x = (Math.random() - 0.5) * 760, z = -60 - Math.random() * 420;
+    if (Math.abs(x) < 80 && z > -150) continue;
+    const h = 14 + Math.random() * 24;
+    const p = new THREE.Mesh(new THREE.ConeGeometry(h * 0.18, h, 5), stump);
+    p.position.set(x, S.groundY(x, z) + h / 2 - 2, z); S.E.add(p); S.hillSet.push(p);
+  }
+  const sky = document.createElement('canvas'); sky.width = 4; sky.height = 256;
+  const sx = sky.getContext('2d'); S.skyTex = new THREE.CanvasTexture(sky); S.skyTex.colorSpace = THREE.SRGBColorSpace;
+  // stops: [[pos, fromHex, toHex], …] blended by k
+  S.paintSky = (stops, k = 0) => {
+    const g = sx.createLinearGradient(0, 0, 0, 256);
+    for (const [p, a, b] of stops) g.addColorStop(p, new THREE.Color(a).lerp(new THREE.Color(b ?? a), k).getStyle());
+    sx.fillStyle = g; sx.fillRect(0, 0, 4, 256); S.skyTex.needsUpdate = true;
+  };
+}
+// the hero ship standing level (the model is built for the top-down game view)
+function cineShip(S) {
+  const hero = new THREE.Group(), ship = buildShipGroup(false);
+  ship.rotation.x = -Math.PI / 2; hero.add(ship); hero.scale.setScalar(2.4); S.E.add(hero);
+  const thrust = glowSprite(0x33ddff, 16, 0); thrust.position.set(-20, 0, 2.5); ship.add(thrust);
+  S.hero = hero; S.thrust = thrust; S.flame = hero.getObjectByName('flame');
+  S.trail = [];
+  for (let i = 0; i < 30; i++) { const g = glowSprite(0x66e6ff, 30, 0); g.visible = false; S.E.add(g); S.trail.push({ g, life: 0 }); }
+  S.trailI = 0; S.vel = new THREE.Vector3();
+}
+function cineEngine(S, on) {
+  S.thrust.material.opacity = on ? 0.75 + Math.random() * 0.2 : 0;
+  if (S.flame) { S.flame.visible = on; S.flame.scale.set(1, 0.8 + Math.random() * 0.4, 1); }
+}
+// lift off from the hill and vanish into the sky; returns 'veil' / 'done' like a finale
+function cineTakeoff(S, ct, s) {
+  cineEngine(S, true);
+  if (ct < 0.8) { S.shake = 0.3 + ct; S.hero.position.y += s * 10; }
+  else {
+    if (!S.lifted) { S.lifted = true; sfx.liftoff(); fxFlash(0xbff8ff, 0.4); }
+    const k = ct - 0.8, acc = 260 + k * 900;
+    S.hero.rotation.z += (0.9 - S.hero.rotation.z) * Math.min(1, s * 2.2);
+    S.vel.x += acc * s * 0.4; S.vel.y += acc * s; S.vel.z -= acc * s * 0.8;
+    S.hero.position.addScaledVector(S.vel, s);
+    const nz = new THREE.Vector3(-24, 0, 0); S.hero.localToWorld(nz);
+    const p = S.trail[S.trailI++ % S.trail.length]; p.life = 1; p.g.visible = true; p.g.position.copy(nz);
+    S.camTarget.lerp(S.hero.position, Math.min(1, s * 4));
+    if (k > 1.6 && !S.veiled) { S.veiled = true; return 'veil'; }
+    if (k > 2.4) return 'done';
+  }
+  return null;
+}
+function cineTrail(S, s) {
+  for (const p of S.trail) {
+    if (p.life <= 0) continue;
+    p.life -= s * 1.4; p.g.material.opacity = Math.max(0, p.life) * 0.7; p.g.scale.setScalar(30 + (1 - p.life) * 40);
+    if (p.life <= 0) p.g.visible = false;
+  }
+}
+// cast
+function cineRay(S) { const r = buildRay(); S.E.add(r); return r; }
+function cineBird(S, key, scale = 7.5) {
+  if (!MODELS[key]) return null;
+  const g = new THREE.Group(), m = cloneModel(MODELS[key]); m.scale.setScalar(scale); g.add(m); S.E.add(g); return g;
+}
+function cinePallas(S) {
+  if (!MODELS.pallas) return null;
+  const p = cloneModel(MODELS.pallas); p.scale.setScalar(5.5); S.E.add(p); return p;
+}
+function cinePallasTick(p, t, lookAt, eye = 1) {
+  if (!p) return;
+  if (lookAt) p.lookAt(lookAt.x, p.position.y, lookAt.z);
+  const o = p.getObjectByName('orbit'); if (o) o.rotation.y = t * 0.8;
+  const e = p.getObjectByName('eye'); if (e) e.material.emissiveIntensity = (2.2 + Math.sin(t * 5) * 0.4) * eye;
+}
+function cineLeaf(r, t) { const lf = r.getObjectByName('leaf'); if (lf) lf.rotation.z = (lf.userData.rz0 ?? -0.4) + Math.sin(t * 3) * 0.12; return lf; }
+// a flagship wreck for the cutscenes, standing level (its top +Z faces up)
+function cineWreck(S, def) {
+  const w = new THREE.Group(), g = buildBossShip(def, true);
+  scene.remove(g);
+  if (MODELS[def.id] && g.children[0]) g.children[0].scale.z = g.children[0].scale.x;
+  g.rotation.x = -Math.PI / 2; w.add(g); S.E.add(w);
+  S.pops = [];
+  for (let i = 0; i < 22; i++) { const sp = glowSprite(i % 3 ? 0xffa04a : def.color, 80, 0); sp.visible = false; S.E.add(sp); S.pops.push({ g: sp, life: 0, size: 80 }); }
+  S.popI = 0; S.popT = 0;
+  return { w, g };
+}
+function cinePops(S, wreckInner, s, span = [-300, 300, 160]) {
+  S.popT -= s;
+  if (S.popT <= 0) {
+    S.popT = 0.14 + Math.random() * 0.25;
+    const p = S.pops[S.popI++ % S.pops.length];
+    p.life = 1; p.size = 90 + Math.random() * 160; p.g.visible = true;
+    p.g.position.copy(wreckInner.localToWorld(new THREE.Vector3(span[0] + Math.random() * (span[1] - span[0]), (Math.random() - 0.5) * span[2], Math.random() * 30)));
+    if (Math.random() < 0.3) sfx.kill();
+  }
+  for (const p of S.pops) {
+    if (p.life <= 0) continue;
+    p.life -= s * 1.6; p.g.material.opacity = Math.max(0, p.life) * 0.95; p.g.scale.setScalar(p.size * (1.6 - p.life));
+    if (p.life <= 0) p.g.visible = false;
+  }
+}
+// SOL as a flickering hologram (beacon / PALLAS's memory)
+function cineHologram(S) {
+  const g = cineBird(S, 'sol', 7.5);
+  if (!g) return null;
+  const mat = new THREE.MeshBasicMaterial({ color: 0x7fe8ff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
+  g.traverse(o => { if (o.isMesh) o.material = mat; });
+  g.userData.mat = mat; g.visible = false;
+  return g;
+}
+function cineHoloTick(h, t, on) {
+  if (!h) return;
+  const m = h.userData.mat;
+  m.opacity += ((on ? 0.38 : 0) - m.opacity) * 0.08;
+  h.visible = m.opacity > 0.01;
+  if (on && Math.random() < 0.06) m.opacity *= 0.3;            // signal drop-outs
+  h.position.x += Math.random() < 0.04 ? (Math.random() - 0.5) * 2 : 0;
+}
+
+// ── CHAPTER 2 prologue: weeks later, a campfire on the hill; the intercepted message ──
+const Prologue2 = {
+  flag: 'hd_prologue2', music: 'menu',
+  panels: [
+    { mood: 'camp', lines: ['バイデント陥落から、数週間。', 'レイとパラスは、焼けた丘で夜を明かしていた。', 'R:……静かだな。', 'P:はい。静かすぎるくらいです。'] },
+    { mood: 'signal', lines: ['!ザ……ザザ……ッ', 'X:……穂先は折れた。だが槍は、主の手にある。', 'R:っ……！ 葉っぱが……光ってる？', 'P:……今の反応、記録しました。',
+      'P:発信源を特定。バイデント残党の艦隊——そして、その奥にもう一つ。', 'R:槍の、主……。行くぞ、パラス。'],
+      on: { 1: S => { S.glow = true; fxFlash(0x8dff9a, 0.35); } } },
+  ],
+  build(S) {
+    Object.assign(S, cineStage(0x050a20)); cineHill(S); cineShip(S);
+    S.paintSky([[0, 0x050a24], [0.55, 0x101a40], [0.75, 0x1c1a40], [1, 0x0a0812]]);
+    S.E.background = S.skyTex; S.E.fog = new THREE.Fog(0x0a0c1c, 400, 1600);
+    S.ray = cineRay(S); S.pallas = cinePallas(S);
+    S.fire = glowSprite(0xff8a3a, 40, 0.9); S.E.add(S.fire);
+    S.fireLight = new THREE.PointLight(0xff8a3a, 2.2, 140); S.E.add(S.fireLight);
+    S.leafGlow = glowSprite(0x8dff9a, 22, 0); S.E.add(S.leafGlow);
+  },
+  reset(S) {
+    S.glow = false; S.lifted = S.veiled = false; S.vel.set(0, 0, 0);
+    S.hero.position.set(-62, S.groundY(-62, -36) + 6, -36); S.hero.rotation.set(0, 0.5, 0.03);
+    S.ray.visible = true; if (S.pallas) S.pallas.visible = true;
+    for (const p of S.trail) { p.life = 0; p.g.visible = false; }
+  },
+  mood(S, m) {},
+  update(S, m, t, s, li) {
+    const G = S.groundY, fx = -4, fz = 36;
+    S.fire.position.set(fx, G(fx, fz) + 5, fz); S.fire.material.opacity = 0.75 + Math.random() * 0.2; S.fire.scale.setScalar(38 + Math.random() * 8);
+    S.fireLight.position.set(fx, G(fx, fz) + 10, fz); S.fireLight.intensity = 1.8 + Math.random() * 0.8;
+    const rx = 16, rz = 30;
+    S.ray.position.set(rx, G(rx, rz) + 11 + Math.sin(t * 2) * 0.3, rz);
+    S.ray.rotation.y = m === 'signal' && li >= 2 ? 0.4 : -1.1;   // gazing at the fire, then at the sky
+    S.ray.rotation.x = m === 'signal' && li >= 2 ? -0.25 : 0;
+    const lf = cineLeaf(S.ray, t);
+    if (lf) { lf.getWorldPosition(S.leafGlow.position); S.leafGlow.material.opacity = S.glow ? 0.6 + Math.sin(t * 7) * 0.3 : 0; S.leafGlow.scale.setScalar(S.glow ? 24 + Math.sin(t * 7) * 6 : 22); }
+    if (S.pallas) { S.pallas.position.set(rx + 26, G(rx, rz) + 30 + Math.sin(t * 2.2) * 1.5, rz - 8); cinePallasTick(S.pallas, t, S.ray.position, m === 'signal' && li === 0 ? (Math.random() < 0.5 ? 0.2 : 1) : 1); }
+    if (!S.cine) {
+      cineEngine(S, false);
+      if (m === 'camp') { S.camPos.set(120 - t * 2, S.g0 + 24, 200); S.camTarget.set(-16, S.g0 + 12, 6); }
+      else { S.camPos.set(96, S.g0 + 18, 170); S.camTarget.set(-6, S.g0 + 30 + Math.min(t, 2) * 10, -40); }
+    }
+    cineTrail(S, s);
+  },
+  cineStart(S) { S.cine = true; S.ray.visible = false; if (S.pallas) S.pallas.visible = false; sfx.ignite(); if (Music.started) Music.riser(1.6); },
+  cine(S, ct, s) { S.camPos.set(70, S.g0 + 20, 180); return cineTakeoff(S, ct, s); },
+  end(o) { this.S.cine = false; if (o.onDone) o.onDone(); else if (Music.started) Music.setSection('menu'); },
+};
+
+// ── after CHARON: the prisoners come home; MIMOSA; PALLAS's confession ──
+const Confession = {
+  music: 'ending',
+  panels: [
+    { mood: 'pods', lines: ['切り離された捕虜ポッドを、レイはアイギスへと導いた。', 'P:ポッド十基、生体反応すべて正常です。', 'R:……帰ろう。みんなで。'] },
+    { mood: 'reunion', lines: ['M:……レイ？', 'R:ばあちゃん……！', 'M:レイ……大きくなったねえ。', 'R:数週間で大きくならないよ。',
+      'M:ふふ。ほら、ひまわりの種。ずっと持ってたんだよ。', 'R:……ばあちゃんの畑の味だ。', 'M:おや、その機体……これ、ソルの……', 'R:え？', 'P:…………', 'P:レイ。話さなければならないことがあります。'],
+      on: { 6: S => { S.lookShip = true; } } },
+    { mood: 'confess', lines: ['P:私は昔、アイギス・シールドを管理していました。', 'P:襲撃の一年前、シールドに仕込まれた裏口を見つけて、警告しました。',
+      'P:でも信じてもらえず、誤作動として凍結されました。', 'P:ただ一人、私を信じてくれた人が——この機体に、私を残してくれた。',
+      'P:前の操縦士は、ソル。……あなたの父です。', 'R:……なんで、黙ってた。', 'P:……怖かったんです。あなたまで、いなくなる気がして。', 'R:……バカだな。',
+      'R:何度だって立ち上がるって、言っただろ。俺も、お前も。', 'P:……はい。', 'M:ソルも、きっと同じことを言ったねえ。', 'R:行ってくる。ケルベロスを、止めに。'],
+      on: { 3: S => { S.holo = true; }, 5: S => { S.holo = false; } } },
+  ],
+  build(S) {
+    Object.assign(S, cineStage(0x06100e)); cineHill(S); cineShip(S);
+    S.wreck = cineWreck(S, BOSS_DEFS2[1]);
+    S.podGroup = new THREE.Group(); S.E.add(S.podGroup);
+    const podM = new THREE.MeshStandardMaterial({ color: 0x223030, roughness: 0.5 }), winM = new THREE.MeshBasicMaterial({ color: 0x7dffb0 });
+    S.pods = [];
+    for (let i = 0; i < 10; i++) {
+      const p = new THREE.Group();
+      p.add(new THREE.Mesh(new THREE.BoxGeometry(26, 16, 18), podM));
+      const w = new THREE.Mesh(new THREE.BoxGeometry(20, 3, 18.5), winM); w.position.y = 2; p.add(w);
+      const gl = glowSprite(0x5aff9a, 50, 0.5); p.add(gl);
+      S.podGroup.add(p); S.pods.push(p);
+    }
+    S.ray = cineRay(S); S.pallas = cinePallas(S); S.mimosa = cineBird(S, 'mimosa'); S.holo = false; S.sol = cineHologram(S);
+  },
+  reset(S) { S.lookShip = false; S.holo = false; S.lifted = S.veiled = false; S.cine = false; S.vel.set(0, 0, 0); for (const p of S.trail) { p.life = 0; p.g.visible = false; } },
+  mood(S, m) {
+    const space = m === 'pods';
+    for (const o of S.hillSet) o.visible = !space;
+    S.wreck.w.visible = space;
+    S.ray.visible = !space; if (S.pallas) S.pallas.visible = !space; if (S.mimosa) S.mimosa.visible = !space;
+    if (space) { S.E.background = new THREE.Color(0x040c0a); S.E.fog = null; S.stars.material.opacity = 1; }
+    else {
+      const dusk = m === 'reunion';
+      S.paintSky(dusk ? [[0, 0x14143a], [0.5, 0x3a2a5a], [0.68, 0xc0607a], [0.8, 0xf0a070], [1, 0x3a2020]]
+                      : [[0, 0x040820], [0.55, 0x10183a], [0.72, 0x2a2048], [1, 0x0a0812]]);
+      S.E.background = S.skyTex; S.E.fog = new THREE.Fog(dusk ? 0x5a3040 : 0x0c0c20, 400, 1600);
+      S.stars.material.opacity = dusk ? 0.35 : 1;
+      S.hemi.intensity = dusk ? 1.0 : 0.8; S.key.color.setHex(dusk ? 0xffb080 : 0xa0b8ff);
+      S.hero.position.set(-64, S.groundY(-64, -40) + 6, -40); S.hero.rotation.set(0, 0.6, 0.03);
+      // the pods have landed around the hill, hatches open
+      S.pods.forEach((p, i) => { const a = -0.9 + i * 0.22, R = 150 + (i % 3) * 30, x = Math.sin(a) * R, z = -Math.cos(a) * R * 0.6 - 20;
+        p.position.set(x, S.groundY(x, z) + 7, z); p.rotation.set(0, a, 0); p.scale.setScalar(1); });
+    }
+  },
+  update(S, m, t, s, li) {
+    const G = S.groundY;
+    cineTrail(S, s);
+    if (m === 'pods') {
+      // the hulk drifts away; the pods fly in formation behind the hero, towards camera-left
+      S.wreck.w.position.set(260, -60 - t * 6, -520); S.wreck.w.rotation.set(0.1, -0.7, -0.08 - t * 0.02);
+      cinePops(S, S.wreck.g, s * 0.5);
+      cineEngine(S, true);
+      S.hero.position.set(-120 - t * 18, 30 + Math.sin(t * 1.4) * 3, 60); S.hero.rotation.set(0, 0.35, 0);
+      S.pods.forEach((p, i) => { p.position.set(-60 - t * 18 + (i % 5) * 38, 10 + Math.floor(i / 5) * 30 + Math.sin(t * 1.5 + i) * 3, -30 - (i % 5) * 26); p.rotation.set(0, 0.35, Math.sin(t + i) * 0.05); });
+      S.camPos.set(-60, 90, 360); S.camTarget.set(-60, 10, -60);
+      return;
+    }
+    const rx = 18, rz = 34, mx = -16, mz = 34;
+    const close = m === 'reunion' && li >= 1 ? Math.min(1, (S.hopT = (S.hopT || 0) + s) / 0.6) : (m === 'confess' ? 1 : 0);
+    if (m === 'reunion' && li < 1) S.hopT = 0;
+    const rxx = rx - close * 8;
+    S.ray.position.set(rxx, G(rxx, rz) + 11 + Math.abs(Math.sin(t * (close < 1 ? 9 : 2))) * (close < 1 && li >= 1 ? 3 : 0.4), rz);
+    S.ray.rotation.set(0, m === 'confess' && li <= 9 ? 0.9 : -1.25, 0);
+    cineLeaf(S.ray, t);
+    if (S.mimosa) { S.mimosa.position.set(mx, G(mx, mz), mz); S.mimosa.rotation.y = S.lookShip && m === 'reunion' ? -2.4 : 1.25; }
+    if (S.pallas) {
+      const px = m === 'confess' ? 34 : 32, py = G(rx, rz) + 30 + Math.sin(t * 2.2) * 1.5;
+      S.pallas.position.set(px, py, rz - 12);
+      cinePallasTick(S.pallas, t, m === 'confess' ? S.camPos : S.ray.position, m === 'reunion' && li === 8 ? 0.35 : 1);
+    }
+    if (S.sol) { S.sol.position.set(-30, G(-30, 0), 0); S.sol.rotation.y = 0.6; cineHoloTick(S.sol, t, S.holo && !S.cine); }
+    if (!S.cine) {
+      cineEngine(S, false);
+      if (m === 'reunion') {
+        if (S.lookShip) { S.camPos.set(20, S.g0 + 20, 110); S.camTarget.set(-50, S.g0 + 14, -30); }
+        else { S.camPos.set(2, S.g0 + 12, 110 - t * 1.2); S.camTarget.set(2, S.g0 + 12, 30); }
+      } else { S.camPos.set(60, S.g0 + 16, 100 - Math.min(t, 6) * 2); S.camTarget.set(10, S.g0 + 20, 10); }
+    }
+  },
+  cineStart(S) { S.cine = true; S.ray.visible = false; if (S.pallas) S.pallas.visible = false; sfx.ignite(); if (Music.started) Music.riser(1.6); },
+  cine(S, ct, s) { S.camPos.set(40, S.g0 + 18, 120); return cineTakeoff(S, ct, s); },
+  end(o) {
+    this.S.cine = false;
+    if (o.fromLog) { if (Music.started) Music.setSection('menu'); return; }
+    gstate = 'play'; P.inv = Math.max(P.inv, 150);
+    if (Music.started) Music.setSection('p' + (curPhase + 1));
+    commSay([['P', 'ケルベロスの反応、270秒地点。'], ['R', '……行くぞ、相棒。'], ['P', 'はい。']]);
+  },
+};
+
+// ── after CERBERUS: the fall, SOL's beacon, the first seed of the shield tree ──
+const Epilogue2 = {
+  music: 'ending', title: ['CERBERUS FALLS', 'アイギスに、最初の芽が出た。'],
+  panels: [
+    { mood: 'fall', lines: ['三つの首を失った冥王の旗艦が、静かに沈んでいく。', 'H:……あの男は……まだ、門の向こうだ……', 'R:門……？ 父さんのことか！？ おい！', 'P:……ケルベロス、反応消失。'] },
+    { mood: 'beacon', lines: ['!ピ……ピ……ピ……', 'P:微弱な信号を受信。……この識別コード。', 'P:ソルの、個人ビーコンです。', 'R:父さんの……！？',
+      'P:発信源は銀河の果て。……「門」の向こう側です。', 'R:……生きてるんだな。きっと。'], on: { 2: S => { S.holo = true; fxFlash(0x7fe8ff, 0.3); } } },
+    { mood: 'seed', lines: ['M:おかえり、レイ。……おや、葉っぱの根元に、種がついてるよ。', 'R:え？ ……ほんとだ。', 'P:盾の樹の種です。この星を、もう一度守れる種。',
+      'R:ここに植えよう。アイギスの、最初の一本だ。', 'M:ひまわりと一緒に、育てようねえ。', 'P:……おかえりなさい、レイ。', 'R:……ただいま。'],
+      on: { 3: S => { S.planted = true; sfx.repair(); } } },
+  ],
+  build(S) {
+    Object.assign(S, cineStage(0x08040e)); cineHill(S); cineShip(S);
+    S.wreck = cineWreck(S, BOSS_DEFS2[2]);
+    for (const n of ['head_L', 'head_C', 'head_R', 'tipGlow_L', 'tipGlow_C', 'tipGlow_R']) { const o = S.wreck.g.getObjectByName(n); if (o) o.visible = false; }
+    S.ray = cineRay(S); S.pallas = cinePallas(S); S.mimosa = cineBird(S, 'mimosa'); S.sol = cineHologram(S);
+    S.ringFx = new THREE.Mesh(new THREE.TorusGeometry(1, 0.06, 8, 64), new THREE.MeshBasicMaterial({ color: 0x7fe8ff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }));
+    S.E.add(S.ringFx);
+    // the sprout: stem + two leaves + glow, grown by scale
+    S.sprout = new THREE.Group();
+    const leafM = new THREE.MeshStandardMaterial({ color: 0x3cb054, emissive: 0x1a6a2a, emissiveIntensity: 0.6, roughness: 0.6 });
+    const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.5, 8, 8), leafM); stem.position.y = 4; S.sprout.add(stem);
+    for (const sx of [1, -1]) { const lf = new THREE.Mesh(new THREE.SphereGeometry(2.4, 12, 8), leafM); lf.scale.set(1.6, 0.35, 0.9); lf.position.set(sx * 2.6, 7.6, 0); lf.rotation.z = sx * 0.4; S.sprout.add(lf); }
+    S.sproutGlow = glowSprite(0x8dff9a, 40, 0); S.sprout.add(S.sproutGlow); S.sproutGlow.position.y = 6;
+    S.E.add(S.sprout);
+    S.dome = new THREE.Mesh(new THREE.SphereGeometry(1, 48, 24, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0x7fe8ff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, wireframe: true }));
+    S.E.add(S.dome);
+    S.sun = glowSprite(0xffb060, 420, 0); S.E.add(S.sun);
+  },
+  reset(S) { S.holo = false; S.planted = false; S.cine = false; S.grow = 0; },
+  mood(S, m) {
+    const space = m !== 'seed';
+    for (const o of S.hillSet) o.visible = !space;
+    S.wreck.w.visible = m === 'fall';
+    for (const o of [S.ray, S.pallas, S.mimosa, S.sprout, S.dome, S.sun]) if (o) o.visible = !space;
+    S.hero.visible = true;
+    if (space) { S.E.background = new THREE.Color(0x07041a); S.E.fog = null; S.stars.material.opacity = 1; S.hemi.intensity = 1; S.key.intensity = 1.4; S.key.color.setHex(0xc8b8ff); }
+    else {
+      S.dawn = [[0, 0x060a24, 0x2c5aa8], [0.45, 0x1c1846, 0x5a70b8], [0.62, 0x6a2a5a, 0xe88a6a], [0.75, 0xb0485a, 0xffc890], [1, 0x2a1420, 0x9a5a50]];
+      S.paintSky(S.dawn, 0); S.E.background = S.skyTex; S.E.fog = new THREE.Fog(0x3a2030, 400, 1700);
+      S.hemi.intensity = 0.8; S.key.color.setHex(0xffb080); S.key.intensity = 0.6; S.key.position.set(-0.1, 0.15, -1);
+      S.hero.position.set(-62, S.groundY(-62, -36) + 6, -36); S.hero.rotation.set(0, 0.5, 0.03);
+      S.sprout.scale.setScalar(0.001); S.sun.material.opacity = 0;
+    }
+  },
+  update(S, m, t, s, li) {
+    const G = S.groundY;
+    if (m !== 'seed') {
+      cineEngine(S, true);
+      if (m === 'fall') {
+        S.wreck.w.position.set(80, -t * 8, -420); S.wreck.w.rotation.set(t * 0.01, -0.45, -0.1 - t * 0.03);
+        cinePops(S, S.wreck.g, s);
+        S.hero.position.set(-420 + Math.min(1, t / 3) * 200, 40 + Math.sin(t * 2) * 3, 200); S.hero.rotation.set(0, 0.5, 0);
+        S.camPos.set(-560 + t * 5, 160, 600); S.camTarget.set(20, -30 - t * 4, -380);
+      } else {
+        S.hero.position.set(0, Math.sin(t * 1.6) * 2, 0); S.hero.rotation.set(Math.sin(t) * 0.04, 0.9, 0);
+        if (S.sol) { S.sol.position.set(36, 18, -30); S.sol.rotation.y = 0.2; cineHoloTick(S.sol, t, S.holo); }
+        // beacon rings pulsing far away (the gate)
+        const k = (t * 0.5) % 1; S.ringFx.position.set(-500, 120, -1800); S.ringFx.scale.setScalar(40 + k * 260); S.ringFx.material.opacity = S.holo ? (1 - k) * 0.8 : 0;
+        S.camPos.set(110, 40, 150); S.camTarget.set(10, 14, -30);
+      }
+      return;
+    }
+    // the hill at dawn
+    if (S.sol) S.sol.visible = false; S.ringFx.material.opacity = 0;
+    cineEngine(S, false);
+    const rx = 12, rz = 30, mx = -14, mz = 34, sx = -1, sz = 50;
+    S.ray.position.set(rx, G(rx, rz) + 11 + Math.sin(t * 2) * 0.4, rz);
+    S.ray.rotation.y = S.planted ? -0.58 : -1.42;
+    cineLeaf(S.ray, t);
+    if (S.mimosa) { S.mimosa.position.set(mx, G(mx, mz), mz); S.mimosa.rotation.y = S.planted ? 0.68 : 1.72; }
+    if (S.pallas) { S.pallas.position.set(rx + 22, G(rx, rz) + 30 + Math.sin(t * 2.2) * 1.5, rz - 10); cinePallasTick(S.pallas, t, S.ray.position); }
+    S.sprout.position.set(sx, G(sx, sz), sz);
+    if (S.planted) S.grow = Math.min(S.cine ? 2.2 : 0.35, S.grow + s * (S.cine ? 0.6 : 0.4));
+    S.sprout.scale.setScalar(Math.max(0.001, S.grow));
+    S.sproutGlow.material.opacity = S.planted ? 0.5 + Math.sin(t * 4) * 0.2 : 0;
+    if (!S.cine) { S.camPos.set(10, S.g0 + 12, 120 - Math.min(t, 6)); S.camTarget.set(0, S.g0 + 12, 30); }
+  },
+  cineStart(S) { S.cine = true; if (Music.started) Music.riser(2.4); },
+  cine(S, ct, s) {
+    // sunrise; the sprout shoots up and the old shield flickers over the hill once more
+    const k = Math.min(1, ct / 3.6), e = k * k * (3 - 2 * k);
+    S.paintSky(S.dawn, e);
+    S.sun.position.set(-170, S.g0 - 120 + e * 230, -1500); S.sun.material.opacity = Math.min(1, ct / 1.2);
+    S.stars.material.opacity = 1 - e; S.hemi.intensity = 0.8 + e * 0.3; S.key.intensity = 0.6 + e * 1.0;
+    S.E.fog.color.set(new THREE.Color(0x3a2030).lerp(new THREE.Color(0x7a4a58), e));
+    const d = Math.max(0, ct - 2.2);
+    S.dome.position.copy(S.sprout.position); S.dome.scale.setScalar(10 + d * 260);
+    S.dome.material.opacity = d > 0 ? Math.max(0, 0.5 - d * 0.18) : 0;
+    if (d > 0 && !S.domeSaid) { S.domeSaid = true; sfx.shield(); fxFlash(0x7fe8ff, 0.3); }
+    S.camPos.set(10 + e * 60, S.g0 + 12 + e * 40, 120 + e * 110); S.camTarget.set(-20, S.g0 + 14 + e * 30, -200);
+    if (ct > 3.2 && !S.titled) { S.titled = true; return 'title'; }
+    if (ct > 7.4 && !S.veiled) { S.veiled = true; return 'veil'; }
+    if (ct > 8.4) return 'done';
+    return null;
+  },
+  end(o) {
+    const S = this.S; S.cine = false; S.titled = S.veiled = S.domeSaid = false;
+    showCredits('story2', () => {
+      if (o.fromLog) { if (Music.started) Music.setSection('menu'); return; }
+      gstate = 'play'; P.inv = Math.max(P.inv, 150);
+      if (Music.started) Music.setSection('p' + (curPhase + 1));
+      commSay([['P', 'ビーコンの解析を始めます。'], ['R', '……待ってろよ、父さん。何度だって飛んでいく。']]);
+    });
+  },
+};
+for (const c of [Prologue2, Confession, Epilogue2]) c.play = (o = {}) => loadPart2Models().then(() => Cine.play(c, o));
+
 // ── Secrets ───────────────────────────────────────────────────────────────────
 // Hidden touch gestures / play feats that unlock cosmetic modes, skins and
 // titles. Only the *count* is ever shown to players (SECRETS n/9); the
@@ -7757,6 +8541,7 @@ const SECRET_TITLES = [
   { id: 'midnight', title: 'NIGHT OWL' },
   { id: 'complete', title: 'SECRET MASTER' },
   { id: 'story',    title: 'AEGIS PILOT' },
+  { id: 'story2',   title: 'SHIELD BEARER' },
 ];
 const SHIP_SIZES = { normal: 1, mini: 0.6, big: 1.45 };
 
@@ -7766,7 +8551,7 @@ catch (e) { secretsFound = []; }
 let secOpts = { retro: false, mirror: false, size: 'normal', midnight: false, hardcore: false, title: '' };
 try { Object.assign(secOpts, JSON.parse(localStorage.getItem('hd_sec_opts') || '{}') || {}); } catch (e) {}
 
-const hasSecret = id => id === 'complete' ? secretsComplete() : id === 'story' ? bossBest >= 2 : secretsFound.includes(id);
+const hasSecret = id => id === 'complete' ? secretsComplete() : id === 'story' ? bossBest >= 2 : id === 'story2' ? bossBest2 >= 3 : secretsFound.includes(id);
 function secretsComplete() { return SECRET_DEFS.every(d => secretsFound.includes(d.id)); }
 function saveSecrets() {
   localStorage.setItem('hd_secrets', JSON.stringify(secretsFound));
@@ -8037,6 +8822,14 @@ function creditsCast() {
       'でかい図体に、でかい声。何度負けても懲りない。') : U()) +
     (seen('acheron', 1) ? C(ACHERON_FACE, '#9a6cff', 'ACHERON', 'アケロン', 'BIDENT ／ 第二の穂先',
       'アイギス襲撃の立案者。冷酷で、美を好む。') : U()) +
+    (bossBest2 >= 1 || (met.orthros || 0) > 0 ? C(ORTHROS_FACE, '#ff9a3c', 'ORTHROS', 'オルトロス', 'HADES ／ 猟犬',
+      '双頭の追跡者。盾の樹の匂いを嗅ぎ分ける。') : '') +
+    (bossBest2 >= 2 || (met.charon || 0) > 0 ? C(CHARON_FACE, '#5affaa', 'CHARON', 'カロン', 'HADES ／ 渡し守',
+      '捕虜を運ぶ輸送要塞の主。運賃にうるさい。') : '') +
+    (bossBest2 >= 2 ? C(MIMOSA_FACE, '#ffd25a', 'MIMOSA', 'ミモザ', 'レイの祖母',
+      'ひまわり畑の主。レイを今でもヒナ扱いする。') : '') +
+    (bossBest2 >= 3 || (met.cerberus || 0) > 0 ? C(HADES_FACE, '#c08aff', 'HADES', 'ハデス', '冥王 ／ 旗艦ケルベロス',
+      '槍を握る者。銀河じゅうの伝説の盾を求める。') : '') +
     `</div>` +
     `<div class="cr-k">SETTING</div><div class="cr-v">PLANET AEGIS<br><small>最強の盾の名を冠した、美しい星</small></div>`;
 }
@@ -8044,11 +8837,12 @@ function showCredits(ending, onClose = null) {
   if (creditsOpen) return;
   creditsOpen = true;
   creditsOnClose = onClose;
-  const story = ending === 'story';
+  const story = ending === 'story', story2 = ending === 'story2';
   const roll = document.getElementById('cr-roll');
   const L = (k, v) => `<div class="cr-k">${k}</div><div class="cr-v">${v}</div>`;
   roll.innerHTML =
-    (story ? `<div class="cr-end">BIDENT FALLS</div><div class="cr-thanks">そして、レイの旅は続く。</div>`
+    (story2 ? `<div class="cr-end">CERBERUS FALLS</div><div class="cr-thanks">そして、門の向こうへ——</div>`
+     : story ? `<div class="cr-end">BIDENT FALLS</div><div class="cr-thanks">そして、レイの旅は続く。</div>`
      : ending ? `<div class="cr-end">ALL SECRETS FOUND</div><div class="cr-thanks">すべての秘密を見つけてくれて、ありがとう。</div>` : '') +
     `<div class="cr-logo">HOVER<br>DODGE</div>` +
     creditsCast() +
@@ -8060,7 +8854,8 @@ function showCredits(ending, onClose = null) {
     L('VISUALS', 'Three.js · WebGL · Bloom<br><small>3D models: glTF</small>') +
     L('TYPEFACES', 'Orbitron · Rajdhani') +
     L('SPECIAL THANKS', 'YOU') +
-    (story ? `<div class="cr-reward">◆ TITLE: AEGIS PILOT</div>`
+    (story2 ? `<div class="cr-reward">◆ TITLE: SHIELD BEARER</div><div class="cr-fin">TO BE CONTINUED</div>`
+     : story ? `<div class="cr-reward">◆ TITLE: AEGIS PILOT</div>`
      : ending ? `<div class="cr-reward">◆ PRISM SKIN UNLOCKED<br>◆ TITLE: SECRET MASTER</div>` : '') +
     `<div class="cr-fin">THANK YOU FOR PLAYING</div>`;
   creditsEl.classList.add('open');
@@ -8116,6 +8911,7 @@ function loop(now) {
   syncScene();
   if (Prologue.active) Prologue.update(realDt);
   Epilogue.update(realDt);
+  Cine.update(realDt);
   syncBossHUD();
   commTick(realDt);
   fx.aberr *= Math.pow(0.9, realDt);
