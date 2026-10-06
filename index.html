@@ -2296,7 +2296,7 @@ import { GLTFLoader }      from 'three/addons/loaders/GLTFLoader.js';
 
 // Single source of truth for the version: shown on the title / portrait
 // screens and passed to the service worker, which names its cache after it.
-const VERSION = '2.3.0';
+const VERSION = '2.3.1';
 
 // ── 3D models (glTF). The ship, Ray and PALLAS are waited for (briefly) before
 // the scene is built; the two flagships stream in the background — they are
@@ -8048,7 +8048,7 @@ function showCredits(ending, onClose = null) {
   const roll = document.getElementById('cr-roll');
   const L = (k, v) => `<div class="cr-k">${k}</div><div class="cr-v">${v}</div>`;
   roll.innerHTML =
-    (story ? `<div class="cr-end">BIDENT FALLS</div><div class="cr-thanks">アイギスの空に、静かな夜が戻った。</div>`
+    (story ? `<div class="cr-end">BIDENT FALLS</div><div class="cr-thanks">そして、レイの旅は続く。</div>`
      : ending ? `<div class="cr-end">ALL SECRETS FOUND</div><div class="cr-thanks">すべての秘密を見つけてくれて、ありがとう。</div>` : '') +
     `<div class="cr-logo">HOVER<br>DODGE</div>` +
     creditsCast() +
