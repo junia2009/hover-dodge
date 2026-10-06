@@ -2328,7 +2328,7 @@ import { GLTFLoader }      from 'three/addons/loaders/GLTFLoader.js';
 
 // Single source of truth for the version: shown on the title / portrait
 // screens and passed to the service worker, which names its cache after it.
-const VERSION = '2.6.2';
+const VERSION = '2.6.3';
 
 // ── 3D models (glTF). The ship, Ray and PALLAS are waited for (briefly) before
 // the scene is built; the flagships stream in the background — they are
@@ -2344,7 +2344,9 @@ loadModel('styx', 'models/styx.glb'); loadModel('acheron', 'models/acheron.glb')
 // CHAPTER 2 cast — only fetched once the player can reach it (ACHERON beaten)
 let part2Models = null;
 function loadPart2Models() {
-  if (!part2Models) part2Models = Promise.all(['orthros', 'charon', 'cerberus', 'mimosa', 'sol'].map(k => loadModel(k, `models/${k}.glb`)));
+  // ?v= bumps a model past the service worker's long-lived model cache when it changes
+  const MODEL_REV = { mimosa: 2 };
+  if (!part2Models) part2Models = Promise.all(['orthros', 'charon', 'cerberus', 'mimosa', 'sol'].map(k => loadModel(k, `models/${k}.glb${MODEL_REV[k] ? '?v=' + MODEL_REV[k] : ''}`)));
   return part2Models;
 }
 if ((+localStorage.getItem('hd_boss') || 0) >= 2) loadPart2Models();
