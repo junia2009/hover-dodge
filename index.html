@@ -2328,7 +2328,7 @@ import { GLTFLoader }      from 'three/addons/loaders/GLTFLoader.js';
 
 // Single source of truth for the version: shown on the title / portrait
 // screens and passed to the service worker, which names its cache after it.
-const VERSION = '2.6.0';
+const VERSION = '2.6.1';
 
 // ── 3D models (glTF). The ship, Ray and PALLAS are waited for (briefly) before
 // the scene is built; the flagships stream in the background — they are
@@ -8494,7 +8494,11 @@ const Confession = {
     if (S.mimosa) { S.mimosa.position.set(mx, G(mx, mz), mz); S.mimosa.rotation.y = S.lookShip && m === 'reunion' ? -2.4 : 1.25; }
     if (S.pallas) {
       const px = conf ? 34 : 32, py = G(rx, rz) + 30 + Math.sin(t * 2.2) * 1.5;
-      S.pallas.visible = true; S.pallas.position.set(px, py, rz - 12);
+      if (S.cine) {                                     // take-off: PALLAS dives into the cockpit first
+        const ck = S.hero.position.clone(); ck.y += 8;
+        S.pallas.position.lerp(ck, Math.min(1, s * 5)); S.pallas.scale.multiplyScalar(Math.max(0.8, 1 - s * 3));
+        if (S.pallas.scale.x < 0.8) S.pallas.visible = false;
+      } else { S.pallas.visible = true; S.pallas.position.set(px, py, rz - 12); }
       cinePallasTick(S.pallas, t, conf ? S.camPos : S.ray.position, m === 'reunion' && li === 8 ? 0.35 : 1);
     }
     if (!S.cine) {
@@ -8505,7 +8509,7 @@ const Confession = {
       } else { S.camPos.set(70, S.g0 + 22, 175 - Math.min(t, conf ? 6 : 0) * 3); S.camTarget.set(6, S.g0 + 18, 20); }
     }
   },
-  cineStart(S) { S.cine = true; S.ray.visible = false; if (S.pallas) S.pallas.visible = false; sfx.ignite(); if (Music.started) Music.riser(1.6); },
+  cineStart(S) { S.cine = true; S.ray.visible = false; sfx.ignite(); if (Music.started) Music.riser(1.6); },
   cine(S, ct, s) { S.camPos.set(40, S.g0 + 18, 120); return cineTakeoff(S, ct, s); },
   end(o) {
     this.S.cine = false;
