@@ -110,6 +110,9 @@ button { font-family: var(--f-ui) }
   z-index: 1;
 }
 
+/* the cast roaming behind the portrait UI (3D, see Rot3D) */
+#rot-3d { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
+
 /* Corner brackets */
 .rot-bracket {
   position: absolute;
@@ -1873,6 +1876,7 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
 </head>
 <body>
 <div id="rotate-screen">
+  <canvas id="rot-3d" aria-hidden="true"></canvas>
   <div class="rot-bracket tl"></div>
   <div class="rot-bracket tr"></div>
   <div class="rot-bracket bl"></div>
@@ -2314,7 +2318,7 @@ import { GLTFLoader }      from 'three/addons/loaders/GLTFLoader.js';
 
 // Single source of truth for the version: shown on the title / portrait
 // screens and passed to the service worker, which names its cache after it.
-const VERSION = '2.4.1';
+const VERSION = '2.5.0';
 
 // ── 3D models (glTF). The ship, Ray and PALLAS are waited for (briefly) before
 // the scene is built; the flagships stream in the background — they are
@@ -8933,7 +8937,7 @@ function loop(now) {
   lensPass.uniforms.uAberr.value = fx.aberr;
   lensPass.uniforms.uFlash.value = fx.flash;
   lensPass.uniforms.uTime.value = now / 1000;
-  composer.render();
+  if (!(Rot3D && Rot3D.running && gstate === 'menu')) composer.render();
   drawHUD();
   syncUI(now);
   requestAnimationFrame(loop);
@@ -8962,6 +8966,120 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
   setTimeout(checkUpdate, 5000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) checkUpdate(); });
 }
+// ── Portrait screen: the cast hangs around behind the "rotate" UI ──
+// A small, separate renderer (1 unit = 1 css px, y up). RAY flaps about like in the game, PALLAS
+// follows him, the ship streaks past now and then, MIMOSA watches from a corner once she is home.
+// Tap RAY or PALLAS for a reaction. Only runs while the portrait screen is showing.
+const Rot3D = (() => {
+  const mq = matchMedia('(orientation: portrait)');
+  const canvas = document.getElementById('rot-3d');
+  let R = null, scene3 = null, cam = null, W = 0, H = 0, last = 0, running = false;
+  let ray = null, pallas = null, ship = null, mimosa = null;
+  const st = { x: 0, y: 0, vx: 70, vy: 0, flapT: 0, spin: 0, goal: 0, goalT: 0 };
+  const pal = { x: 0, y: 0, flash: 0, blink: 0 };
+  const sh = { on: false, t: 3, x: 0, y: 0, dir: 1, trail: [], ti: 0 };
+  function setup() {
+    R = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+    R.setPixelRatio(Math.min(2, devicePixelRatio || 1));
+    R.outputColorSpace = THREE.SRGBColorSpace;
+    scene3 = new THREE.Scene();
+    scene3.add(new THREE.HemisphereLight(0xcfe0ff, 0x203050, 1.7));
+    const d = new THREE.DirectionalLight(0xffffff, 1.8); d.position.set(0.5, 1, 2); scene3.add(d);
+    const rim = new THREE.DirectionalLight(0x00e8ff, 1.2); rim.position.set(-1, 0.5, -1); scene3.add(rim);
+    cam = new THREE.PerspectiveCamera(30, 1, 1, 5000);
+    for (let i = 0; i < 18; i++) { const g = glowSprite(0x33ddff, 26, 0); g.visible = false; scene3.add(g); sh.trail.push({ g, life: 0 }); }
+  }
+  function cast() {
+    if (!ray && MODELS.ray) {
+      ray = cloneModel(MODELS.ray); ray.scale.setScalar(22); scene3.add(ray);
+      const lf = ray.getObjectByName('leaf'); if (lf) lf.userData.rz0 = lf.rotation.z;
+      st.x = -W * 0.2; st.y = H * 0.1;
+    }
+    if (!pallas && MODELS.pallas) { pallas = cloneModel(MODELS.pallas); pallas.scale.setScalar(15); scene3.add(pallas); pal.x = st.x - 60; pal.y = st.y + 40; }
+    if (!ship && MODELS.ship) { ship = cloneModel(MODELS.ship); ship.scale.setScalar(1.6); ship.visible = false; scene3.add(ship); }
+    if (!mimosa && MODELS.mimosa && typeof bossBest2 === 'number' && bossBest2 >= 2) { mimosa = cloneModel(MODELS.mimosa); mimosa.scale.setScalar(20); scene3.add(mimosa); }
+  }
+  function resize() {
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    if (!w || !h || (w === W && h === H)) return;
+    W = w; H = h;
+    R.setSize(W, H, false);
+    cam.aspect = W / H; cam.position.set(0, 0, (H / 2) / Math.tan(THREE.MathUtils.degToRad(15))); cam.lookAt(0, 0, 0); cam.updateProjectionMatrix();
+  }
+  function tick(now) {
+    if (!running) return;
+    requestAnimationFrame(tick);
+    const dt = Math.min(0.05, (now - (last || now)) / 1000); last = now;
+    resize(); cast();
+    const t = now / 1000, xMax = W / 2 - 46, yMin = -H / 2 + 70, yMax = H / 2 - 110;
+    if (ray) {
+      // flappy flight: gravity, a flap when sinking too low (or on a whim), bounce off the sides
+      // pick a new cruising height every few seconds, flap whenever he sinks below it
+      st.goalT -= dt;
+      if (st.goalT <= 0) { st.goal = yMin + 60 + Math.random() * (yMax - yMin - 100); st.goalT = 3 + Math.random() * 3; }
+      st.vy -= 820 * dt;
+      if (st.vy < 0 && st.y < st.goal) { st.vy = 300 + Math.random() * 60; st.flapT = 0.25; }
+      if (st.y > yMax) { st.y = yMax; st.vy = Math.min(st.vy, 0); }
+      st.x += st.vx * dt; st.y += st.vy * dt;
+      if (Math.abs(st.x) > xMax) { st.x = Math.sign(st.x) * xMax; st.vx = -st.vx; }
+      st.flapT = Math.max(0, st.flapT - dt); st.spin = Math.max(0, st.spin - dt);
+      ray.position.set(st.x, st.y - 36, 0);
+      const face = Math.sign(st.vx) * 1.05;
+      ray.rotation.set(0, face + (st.spin > 0 ? (1 - st.spin / 0.7) * Math.PI * 2 : 0), THREE.MathUtils.clamp(-st.vy * 0.0006, -0.35, 0.35) * Math.sign(st.vx));
+      const fl = st.flapT > 0 ? Math.sin(st.flapT * 50) * 0.7 : 0;
+      for (const [n, s] of [['wingL', 1], ['wingR', -1]]) { const w = ray.getObjectByName(n); if (w) w.rotation.z = s * fl; }
+      const lf = ray.getObjectByName('leaf'); if (lf) lf.rotation.z = (lf.userData.rz0 ?? -0.4) + Math.sin(t * 4) * 0.15;
+    }
+    if (pallas) {
+      // trails a little behind and above Ray
+      const tx = st.x - Math.sign(st.vx) * 58, ty = st.y + 46 + Math.sin(t * 2.2) * 6;
+      pal.x += (tx - pal.x) * Math.min(1, dt * 2.4); pal.y += (ty - pal.y) * Math.min(1, dt * 2.4);
+      pallas.position.set(pal.x, pal.y, 10);
+      pallas.rotation.y += (Math.sign(st.x - pal.x) * 0.9 - pallas.rotation.y) * Math.min(1, dt * 4);
+      const o = pallas.getObjectByName('orbit'); if (o) o.rotation.y = t * (pal.flash > 0 ? 6 : 0.9);
+      pal.flash = Math.max(0, pal.flash - dt); pal.blink -= dt;
+      if (pal.blink < -3 - Math.random() * 3) pal.blink = 0.12;
+      const e = pallas.getObjectByName('eye'); if (e) e.material.emissiveIntensity = pal.blink > 0 ? 0.1 : 2 + pal.flash * 6;
+    }
+    if (ship) {
+      // now and then the ship streaks across, trailing glow
+      sh.t -= dt;
+      if (!sh.on && sh.t <= 0) { sh.on = true; sh.dir = Math.random() < 0.5 ? 1 : -1; sh.x = -sh.dir * (W / 2 + 60); sh.y = (Math.random() - 0.5) * H * 0.6; }
+      if (sh.on) {
+        sh.x += sh.dir * 300 * dt; sh.y += Math.sin(t * 3) * 12 * dt;
+        ship.visible = true; ship.position.set(sh.x, sh.y, -60); ship.rotation.set(Math.sin(t * 3) * 0.12, 0, sh.dir > 0 ? 0 : Math.PI);
+        const p = sh.trail[sh.ti++ % sh.trail.length]; p.life = 1; p.g.visible = true; p.g.position.set(sh.x - sh.dir * 24, sh.y, -60);
+        if (Math.abs(sh.x) > W / 2 + 70) { sh.on = false; ship.visible = false; sh.t = 6 + Math.random() * 6; }
+      }
+      for (const p of sh.trail) { if (p.life <= 0) continue; p.life -= dt * 2.2; p.g.material.opacity = Math.max(0, p.life) * 0.6; p.g.scale.setScalar(22 + (1 - p.life) * 30); if (p.life <= 0) p.g.visible = false; }
+    }
+    if (mimosa) {
+      // grandma watches from the bottom corner and waves when Ray flies by
+      mimosa.position.set(-W / 2 + 46, -H / 2 + 34, 0);
+      mimosa.rotation.y = 0.5 + Math.sin(t * 0.8) * 0.15;
+      const near = Math.hypot(st.x - mimosa.position.x, st.y - mimosa.position.y) < 160;
+      const w = mimosa.getObjectByName('wingR'); if (w) w.rotation.z = near ? -0.6 + Math.sin(t * 10) * 0.4 : 0;
+    }
+    R.render(scene3, cam);
+  }
+  // taps: RAY does a spin and chirps, PALLAS flashes her eye and beeps (buttons keep working)
+  document.getElementById('rotate-screen').addEventListener('pointerdown', e => {
+    if (!running || e.target.closest('button')) return;
+    const r = canvas.getBoundingClientRect(), px = e.clientX - r.left - W / 2, py = H / 2 - (e.clientY - r.top);
+    if (ray && Math.hypot(px - st.x, py - st.y) < 55) { st.spin = 0.7; st.vy = 420; sfx.talk('R'); sfx.talk('R'); }
+    else if (pallas && Math.hypot(px - pal.x, py - pal.y) < 40) { pal.flash = 0.6; sfx.talk('P'); }
+  });
+  function sync() {
+    const want = mq.matches && !document.hidden;
+    if (want && !running) { if (!R) setup(); running = true; last = 0; requestAnimationFrame(tick); }
+    else if (!want) running = false;
+  }
+  if (mq.addEventListener) mq.addEventListener('change', sync); else if (mq.addListener) mq.addListener(sync);
+  document.addEventListener('visibilitychange', sync);
+  sync();
+  return { get running() { return running; } };
+})();
+
 requestAnimationFrame(loop);
 </script>
 <script>
