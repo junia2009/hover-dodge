@@ -1124,6 +1124,12 @@ button { font-family: var(--f-ui) }
 #story.on { display: block; }
 #story .story-box { transition: opacity .4s; }
 #story.cine .story-box { opacity: 0; pointer-events: none; }
+.story-title { position: absolute; left: 0; right: 0; top: 34%; text-align: center; pointer-events: none;
+  opacity: 0; letter-spacing: 2px; transition: opacity 1.4s ease, letter-spacing 3s ease; }
+.story-title b { display: block; font: 900 clamp(30px, 6.4vw, 54px)/1 var(--f-disp); color: #fff;
+  text-shadow: 0 0 18px #ffb060, 0 0 44px #ff7a3a; letter-spacing: inherit; }
+.story-title span { display: block; margin-top: 14px; font: 600 15px/1.4 var(--f-ui); color: #fff1dc; letter-spacing: 4px; text-shadow: 0 0 10px #000; }
+#story.titled .story-title { opacity: 1; letter-spacing: 10px; }
 #story::before { content: ''; position: absolute; inset: 0; background: #000; opacity: var(--fade); pointer-events: none; }
 .story-skip {
   position: absolute; top: max(14px, env(safe-area-inset-top)); right: max(14px, env(safe-area-inset-right));
@@ -2135,6 +2141,7 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
     <div class="story-body"><div class="story-name" id="story-name"></div><div class="story-text" id="story-text"></div></div>
     <div class="story-next">▼</div>
   </div>
+  <div class="story-title"><b>BIDENT FALLS</b><span>アイギスの空に、朝が来た。</span></div>
 </div>
 
 <div id="secret-toast" aria-live="polite">
@@ -2289,7 +2296,7 @@ import { GLTFLoader }      from 'three/addons/loaders/GLTFLoader.js';
 
 // Single source of truth for the version: shown on the title / portrait
 // screens and passed to the service worker, which names its cache after it.
-const VERSION = '2.2.2';
+const VERSION = '2.3.0';
 
 // ── 3D models (glTF). The ship, Ray and PALLAS are waited for (briefly) before
 // the scene is built; the two flagships stream in the background — they are
@@ -4031,6 +4038,8 @@ const SECTIONS = {
   boss: { bpm: 138, style: 4, chords: [CH(45,0,3,7), CH(46,0,4,7), CH(38,0,3,7), CH(40,0,4,7,10)],
           lv: { pad: .22, bass: .66, kick: .95, snare: .62, hat: .5, lead: .45, arp: .25 },
           motif: [0,0,null,2,null,1,0,null, 3,null,2,1,null,2,4,3] },
+  ending: { bpm: 76, style: 0, chords: [CH(41,0,4,7,11,16), CH(43,0,4,7,14), CH(45,0,3,7,10,14), CH(48,0,4,7,11,14)],
+          lv: { pad: .62, bass: .2, kick: 0, snare: 0, hat: 0, lead: 0, arp: .4 } },
 };
 // Bass rhythm per style: step → [interval, length in 16ths]
 const BASS = [
@@ -7397,18 +7406,163 @@ function showBossBanner(def) {
   setTimeout(() => setText(hudBanner.querySelector('.b-kicker'), 'ENTERING'), 2400);
 }
 
-// ── Epilogue (after ACHERON): story overlay on the frozen game, then credits, then fly on ──
+// ── Epilogue (after ACHERON): a 3D cutscene like the prologue, then credits ──
+// wreck (ACHERON sinks) → return (flying home to Aegis) → dawn (the hill) → sunrise + BIDENT FALLS
+// Live: the run is frozen underneath and goes on after the credits. From the LOG: back to the title.
 const Epilogue = (() => {
+  const E = new THREE.Scene();
+  const cam = new THREE.PerspectiveCamera(42, VW / VH, 1, 6000);
+  const hemi = new THREE.HemisphereLight(0x6a5ad0, 0x0a0814, 1.0);
+  const key = new THREE.DirectionalLight(0xb8a8ff, 1.6); key.position.set(-1, 1.4, 1.2);
+  const boom = new THREE.PointLight(0xff8a4a, 0, 900);
+  const fill = new THREE.DirectionalLight(0x9aa8d8, 0); fill.position.set(0.6, 0.5, 1);   // dawn: keeps the cast readable against the sun
+  E.add(hemi, key, boom, fill);
+  // stars all round (the hill hides the lower half at dawn)
+  const sp = [];
+  for (let i = 0; i < 2400; i++) {
+    const v = new THREE.Vector3().randomDirection().multiplyScalar(2600);
+    sp.push(v.x, v.y, v.z);
+  }
+  const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.Float32BufferAttribute(sp, 3));
+  const stars = new THREE.Points(sg, new THREE.PointsMaterial({ color: 0xaab4d0, size: 1.2, sizeAttenuation: false, fog: false, transparent: true }));
+  E.add(stars);
+  // ── 1. wreck: ACHERON (built on play — the model may still be loading at boot) ──
+  const wreck = new THREE.Group(); wreck.position.set(60, 0, -320); E.add(wreck);
+  let ach = null, achFromModel = false;
+  function ensureAcheron() {
+    if (ach && (achFromModel || !MODELS.acheron)) return;
+    if (ach) wreck.remove(ach);
+    ach = buildBossShip(BOSS_DEFS[1], true);
+    scene.remove(ach);                                   // buildBossShip adds itself to the game scene
+    achFromModel = !!MODELS.acheron;
+    if (achFromModel) ach.children[0].scale.z = 1;      // full depth: we see it from the side here
+    ach.rotation.x = -Math.PI / 2;                       // its top (+Z) faces up (+Y)
+    wreck.add(ach);
+  }
+  const pops = [];                                       // explosion puffs on the hull
+  for (let i = 0; i < 26; i++) { const g = glowSprite(i % 3 ? 0xffa04a : 0xd890ff, 80, 0); g.visible = false; E.add(g); pops.push({ g, life: 0, size: 80 }); }
+  let popI = 0, popT = 0, popSfxT = 0;
+  const fleeing = [];                                    // the remnants scatter
+  for (let i = 0; i < 5; i++) {
+    const pg = new THREE.Group();
+    const hull = new THREE.Mesh(new THREE.ConeGeometry(9, 40, 4), new THREE.MeshPhongMaterial({ color: 0x1a0c14, emissive: 0x200008 }));
+    hull.rotation.z = -Math.PI / 2; pg.add(hull);
+    const glow = glowSprite(0xff2a3c, 50, 0.9); glow.position.x = -22; pg.add(glow);
+    E.add(pg); fleeing.push(pg);
+  }
+  // ── 2. return: scorched Aegis ahead ──
+  const pc = document.createElement('canvas'); pc.width = 512; pc.height = 256;
+  const pcx = pc.getContext('2d');
+  pcx.fillStyle = '#17181c'; pcx.fillRect(0, 0, 512, 256);
+  for (let i = 0; i < 260; i++) {                        // ash + dead seas
+    pcx.fillStyle = Math.random() < 0.3 ? 'rgba(20,40,70,0.5)' : `rgba(${50 + Math.random() * 30 | 0},${38 + Math.random() * 20 | 0},${36 + Math.random() * 16 | 0},0.35)`;
+    pcx.beginPath(); pcx.arc(Math.random() * 512, Math.random() * 256, 4 + Math.random() * 26, 0, Math.PI * 2); pcx.fill();
+  }
+  const ec = document.createElement('canvas'); ec.width = 512; ec.height = 256;
+  const ecx = ec.getContext('2d');
+  ecx.fillStyle = '#000'; ecx.fillRect(0, 0, 512, 256);
+  ecx.lineCap = 'round';
+  for (let i = 0; i < 40; i++) {                         // still-smouldering scars
+    let x = Math.random() * 512, y = 30 + Math.random() * 196;
+    ecx.strokeStyle = `rgba(255,${90 + Math.random() * 80 | 0},40,${0.5 + Math.random() * 0.5})`; ecx.lineWidth = 0.6 + Math.random() * 1.2;
+    ecx.beginPath(); ecx.moveTo(x, y);
+    for (let k = 0; k < 8; k++) { x += (Math.random() - 0.5) * 30; y += (Math.random() - 0.5) * 16; ecx.lineTo(x, y); }
+    ecx.stroke();
+  }
+  const planet = new THREE.Mesh(new THREE.SphereGeometry(700, 64, 32), new THREE.MeshPhongMaterial({
+    map: new THREE.CanvasTexture(pc), emissiveMap: new THREE.CanvasTexture(ec), emissive: 0xff7a3a, emissiveIntensity: 0.8, shininess: 4 }));
+  planet.position.set(0, -760, -1900); E.add(planet);
+  const atmo = glowSprite(0x4a8aff, 2100, 0.55); atmo.position.set(0, -700, -2300); E.add(atmo);
+  // ── 3. dawn: the same hill as the prologue ──
+  const HC = new THREE.Vector3(0, -905, -150), HR = 900;
+  const hill = new THREE.Mesh(new THREE.SphereGeometry(HR, 64, 32), new THREE.MeshLambertMaterial({ color: 0x1a1416 }));
+  hill.position.copy(HC); E.add(hill);
+  const groundY = (x, z) => HC.y + Math.sqrt(Math.max(0, HR * HR - x * x - (z - HC.z) * (z - HC.z)));
+  const g0 = groundY(0, 0);
+  const pineMat = new THREE.MeshLambertMaterial({ color: 0x120c0e });
+  const dawnSet = [hill];
+  for (let i = 0; i < 40; i++) {
+    const x = (Math.random() - 0.5) * 760, z = -60 - Math.random() * 420;
+    if (Math.abs(x) < 70 && z > -140) continue;
+    const h = 14 + Math.random() * 24;                   // burnt stumps, shorter than the old pines
+    const p = new THREE.Mesh(new THREE.ConeGeometry(h * 0.18, h, 5), pineMat);
+    p.position.set(x, groundY(x, z) + h / 2 - 2, z); E.add(p); dawnSet.push(p);
+  }
+  const embers = [];
+  for (let i = 0; i < 8; i++) {
+    const e = glowSprite(0xff6a1a, 60 + Math.random() * 60, 0);
+    const x = (Math.random() - 0.5) * 600, z = -140 - Math.random() * 320;
+    e.position.set(x, groundY(x, z) + 8, z); E.add(e); embers.push(e); dawnSet.push(e);
+  }
+  const SUN_X = -170, SUN_Z = -1500;
+  const sun = glowSprite(0xffb060, 420, 0); sun.position.set(SUN_X, g0 - 120, SUN_Z); E.add(sun); dawnSet.push(sun);
+  const sunCore = glowSprite(0xffffff, 120, 0); E.add(sunCore); dawnSet.push(sunCore);
+  const sky = document.createElement('canvas'); sky.width = 4; sky.height = 256;
+  const skyx = sky.getContext('2d'), skyTex = new THREE.CanvasTexture(sky);
+  skyTex.colorSpace = THREE.SRGBColorSpace;
+  const C = (a, b, k) => new THREE.Color(a).lerp(new THREE.Color(b), k).getStyle();
+  let skyK = -1;
+  function paintSky(k) {                                 // k: 0 = before dawn, 1 = sunrise
+    if (Math.abs(k - skyK) < 0.01) return;
+    skyK = k;
+    const g = skyx.createLinearGradient(0, 0, 0, 256);
+    g.addColorStop(0, C(0x060a24, 0x2c5aa8, k));
+    g.addColorStop(0.45, C(0x1c1846, 0x5a70b8, k));
+    g.addColorStop(0.62, C(0x6a2a5a, 0xe88a6a, k));
+    g.addColorStop(0.75, C(0xb0485a, 0xffc890, k));
+    g.addColorStop(1, C(0x2a1420, 0x9a5a50, k));
+    skyx.fillStyle = g; skyx.fillRect(0, 0, 4, 256);
+    skyTex.needsUpdate = true;
+  }
+  // ── cast ──
+  // the ship model is built for the top-down game view (up = +Z): stand it up so it flies level here
+  const hero = new THREE.Group(), heroShip = buildShipGroup(false);
+  heroShip.rotation.x = -Math.PI / 2; hero.add(heroShip); hero.scale.setScalar(2.4); E.add(hero);
+  const heroThrust = glowSprite(0x33ddff, 16, 0.85); heroThrust.position.set(-20, 0, 2.5); heroShip.add(heroThrust);
+  const ray = buildRay(); E.add(ray); dawnSet.push(ray);
+  const pallas = MODELS.pallas ? cloneModel(MODELS.pallas) : null;
+  if (pallas) { pallas.scale.setScalar(5.5); E.add(pallas); dawnSet.push(pallas); }
+  const leafGlow = glowSprite(0x8dff9a, 22, 0); E.add(leafGlow); dawnSet.push(leafGlow);
+
+  const PANELS = [
+    { mood: 'wreck', lines: ['二本目の穂先——バイデント旗艦アケロンが、静かに沈んでいく。', 'A:槍は……まだ、折れては……いない……', 'P:敵旗艦、沈黙。海賊団の残党は、散り散りに逃げていきます。'] },
+    { mood: 'return', lines: ['R:……終わった、のか。', 'P:ひとまずは。二本の穂先は、どちらも折れました。', 'R:……帰ろう。アイギスに。'] },
+    { mood: 'dawn', lines: ['焼けた丘に、あの夜から初めての朝が来ようとしていた。', 'R:アイギスの空は、戻らない。……でも。', 'R:俺は、パイロットになった。',
+      'P:はい。少し抜けていますが、優秀なパイロットです。', 'R:一言多い。', 'P:……長いあいだ、眠っていました。起こしてくれて、ありがとうございます。',
+      'R:……お、おう。', 'P:記録しました。今の顔。', 'R:消せ。'] },
+  ];
   const el = document.getElementById('story');
   const elName = document.getElementById('story-name'), elText = document.getElementById('story-text'), elFace = document.getElementById('story-face');
-  const LINES = ['バイデントは、二本の穂先を失った。', 'P:海賊団の残党は、散り散りに逃げていきます。',
-    'R:アイギスの空は、戻らない。……でも。', 'R:俺は、パイロットになった。',
-    'P:はい。少し抜けていますが、優秀なパイロットです。', 'R:一言多い。'];
-  let active = false, replay = false, i = 0, shown = 0;
-  function show() {
-    const raw = LINES[i];
+  const xfade = document.getElementById('xfade');
+  const veil = (on, secs) => { xfade.style.setProperty('--xd', secs + 's'); xfade.classList.toggle('on', on); };
+  let active = false, replay = false, pi = 0, li = 0, shown = 0, t = 0, fade = 0, shake = 0;
+  let cine = false, ct = 0, titled = false, veiled = false;
+  const camPos = new THREE.Vector3(), camTarget = new THREE.Vector3(), tmp = new THREE.Vector3();
+
+  function setMood(m) {
+    const dawn = m === 'dawn';
+    for (const o of dawnSet) o.visible = dawn;
+    wreck.visible = m === 'wreck';
+    for (const f of fleeing) f.visible = m === 'wreck';
+    for (const p of pops) { p.life = 0; p.g.visible = false; }
+    planet.visible = atmo.visible = m === 'return';
+    E.background = dawn ? skyTex : new THREE.Color(m === 'wreck' ? 0x07041a : 0x02040e);
+    E.fog = dawn ? new THREE.Fog(0x3a2030, 400, 1700) : null;
+    hemi.color.setHex(dawn ? 0x8a7ab0 : 0x6a5ad0); hemi.groundColor.setHex(dawn ? 0x1a0e10 : 0x0a0814);
+    hemi.intensity = dawn ? 0.7 : 1.0; fill.intensity = dawn ? 0.7 : 0;
+    key.color.setHex(dawn ? 0xffb080 : m === 'return' ? 0xffd2a8 : 0xb8a8ff);
+    key.intensity = dawn ? 0.5 : 1.6;
+    if (m === 'return') key.position.set(1, 0.6, -0.4); else if (dawn) key.position.set(SUN_X / 1500, 0.15, -1); else key.position.set(-1, 1.4, 1.2);
+    stars.material.opacity = 1;
+    boom.intensity = 0;
+    if (dawn) { paintSky(0); sun.material.opacity = 0; sunCore.material.opacity = 0; leafGlow.material.opacity = 0; }
+    hero.rotation.set(0, 0, 0);
+    if (m === 'wreck') hero.position.set(-640, 40, 160);
+  }
+  function showLine() {
+    const raw = PANELS[pi].lines[li];
     let who = null, text = raw;
-    if (/^[RP]:/.test(raw)) { who = SPEAKERS[raw[0]]; text = raw.slice(2); }
+    if (/^[RPA]:/.test(raw)) { who = SPEAKERS[raw[0]]; text = raw.slice(2); }
     elText._sp = who ? raw[0] : null;
     el.classList.toggle('talk', !!who); el.classList.remove('sfx');
     elFace.innerHTML = who ? who.face : '';
@@ -7416,38 +7570,166 @@ const Epilogue = (() => {
     elText._full = text; shown = 0; elText.textContent = '';
   }
   function advance() {
-    if (!active) return;
+    if (!active || cine) return;
     if (shown < elText._full.length) { shown = elText._full.length; elText.textContent = elText._full; return; }
     ui.select();
-    if (++i >= LINES.length) return finish();
-    show();
+    if (++li >= PANELS[pi].lines.length) {
+      li = 0;
+      if (++pi >= PANELS.length) { pi--; li = PANELS[pi].lines.length - 1; return sunrise(); }
+      fade = 1; t = 0; setMood(PANELS[pi].mood);
+    }
+    showLine();
+  }
+  // after the last line: no text — the sun comes up over the burnt hill
+  function sunrise() {
+    cine = true; ct = 0; titled = veiled = false;
+    el.classList.add('cine');
+    if (Music.started) Music.riser(2.4);
   }
   function finish() {
-    active = false;
-    el.classList.remove('on');
-    if (replay) { replay = false; return showCredits('story'); }   // from the LOG: credits, then back to the title
-    showCredits('story', () => {
-      // …and the run goes on
-      gstate = 'play';
-      P.inv = Math.max(P.inv, 150);
-      commSay([['P', 'まだ飛べますか？'], ['R', '当たり前だ。何度だって飛ぶ。']]);
-    });
+    if (!active) return;
+    if (!xfade.classList.contains('on')) veil(true, 0);
+    active = false; cine = false;
+    el.classList.remove('on', 'cine', 'titled');
+    renderPass.scene = scene; renderPass.camera = camera;
+    const fromLog = replay; replay = false;
+    if (fromLog) {
+      gstate = 'menu';
+      showCredits('story', () => { if (Music.started) Music.setSection('menu'); });
+    } else {
+      showCredits('story', () => {
+        // …and the run goes on
+        gstate = 'play';
+        P.inv = Math.max(P.inv, 150);
+        if (Music.started) Music.setSection('p' + (curPhase + 1));
+        commSay([['P', 'まだ飛べますか？'], ['R', '当たり前だ。何度だって飛ぶ。']]);
+      });
+    }
+    requestAnimationFrame(() => requestAnimationFrame(() => veil(false, 1.2)));
   }
   function play(fromLog = false) {
-    active = true; i = 0; replay = fromLog;
-    if (!replay) { gstate = 'cut'; commClear(); }
-    el.style.setProperty('--fade', replay ? '0.9' : '0');   // replay: dim the title behind the text
+    ensureAcheron();
+    active = true; replay = fromLog; pi = 0; li = 0; t = 0; fade = 1; shake = 0;
+    cine = false; el.classList.remove('cine', 'titled');
+    gstate = fromLog ? 'story' : 'cut';
+    if (!fromLog) commClear();
+    setMood('wreck');
+    renderPass.scene = E; renderPass.camera = cam;
+    el.style.setProperty('--fade', '1');
     el.classList.add('on');
-    show();
+    if (Music.started) Music.setSection('ending');
+    showLine();
+  }
+  function popAt(local, size) {
+    const p = pops[popI++ % pops.length];
+    p.life = 1; p.size = size; p.g.visible = true;
+    p.g.position.copy(ach.localToWorld(local));
   }
   function update(realDt) {
     if (!active) return;
-    if (shown < elText._full.length) {
+    const s = realDt / 60;
+    t += s;
+    if (shown < (elText._full || '').length) {
       const prev = shown;
-      shown = Math.min(elText._full.length, shown + realDt / 60 * 26);
+      shown = Math.min(elText._full.length, shown + s * 26);
       if (elText._sp) talkBlips(elText._sp, prev, shown, elText._full);
       elText.textContent = elText._full.slice(0, Math.floor(shown));
     }
+    fade = Math.max(0, fade - s * 1.4);
+    el.style.setProperty('--fade', fade.toFixed(3));
+    shake = Math.max(0, shake - s * 2);
+    const mood = PANELS[pi].mood;
+    const fl = hero.getObjectByName('flame');
+    if (fl) { fl.visible = mood !== 'dawn'; fl.scale.set(1, 0.8 + Math.random() * 0.4, 1); }
+    heroThrust.material.opacity = 0.7 + Math.random() * 0.2;
+
+    if (mood === 'wreck') {
+      // the flagship lists and sinks, bursting along the hull; the hero glides in to watch
+      wreck.position.set(60, -t * 7, -320);
+      wreck.rotation.set(t * 0.012, -0.5 + t * 0.01, -0.12 - t * 0.035);
+      const ring = ach.getObjectByName('ring'); if (ring) ring.rotation.x += s * 0.2;
+      const ring2 = ach.getObjectByName('ring2'); if (ring2) ring2.rotation.z += s * 0.15;
+      const cg = ach.getObjectByName('coreGlow'); if (cg) cg.material.opacity = Math.random() < 0.15 ? 0.05 : Math.max(0.1, 0.55 - t * 0.04);
+      popT -= s;
+      if (popT <= 0) {
+        popT = 0.12 + Math.random() * 0.25;
+        popAt(tmp.set(-300 + Math.random() * 560, (Math.random() - 0.5) * 180, Math.random() * 40), 90 + Math.random() * 160);
+        boom.position.copy(pops[(popI - 1) % pops.length].g.position); boom.intensity = 3;
+        if ((popSfxT -= 1) <= 0) { popSfxT = 3; sfx.kill(); }
+        if (Math.random() < 0.12) shake = Math.max(shake, 0.5);
+      }
+      boom.intensity *= Math.pow(0.9, realDt);
+      const k = Math.min(1, t / 3.2), e = k * k * (3 - 2 * k);
+      hero.position.set(-640 + e * 420, 40 + Math.sin(t * 2) * 3, 160);
+      hero.rotation.set(Math.sin(t * 1.6) * 0.05, 0.45 * e, 0);
+      fleeing.forEach((f, i) => {
+        const a = i * 1.3 + 0.4;
+        f.position.set(60 + Math.cos(a) * (220 + t * 120), 40 + (i - 2) * 50 + t * 10, -320 + Math.sin(a) * 80 - t * 160 - i * 30);
+        f.rotation.y = -a * 0.3 + 0.6;
+      });
+      camPos.set(-520 + t * 6, 150, 520 - t * 4); camTarget.set(20, -30 - t * 4, -300);
+    } else if (mood === 'return') {
+      // chase cam: the hero heads for the scorched planet
+      hero.position.set(Math.sin(t * 0.7) * 6, 20 + Math.sin(t * 1.4) * 4, -t * 30);
+      hero.rotation.set(Math.sin(t * 0.7) * 0.12, Math.PI / 2, 0);
+      planet.rotation.y = t * 0.01;
+      camPos.set(hero.position.x + 90 - t * 3, hero.position.y + 34, hero.position.z + 190);
+      camTarget.set(hero.position.x - 20, hero.position.y - 90, hero.position.z - 700);
+    } else {
+      // the hill: the ship has landed; Ray watches the horizon, PALLAS beside him
+      const sx = -60, sz = -30;
+      hero.position.set(sx, groundY(sx, sz) + 6, sz);
+      hero.rotation.set(0, 0.55, 0.04);
+      heroThrust.material.opacity = 0;
+      const rx = 14, rz = 26;
+      ray.position.set(rx, groundY(rx, rz) + 11 + Math.sin(t * 2) * 0.4, rz);
+      const lookSun = Math.atan2(SUN_X - rx, SUN_Z - rz);
+      const toPallas = li >= 4 && li <= 7 && !cine;
+      ray.rotation.y += ((toPallas ? lookSun + 1.25 : lookSun) - ray.rotation.y) * Math.min(1, s * 4);
+      ray.rotation.x = cine ? -0.15 : 0;
+      const leaf = ray.getObjectByName('leaf'); if (leaf) leaf.rotation.z = (leaf.userData.rz0 ?? -0.4) + Math.sin(t * 3) * 0.12;
+      if (pallas) {
+        pallas.position.set(rx + 22, groundY(rx, rz) + 28 + Math.sin(t * 2.2) * 1.5, rz - 6);
+        pallas.lookAt(ray.position.x, pallas.position.y, ray.position.z);
+        const orbit = pallas.getObjectByName('orbit'); if (orbit) orbit.rotation.y = t * 0.8;
+        const eye = pallas.getObjectByName('eye'); if (eye) eye.material.emissiveIntensity = 2.2 + Math.sin(t * 5) * 0.4;
+      }
+      embers.forEach((e, i) => { e.material.opacity = (0.16 + Math.sin(t * 4 + i) * 0.05) * (1 - Math.min(1, cine ? ct / 3 : 0)); });
+      if (!cine) {
+        camPos.set(70 - t * 1.2, g0 + 14, 120 - t * 0.8); camTarget.set(-30, g0 + 18, -140);
+      } else {
+        // ── sunrise ──
+        ct += s;
+        const k = Math.min(1, ct / 3.6), e = k * k * (3 - 2 * k);
+        paintSky(e);
+        sun.position.set(SUN_X, g0 - 120 + e * 230, SUN_Z);
+        sun.material.opacity = Math.min(1, ct / 1.2);
+        sun.scale.setScalar(420 + e * 220);
+        sunCore.position.copy(sun.position); sunCore.material.opacity = sun.material.opacity; sunCore.scale.setScalar(120 + e * 60);
+        stars.material.opacity = 1 - e;
+        hemi.intensity = 0.7 + e * 0.3; key.intensity = 0.5 + e * 1.0;
+        E.fog.color.set(C(0x3a2030, 0x7a4a58, e));
+        // the first light catches the last green on Aegis
+        const lf = ray.getObjectByName('leaf');
+        if (lf) { lf.getWorldPosition(leafGlow.position); leafGlow.material.opacity = Math.max(0, Math.min(0.9, (ct - 1.4) * 0.6)) * (0.85 + Math.sin(ct * 6) * 0.15); }
+        camPos.set(70 + e * 50, g0 + 14 + e * 34, 120 + e * 90); camTarget.set(-60 + e * -20, g0 + 18 + e * 40, -300);
+        if (ct > 3.0 && !titled) { titled = true; el.classList.add('titled'); sfx.record(); }
+        if (ct > 7.2 && !veiled) { veiled = true; veil(true, 0.9); }
+        if (ct > 8.2) { finish(); return; }
+      }
+    }
+    for (const p of pops) {
+      if (p.life <= 0) continue;
+      p.life -= s * 1.6;
+      p.g.material.opacity = Math.max(0, p.life) * 0.95;
+      p.g.scale.setScalar(p.size * (1.6 - p.life));
+      if (p.life <= 0) p.g.visible = false;
+    }
+    cam.position.lerp(camPos, Math.min(1, s * 3));
+    if (fade > 0.95) cam.position.copy(camPos);
+    cam.position.x += (Math.random() - 0.5) * shake * 4;
+    cam.position.y += (Math.random() - 0.5) * shake * 4;
+    cam.lookAt(camTarget);
   }
   onTap(el, advance);
   onTap(document.getElementById('story-skip'), () => { if (active) { ui.back(); finish(); } });
