@@ -2117,6 +2117,7 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
       <div><div class="m-title">FLIGHT LOG</div><div class="m-sub" id="log-count">航海日誌</div></div>
       <div class="m-spacer"></div>
       <button class="btn-mini" id="log-prologue" type="button">PROLOGUE ▶</button>
+      <button class="btn-mini" id="log-epilogue" type="button" hidden>EPILOGUE ▶</button>
       <button class="m-close" id="log-close" type="button" aria-label="Close">×</button>
     </header>
     <div class="m-body log-body">
@@ -2288,7 +2289,7 @@ import { GLTFLoader }      from 'three/addons/loaders/GLTFLoader.js';
 
 // Single source of truth for the version: shown on the title / portrait
 // screens and passed to the service worker, which names its cache after it.
-const VERSION = '2.2.1';
+const VERSION = '2.2.2';
 
 // ── 3D models (glTF). The ship, Ray and PALLAS are waited for (briefly) before
 // the scene is built; the two flagships stream in the background — they are
@@ -6665,11 +6666,12 @@ function renderLogUI() {
     logSel = b.dataset.log; ui.select(); renderLogUI();
   });
 }
-function openLog()  { ui.open(); renderLogUI(); logModal.classList.add('open'); }
+function openLog()  { ui.open(); renderLogUI(); document.getElementById('log-epilogue').hidden = bossBest < BOSS_DEFS.length; logModal.classList.add('open'); }
 function closeLog() { ui.back(); logModal.classList.remove('open'); refreshTitleInfo(); }
 onTap(document.getElementById('t-log-btn'), openLog);
 onTap(document.getElementById('log-close'), closeLog);
 onTap(document.getElementById('log-prologue'), () => { closeLog(); Prologue.play(null); });
+onTap(document.getElementById('log-epilogue'), () => { closeLog(); Epilogue.play(true); });   // unlocked by beating ACHERON
 addEventListener('keydown', e => {
   if (e.code === 'Escape' && logModal.classList.contains('open')) { e.preventDefault(); closeLog(); }
 });
@@ -7402,7 +7404,7 @@ const Epilogue = (() => {
   const LINES = ['バイデントは、二本の穂先を失った。', 'P:海賊団の残党は、散り散りに逃げていきます。',
     'R:アイギスの空は、戻らない。……でも。', 'R:俺は、パイロットになった。',
     'P:はい。少し抜けていますが、優秀なパイロットです。', 'R:一言多い。'];
-  let active = false, i = 0, shown = 0;
+  let active = false, replay = false, i = 0, shown = 0;
   function show() {
     const raw = LINES[i];
     let who = null, text = raw;
@@ -7423,6 +7425,7 @@ const Epilogue = (() => {
   function finish() {
     active = false;
     el.classList.remove('on');
+    if (replay) { replay = false; return showCredits('story'); }   // from the LOG: credits, then back to the title
     showCredits('story', () => {
       // …and the run goes on
       gstate = 'play';
@@ -7430,11 +7433,10 @@ const Epilogue = (() => {
       commSay([['P', 'まだ飛べますか？'], ['R', '当たり前だ。何度だって飛ぶ。']]);
     });
   }
-  function play() {
-    active = true; i = 0;
-    gstate = 'cut';
-    commClear();
-    el.style.setProperty('--fade', '0');
+  function play(fromLog = false) {
+    active = true; i = 0; replay = fromLog;
+    if (!replay) { gstate = 'cut'; commClear(); }
+    el.style.setProperty('--fade', replay ? '0.9' : '0');   // replay: dim the title behind the text
     el.classList.add('on');
     show();
   }
