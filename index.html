@@ -8398,7 +8398,7 @@ const Confession = {
       if (m === 'reunion') {
         if (S.lookShip) { S.camPos.set(20, S.g0 + 20, 110); S.camTarget.set(-50, S.g0 + 14, -30); }
         else { S.camPos.set(2, S.g0 + 12, 110 - t * 1.2); S.camTarget.set(2, S.g0 + 12, 30); }
-      } else { S.camPos.set(60, S.g0 + 16, 100 - Math.min(t, 6) * 2); S.camTarget.set(10, S.g0 + 20, 10); }
+      } else { S.camPos.set(70, S.g0 + 22, 175 - Math.min(t, 6) * 3); S.camTarget.set(6, S.g0 + 18, 20); }
     }
   },
   cineStart(S) { S.cine = true; S.ray.visible = false; if (S.pallas) S.pallas.visible = false; sfx.ignite(); if (Music.started) Music.riser(1.6); },
