@@ -4,12 +4,14 @@
 
 Three.js + WebGL で描画する、タップひとつで遊べる横スクロールのアーケードゲームです。ブラウザだけで動き、PWA としてホーム画面に追加すればオフラインでも遊べます。
 
+**▶ 遊ぶ：<https://junia2009.github.io/hover-dodge/>**（スマホは横向きで。ホーム画面に追加するとアプリのように起動します）
+
 - **2 章のストーリー**：小さな鳥のパイロット **レイ** と相棒 AI **パラス** の物語。プロローグ・エピローグ・回想は 3D カットシーンで、あとから LOG で見返せる
 - **ボス戦 5 体**：第一部 STYX / ACHERON、第二部 ORTHROS / CHARON / 三つ首の CERBERUS
 - **やり込み**：パイロットレベル（最大 Lv60）、36 スキルのツリー、装備枠、HULL（耐久）、シナジー、スキン、9 つの隠し要素
 - **3D モデル**（glTF）と、プレイに合わせて変化する **手続き合成の BGM**
 
-[![Play](https://img.shields.io/badge/play-online-00e8ff?style=flat-square)](#) ![Version](https://img.shields.io/badge/version-2.6.3-aa44ff?style=flat-square)
+[![Play](https://img.shields.io/badge/play-online-00e8ff?style=flat-square)](https://junia2009.github.io/hover-dodge/) ![Version](https://img.shields.io/badge/version-2.6.3-aa44ff?style=flat-square)
 
 ---
 
