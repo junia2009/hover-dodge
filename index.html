@@ -1237,7 +1237,12 @@ button { font-family: var(--f-ui) }
 .t-chapter button[data-ch="2"] { --ch-c: #c08aff; }
 .t-chapter button[data-ch="3"] { --ch-c: #ffb066; }
 .t-chapter button[data-ch="4"] { --ch-c: #9fb8ff; }
-.t-chapter button[data-ch="5"] { --ch-c: #ffd25a; }
+/* STORY / PILOT, shown once PILOT MODE is open; the chapters sit under STORY */
+.t-mode button { min-width: calc(150 * var(--px)); }
+.t-mode button[data-mode="story"] { --ch-c: #7ff6ff; }
+.t-mode button[data-mode="pilot"] { --ch-c: #ffd25a; }
+.t-mode:not([hidden]) + .t-chapter { margin-top: calc(8 * var(--px)); }
+.t-mode:not([hidden]) + .t-chapter button { padding-top: calc(5 * var(--px)); padding-bottom: calc(5 * var(--px)); }
 .t-chapter button[hidden] { display: none; }
 .t-chapter + .t-start { margin-top: calc(12 * var(--px)); }
 .t-modes {
@@ -2292,12 +2297,15 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
         <div class="t-eyebrow">NEON EVASION ARCADE</div>
         <h1 class="t-logo"><span>HOVER</span><span class="l2">DODGE</span></h1>
         <div class="t-tag">宇宙海賊団バイデントを追え</div>
+        <div class="t-chapter t-mode" id="t-mode" hidden>
+          <button type="button" data-mode="story">STORY<small>CHAPTER Ⅰ–Ⅳ</small></button>
+          <button type="button" data-mode="pilot">✈ PILOT<small>FREE FLIGHT</small></button>
+        </div>
         <div class="t-chapter" id="t-chapter" hidden>
           <button type="button" data-ch="1">CHAPTER Ⅰ<small>BIDENT</small></button>
           <button type="button" data-ch="2">CHAPTER Ⅱ<small>CERBERUS</small></button>
           <button type="button" data-ch="3" hidden>CHAPTER Ⅲ<small>HYPNOS</small></button>
           <button type="button" data-ch="4" hidden>CHAPTER Ⅳ<small>NYX</small></button>
-          <button type="button" data-ch="5" hidden>✈ PILOT<small>FREE FLIGHT</small></button>
         </div>
         <button class="btn-primary t-start" id="start-btn" type="button">START<kbd>SPACE</kbd></button>
         <div class="t-modes" id="t-modes"></div>
@@ -2391,7 +2399,7 @@ import { GLTFLoader }      from 'three/addons/loaders/GLTFLoader.js';
 
 // Single source of truth for the version: shown on the title / portrait
 // screens and passed to the service worker, which names its cache after it.
-const VERSION = '3.5.0';
+const VERSION = '3.5.1';
 
 // ── 3D models (glTF). The ship, Ray and PALLAS are waited for (briefly) before
 // the scene is built; the flagships stream in the background — they are
@@ -6605,8 +6613,10 @@ const CH_TAG = { 1: '宇宙海賊団バイデントを追え', 2: '冥王ハデ�
 function refreshChapterUI() {
   const open2 = bossBest >= BOSS_DEFS.length, open3 = bossBest2 >= BOSS_DEFS2.length, open4 = bossBest3 >= BOSS_DEFS3.length, open5 = bossBest4 >= BOSS_DEFS4.length;
   if (!open2 || (chapter === 3 && !open3) || (chapter === 4 && !open4) || (chapter === PILOT && !open5)) chapter = 1;
-  document.querySelector('#t-chapter [data-ch="5"]').hidden = !open5;
-  document.getElementById('t-chapter').hidden = !open2;
+  // STORY / PILOT first (once PILOT MODE is open); the chapter row only belongs to STORY
+  document.getElementById('t-mode').hidden = !open5;
+  for (const b of document.querySelectorAll('#t-mode [data-mode]')) b.classList.toggle('on', (b.dataset.mode === 'pilot') === (chapter === PILOT));
+  document.getElementById('t-chapter').hidden = !open2 || chapter === PILOT;
   document.querySelector('#t-chapter [data-ch="3"]').hidden = !open3;
   document.querySelector('#t-chapter [data-ch="4"]').hidden = !open4;
   for (const b of document.querySelectorAll('#t-chapter [data-ch]')) b.classList.toggle('on', +b.dataset.ch === chapter);
@@ -6615,6 +6625,7 @@ function refreshChapterUI() {
 }
 function setChapter(ch) {
   if (ch === chapter) return;
+  if (chapter !== PILOT) localStorage.setItem('hd_story_ch', String(chapter));   // STORY brings back the chapter you left
   chapter = ch; localStorage.setItem('hd_chapter', String(ch));
   if (ch === 2) loadPart2Models();
   if (ch === 3) loadPart3Models();
@@ -6623,6 +6634,10 @@ function setChapter(ch) {
   ui.select(); refreshChapterUI(); refreshRotStats();
 }
 for (const b of document.querySelectorAll('#t-chapter [data-ch]')) onTap(b, () => setChapter(+b.dataset.ch));
+for (const b of document.querySelectorAll('#t-mode [data-mode]')) onTap(b, () => {
+  if (b.dataset.mode === 'pilot') setChapter(PILOT);
+  else if (chapter === PILOT) { const c = +localStorage.getItem('hd_story_ch'); setChapter([1, 2, 3, 4].includes(c) ? c : 4); }
+});
 
 // Result screen values are written once at death; the score counts up when
 // the screen appears.
