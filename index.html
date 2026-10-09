@@ -7500,7 +7500,7 @@ const sayOnce = (b, key, lines) => { if (!b.said[key]) { b.said[key] = true; com
 // where the ship parks — the models are ~2× the old procedural ones
 const BOSS_MODEL = { styx: { tipDX: 324, tipDY: 80, bossX: VW + 10 }, acheron: { tipDX: 324, tipDY: 80, bossX: VW - 20 },
   orthros: { scale: 0.9, bossX: VW - 10 }, charon: { scale: 0.85, bossX: VW + 30 }, cerberus: { scale: 0.7, bossX: VW + 50, heads: true },
-  thanatos: { scale: 0.6, bossX: VW + 70 }, hypnos: { scale: 0.55, bossX: VW + 30 }, gate: { scale: 0.5, bossX: VW + 40 } };
+  thanatos: { scale: 0.6, bossX: VW - 40 }, hypnos: { scale: 0.55, bossX: VW - 70 }, gate: { scale: 0.5, bossX: VW - 70 } };
 function buildBossShip(def, second) {
   const g = new THREE.Group();
   if (MODELS[def.id]) {
@@ -8902,8 +8902,8 @@ const Prologue3 = {
   build(S) {
     Object.assign(S, cineStage(0x2a3a6a)); cineHill(S); cineShip(S);
     S.paintSky([[0, 0x2c5aa8], [0.45, 0x6a8ad0], [0.66, 0xf0b890], [0.8, 0xffd8a8], [1, 0x8a6a5a]]);
-    S.E.background = S.skyTex; S.E.fog = new THREE.Fog(0x9a7a80, 500, 2000);
-    S.hemi.intensity = 1.2; S.key.color.setHex(0xffd8b0); S.key.intensity = 1.6; S.stars.material.opacity = 0;
+    S.E.background = S.skyTex; S.E.fog = new THREE.Fog(0x9a7a80, 800, 2600);
+    S.hemi.intensity = 0.85; S.key.color.setHex(0xffd8b0); S.key.intensity = 1.3; S.stars.material.opacity = 0;
     S.ray = cineRay(S); S.pallas = cinePallas(S); S.mimosa = cineBird(S, 'mimosa'); S.tree = cineSapling(S, 1);
   },
   reset(S) {
@@ -8915,7 +8915,7 @@ const Prologue3 = {
   mood(S, m) {},
   update(S, m, t, s, li) {
     const G = S.groundY;
-    S.tree.position.set(4, G(4, 50), 50); S.tree.userData.glow.material.opacity = 0.3 + Math.sin(t * 2) * 0.1;
+    S.tree.position.set(-34, G(-34, -6), -6); S.tree.userData.glow.material.opacity = 0.3 + Math.sin(t * 2) * 0.1;
     const rx = 20, rz = 30, mx = -14, mz = 30;
     S.ray.position.set(rx, G(rx, rz) + 11 + Math.sin(t * 2) * 0.4, rz); S.ray.rotation.y = li >= 6 ? -2.4 : -1.4;
     cineLeaf(S.ray, t);
@@ -9059,25 +9059,26 @@ const Epilogue3 = {
       const wake = m === 'wake';
       if (S.thaw) S.crystal.material.opacity = Math.max(0, S.crystal.material.opacity - s * 0.4);
       S.crystal.visible = S.crystal.material.opacity > 0.01;
-      S.crystal.position.set(0, 10, -200); S.crystal.rotation.y = t * 0.3;
+      S.crystal.position.set(0, 10, -200); S.crystal.scale.setScalar(1.7); S.crystal.rotation.y = t * 0.3;
       if (S.sol) {
         S.sol.visible = true;
         const up = S.awake ? 0 : 1;            // lying asleep, then upright
-        S.sol.position.set(0, wake ? -12 + Math.sin(t * 1.5) * 2 : -4, wake ? -150 : -200);
+        S.sol.scale.setScalar(1.8);
+        S.sol.position.set(0, wake ? -30 + Math.sin(t * 1.5) * 2 : -24, wake ? -150 : -200);
         S.sol.rotation.set(-up * 1.2, wake ? 0.2 : 0, 0);
       }
       cineEngine(S, true);
-      S.hero.position.set(wake ? 70 : 120, wake ? -6 : 30, wake ? -110 : 120); S.hero.rotation.set(0, wake ? 2.6 : 2.2, 0);
-      if (S.pallas) { S.pallas.position.set(wake ? 38 : 90, wake ? 18 : 60, wake ? -130 : 110); cinePallasTick(S.pallas, t, S.sol ? S.sol.position : null); }
-      if (wake) { S.camPos.set(30, 14, -40); S.camTarget.set(10, 0, -160); }
+      S.hero.position.set(wake ? 120 : 200, wake ? -40 : -60, wake ? -150 : 40); S.hero.rotation.set(0, wake ? 2.8 : 2.4, 0);
+      if (S.pallas) { S.pallas.position.set(wake ? 60 : 150, wake ? 30 : 0, wake ? -140 : 30); cinePallasTick(S.pallas, t, S.sol ? S.sol.position : null); }
+      if (wake) { S.camPos.set(40, 10, 10); S.camTarget.set(20, 0, -160); }
       else { S.camPos.set(140 - t * 4, 60, 260); S.camTarget.set(0, 0, -240); }
       return;
     }
     // home: the family on the hill at dawn
     cineEngine(S, false);
-    S.tree.position.set(4, G(4, 54), 54); S.tree.userData.glow.material.opacity = 0.35 + Math.sin(t * 2) * 0.1;
+    S.tree.position.set(-48, G(-48, -10), -10); S.tree.userData.glow.material.opacity = 0.35 + Math.sin(t * 2) * 0.1;
     const fx = -6, fz = 26, mx = -30, mz = 34, rx = 18, rz = 34;
-    if (S.sol) { S.sol.visible = true; S.sol.position.set(fx, G(fx, fz), fz); S.sol.rotation.set(0, li >= 1 ? -1.3 : -0.6, 0); const sc = S.sol.getObjectByName('scarf'); if (sc) sc.rotation.y = Math.sin(t * 2.4) * 0.2; }
+    if (S.sol) { S.sol.visible = true; S.sol.scale.setScalar(1); S.sol.position.set(fx, G(fx, fz), fz); S.sol.rotation.set(0, li >= 1 ? -1.3 : -0.6, 0); const sc = S.sol.getObjectByName('scarf'); if (sc) sc.rotation.y = Math.sin(t * 2.4) * 0.2; }
     if (S.mimosa) { S.mimosa.position.set(mx, G(mx, mz) + (li === 2 ? Math.abs(Math.sin(t * 7)) * 2 : 0), mz); S.mimosa.rotation.y = 1.2; }
     S.ray.position.set(rx, G(rx, rz) + 11 + Math.sin(t * 2) * 0.4, rz); S.ray.rotation.y = -1.4; cineLeaf(S.ray, t);
     if (S.pallas) { S.pallas.position.set(30, G(30, 20) + 32 + Math.sin(t * 2.2) * 1.5, 20); cinePallasTick(S.pallas, t, S.camPos); }
