@@ -11,7 +11,7 @@ Three.js + WebGL で描画する、タップひとつで遊べる横スクロー
 - **やり込み**：パイロットレベル（最大 Lv80）、42 スキルのツリー、装備枠、HULL（耐久）、シナジー、スキン、9 つの隠し要素
 - **3D モデル**（glTF）と、プレイに合わせて変化する **手続き合成の BGM**
 
-[![Play](https://img.shields.io/badge/play-online-00e8ff?style=flat-square)](https://junia2009.github.io/hover-dodge/) ![Version](https://img.shields.io/badge/version-3.4.0-aa44ff?style=flat-square)
+[![Play](https://img.shields.io/badge/play-online-00e8ff?style=flat-square)](https://junia2009.github.io/hover-dodge/) ![Version](https://img.shields.io/badge/version-3.4.1-aa44ff?style=flat-square)
 
 ---
 
@@ -469,6 +469,7 @@ hover-dodge/
 
 | Version | 内容 |
 | :---: | --- |
+| **3.4.1**  | 軽量化：第四部の「夜」の暗幕を毎フレーム描き直すのをやめ、大きな暗幕 1 枚を機体に合わせて動かす方式に（見た目は同じ、スマホでの描画負担を軽減）。ミラーモードでも光の位置が正しく |
 | **3.4.0**  | 最終決戦（NYX の最終段階）で、仲間が自分の機体で実際に飛んでくるように：ソル（オレンジ）・ハデス（黒と深紅）・ヒュプノス（紫）・タナトス（白）の 4 機が画面の左から駆けつけ、レイの周りで編隊を組んで NYX を撃ち、順番に編隊を抜けて援護する |
 | **3.3.1**  | 縦画面で LOADOUT / SHOP の × ボタンが画面外にはみ出して押せなかった問題を修正（XP が 6 桁になると見出しが幅を超えていた）。幅の狭い画面では見出しをコンパクトに |
 | **3.3.0**  | パイロットレベルの上限を Lv80 に：称号 MYTHIC（70）/ ETERNAL（80）、基本耐久 +1（Lv66）、新スキル NIGHT EYE（Lv65・夜の視界 1.5 倍、忘却が半分）と ★MEMORY CORE（Lv75・1 ランに 1 度、撃墜の瞬間に 2 秒前へ巻き戻る）、限定スキン NIGHT（Lv70）/ DAWN（Lv80）。4 段のスキルツリーは短い画面でコンパクト表示 |
