@@ -2368,7 +2368,7 @@ import { GLTFLoader }      from 'three/addons/loaders/GLTFLoader.js';
 
 // Single source of truth for the version: shown on the title / portrait
 // screens and passed to the service worker, which names its cache after it.
-const VERSION = '3.1.0';
+const VERSION = '3.2.0';
 
 // ── 3D models (glTF). The ship, Ray and PALLAS are waited for (briefly) before
 // the scene is built; the flagships stream in the background — they are
@@ -4098,13 +4098,18 @@ function sendTo(node, out, rev, dly) {
 // One oscillator note with an AD envelope and optional filter / pan sweep.
 function voice({ type = 'sine', f, f2 = null, t, dur, vol = 0.2, a = 0.004, out,
                  rev = 0, dly = 0, lp = null, lp2 = null, hp = null, q = 0.8,
-                 detune = 0, pan = 0, pan2 = null }) {
+                 detune = 0, pan = 0, pan2 = null, vib = 0, vibR = 5.5 }) {
   const ctx = audioCtx;
   const o = ctx.createOscillator();
   o.type = type;
   o.frequency.setValueAtTime(f, t);
   if (f2) o.frequency.exponentialRampToValueAtTime(Math.max(20, f2), t + dur);
   if (detune) o.detune.value = detune;
+  if (vib) {                                  // vibrato (cents), eased in
+    const l = ctx.createOscillator(), lg = ctx.createGain();
+    l.frequency.value = vibR; lg.gain.setValueAtTime(0, t); lg.gain.linearRampToValueAtTime(vib, t + Math.min(0.4, dur * 0.5));
+    l.connect(lg).connect(o.detune); l.start(t); l.stop(t + dur + 0.05);
+  }
   let node = o;
   if (lp) {
     const b = ctx.createBiquadFilter(); b.type = 'lowpass'; b.Q.value = q;
@@ -4202,80 +4207,110 @@ const KICK  = [[], [0, 8], [0, 4, 8, 12], [0, 4, 8, 12, 14], [0, 3, 4, 8, 11, 12
 const SNARE = [[], [], [4, 12], [4, 12], [4, 12, 15]];
 
 // ── One soundtrack per chapter ──
-// Every chapter re-scores all seven sections (title, the four phases, boss, ending) in its own key,
-// tempo, harmony, melodies and instruments. Optional per-section fields the engine understands:
-//   padWave / padLp, leadWave / lead2 / leadOct, arpWave / arpSeq / bell (music-box octave),
-//   kick / snare (step lists), bassStyle (BASS rhythm), hatDiv (2 = 8ths, 4 = quarters)
+// Every chapter re-scores all seven sections (title, the four phases, boss, ending) with its own key,
+// tempo, METER, harmony, melodies, drum kit and instruments. Optional per-section fields:
+//   spb (steps per bar: 16 = 4/4, 12 = 3/4 waltz, 14 = 7/8), swing (0–0.3 delay on the off 16ths)
+//   kit: 'taiko' | 'soft' | 'hymn' (kick / snare sound), kick / snare / tom (step lists), fill (tom roll every 4th bar)
+//   padWave / padLp / padQ / padVib (a choir: low-pass with a resonant "vowel" and vibrato)
+//   leadWave / lead2 / leadOct / leadVib / leadBell (music box) / leadBow (slow attack, like strings)
+//   arpWave / arpSeq / bell, bassStyle / bassSeq (step → [interval, 16ths]) / bassDrive (growl)
+//   stab (steps for brass-like chord stabs), swell (reverse-swell into every 2nd bar), hatDiv
 const SECTIONS_BY_CH = {
   1: SECTIONS,
-  // CHAPTER Ⅱ「CERBERUS」— the underworld: D Phrygian menace, gritty low saw leads, pounding drums
+  // CHAPTER Ⅱ「CERBERUS」— war drums of the underworld: D Phrygian, taiko & toms, growling bass,
+  // brass stabs, a low snarling lead
   2: {
-    menu: { bpm: 80, style: 0, chords: [CH(38,0,3,7,10,14), CH(46,0,4,7,11), CH(43,0,3,7,10), CH(45,0,4,7,10,13)],
-            padLp: 700, lv: { pad: .55, bass: .26, kick: 0, snare: 0, hat: .06, lead: 0, arp: .3 } },
-    p1:   { bpm: 104, style: 1, chords: [CH(38,0,3,7), CH(39,0,4,7), CH(38,0,3,7), CH(36,0,4,7)], padLp: 760,
-            lv: { pad: .42, bass: .42, kick: .4, snare: 0, hat: .22, lead: 0, arp: 0 } },
-    p2:   { bpm: 112, style: 2, chords: [CH(38,0,3,7), CH(46,0,4,7), CH(39,0,4,7), CH(45,0,4,7)], bassStyle: 3,
-            lv: { pad: .3, bass: .56, kick: .8, snare: .42, hat: .3, lead: 0, arp: 0 } },
-    p3:   { bpm: 120, style: 3, chords: [CH(38,0,3,7), CH(36,0,4,7), CH(46,0,4,7), CH(45,0,4,7,10)],
-            leadWave: 'sawtooth', lead2: 'square', leadOct: 12, motif: [0,null,0,1,null,0,null,2, 1,null,0,null,4,3,2,null],
-            lv: { pad: .24, bass: .6, kick: .85, snare: .52, hat: .38, lead: .38, arp: 0 } },
-    p4:   { bpm: 130, style: 4, chords: [CH(38,0,3,7), CH(39,0,4,7), CH(43,0,3,7), CH(45,0,4,7,10)], kick: [0, 2, 4, 8, 10, 12], snare: [4, 12, 14],
-            leadWave: 'sawtooth', lead2: 'square', leadOct: 12, motif: [0,1,0,null,3,2,null,1, 0,null,4,null,3,2,1,null],
-            lv: { pad: .2, bass: .64, kick: .92, snare: .6, hat: .46, lead: .44, arp: 0 } },
-    boss: { bpm: 142, style: 4, chords: [CH(38,0,3,7), CH(39,0,4,7), CH(38,0,3,7), CH(45,0,4,7,10,13)], kick: [0, 2, 4, 6, 8, 10, 12, 14], snare: [4, 12, 15],
-            leadWave: 'sawtooth', lead2: 'sawtooth', leadOct: 12, motif: [0,0,1,0,null,3,null,2, 0,0,1,0,null,4,3,1],
-            lv: { pad: .2, bass: .7, kick: .96, snare: .64, hat: .5, lead: .5, arp: .2 } },
-    ending: { bpm: 72, style: 0, chords: [CH(41,0,4,7,11,14), CH(36,0,4,7,14), CH(38,0,3,7,10,14), CH(46,0,4,7,11)],
-            padLp: 800, lv: { pad: .6, bass: .2, kick: 0, snare: 0, hat: 0, lead: 0, arp: .38 } },
+    menu: { bpm: 76, style: 0, chords: [CH(38,0,3,7,10,13), CH(39,0,4,7,11), CH(38,0,3,7,10), CH(37,0,4,7,10,13)],
+            kit: 'taiko', tom: [0, 10], padLp: 620, padQ: 4, lv: { pad: .55, bass: .3, kick: .35, snare: 0, hat: 0, lead: 0, arp: .22 } },
+    p1:   { bpm: 100, style: 1, chords: [CH(38,0,3,7), CH(39,0,4,7), CH(38,0,3,7), CH(36,0,4,7)], kit: 'taiko', tom: [6, 10, 14],
+            bassDrive: true, padLp: 700, lv: { pad: .4, bass: .46, kick: .5, snare: 0, hat: .14, lead: 0, arp: 0 } },
+    p2:   { bpm: 108, style: 2, chords: [CH(38,0,3,7), CH(46,0,4,7), CH(39,0,4,7), CH(45,0,4,7)], kit: 'taiko', tom: [3, 7, 11], fill: true,
+            kick: [0, 6, 8, 14], snare: [4, 12], bassStyle: 3, bassDrive: true, stab: [0, 3],
+            lv: { pad: .28, bass: .6, kick: .82, snare: .44, hat: .22, lead: 0, arp: 0 } },
+    p3:   { bpm: 116, style: 3, chords: [CH(38,0,3,7), CH(36,0,4,7), CH(46,0,4,7), CH(45,0,4,7,10)], kit: 'taiko', tom: [2, 3, 10, 11], fill: true,
+            kick: [0, 6, 8, 14], snare: [4, 12], bassStyle: 3, bassDrive: true, stab: [0, 3, 6],
+            leadWave: 'sawtooth', lead2: 'square', leadOct: 12, leadVib: 18, motif: [0,null,0,1,null,0,null,2, 1,null,0,null,4,3,2,null],
+            lv: { pad: .22, bass: .64, kick: .88, snare: .54, hat: .3, lead: .4, arp: 0 } },
+    p4:   { bpm: 126, style: 4, chords: [CH(38,0,3,7), CH(39,0,4,7), CH(43,0,3,7), CH(45,0,4,7,10)], kit: 'taiko', tom: [2, 3, 6, 10, 11, 14], fill: true,
+            kick: [0, 2, 4, 8, 10, 12], snare: [4, 12, 14], bassDrive: true, stab: [0, 3, 6, 10],
+            leadWave: 'sawtooth', lead2: 'square', leadOct: 12, leadVib: 22, motif: [0,1,0,null,3,2,null,1, 0,null,4,null,3,2,1,null],
+            lv: { pad: .2, bass: .66, kick: .94, snare: .6, hat: .4, lead: .46, arp: 0 } },
+    boss: { bpm: 140, style: 4, chords: [CH(38,0,3,7), CH(39,0,4,7), CH(38,0,3,7), CH(37,0,4,7,10,13)], kit: 'taiko', tom: [1, 3, 5, 7, 9, 11, 13, 15], fill: true,
+            kick: [0, 2, 4, 6, 8, 10, 12, 14], snare: [4, 12, 15], bassDrive: true, stab: [0, 3, 6, 8, 11, 14],
+            leadWave: 'sawtooth', lead2: 'sawtooth', leadOct: 12, leadVib: 25, motif: [0,0,1,0,null,3,null,2, 0,0,1,0,null,4,3,1],
+            lv: { pad: .2, bass: .72, kick: .98, snare: .64, hat: .44, lead: .52, arp: .18 } },
+    ending: { bpm: 70, style: 0, chords: [CH(41,0,4,7,11,14), CH(36,0,4,7,14), CH(38,0,3,7,10,14), CH(46,0,4,7,11)],
+            padLp: 760, padQ: 3, lv: { pad: .6, bass: .2, kick: 0, snare: 0, hat: 0, lead: 0, arp: .36 } },
   },
-  // CHAPTER Ⅲ「HYPNOS」— a lullaby: E♭ major / lydian, soft triangles, music-box bells, half-time drums
+  // CHAPTER Ⅲ「HYPNOS」— a waltz lullaby in 3/4: E♭ lydian, soft kit with brushes, music-box lead,
+  // rolling triplet arpeggios, oom-pah-pah bass
   3: {
-    menu: { bpm: 70, style: 0, chords: [CH(39,0,4,7,11,14), CH(44,0,4,7,11,18), CH(48,0,3,7,10,14), CH(46,0,5,7,10)],
-            padWave: 'triangle', padLp: 1400, bell: true, lv: { pad: .6, bass: .18, kick: 0, snare: 0, hat: 0, lead: 0, arp: .4 } },
-    p1:   { bpm: 92, style: 1, chords: [CH(39,0,4,7), CH(44,0,4,7,11), CH(48,0,3,7), CH(46,0,4,7)], padWave: 'triangle', padLp: 1300,
-            hatDiv: 4, bell: true, arpWave: 'sine', arpSeq: [0, 2, 4, 2, 1, 3, 5, 3],
-            lv: { pad: .5, bass: .32, kick: .25, snare: 0, hat: .14, lead: 0, arp: .22 } },
-    p2:   { bpm: 98, style: 2, chords: [CH(39,0,4,7), CH(48,0,3,7), CH(44,0,4,7,11), CH(46,0,4,7)], padWave: 'triangle',
-            kick: [0, 10], snare: [8], bassStyle: 1, bell: true, arpWave: 'sine', arpSeq: [0, 2, 4, 2, 1, 3, 5, 3],
-            lv: { pad: .4, bass: .44, kick: .62, snare: .34, hat: .24, lead: 0, arp: .2 } },
-    p3:   { bpm: 104, style: 3, chords: [CH(44,0,4,7,11), CH(39,0,4,7), CH(41,0,3,7), CH(46,0,4,7)], padWave: 'triangle',
-            kick: [0, 6, 10], snare: [8], leadWave: 'triangle', lead2: 'sine', motif: [4,null,null,3,null,null,2,null, 3,null,null,1,null,null,0,null],
-            lv: { pad: .3, bass: .5, kick: .72, snare: .44, hat: .3, lead: .42, arp: 0 } },
-    p4:   { bpm: 112, style: 4, chords: [CH(44,0,4,7,11), CH(46,0,4,7), CH(39,0,4,7), CH(48,0,3,7)], kick: [0, 6, 8, 14], snare: [4, 12],
-            leadWave: 'triangle', lead2: 'sine', motif: [2,null,4,null,3,2,null,1, 2,null,4,5,null,4,3,null],
-            lv: { pad: .24, bass: .56, kick: .84, snare: .54, hat: .4, lead: .46, arp: .1 } },
-    boss: { bpm: 124, style: 4, chords: [CH(48,0,3,7), CH(44,0,4,7,11), CH(39,0,4,7), CH(46,0,4,7,10)],
-            leadWave: 'square', lead2: 'triangle', motif: [4,null,3,4,null,2,null,1, 2,null,4,null,5,4,3,null],
-            lv: { pad: .22, bass: .62, kick: .92, snare: .6, hat: .46, lead: .48, arp: .25 } },
-    ending: { bpm: 64, style: 0, chords: [CH(44,0,4,7,11,14), CH(43,0,3,7,10), CH(41,0,3,7,10,14), CH(46,0,5,7,10)],
-            padWave: 'triangle', padLp: 1500, bell: true, lv: { pad: .64, bass: .18, kick: 0, snare: 0, hat: 0, lead: 0, arp: .42 } },
+    menu: { bpm: 66, spb: 12, style: 0, chords: [CH(39,0,4,7,11,14), CH(44,0,4,7,11,18), CH(48,0,3,7,10,14), CH(46,0,5,7,10)],
+            padWave: 'triangle', padLp: 1500, padVib: 8, bell: true, leadBell: true, leadOct: 36, motif: [4,null,null,null,3,null,2,null,null,null,1,null],
+            lv: { pad: .55, bass: .16, kick: 0, snare: 0, hat: 0, lead: .3, arp: .3 } },
+    p1:   { bpm: 88, spb: 12, style: 1, chords: [CH(39,0,4,7), CH(44,0,4,7,11), CH(48,0,3,7), CH(46,0,4,7)], kit: 'soft',
+            kick: [0], snare: [4, 8], bassSeq: { 0: [0, 4], 4: [7, 2], 8: [12, 2] }, hatDiv: 4,
+            padWave: 'triangle', padLp: 1300, bell: true, arpWave: 'sine', arpSeq: [0, 2, 4, 2, 1, 3],
+            leadBell: true, leadOct: 36, motif: [2,null,null,null,4,null,3,null,null,null,1,null],
+            lv: { pad: .46, bass: .34, kick: .3, snare: .2, hat: .12, lead: .3, arp: .22 } },
+    p2:   { bpm: 94, spb: 12, style: 2, chords: [CH(39,0,4,7), CH(48,0,3,7), CH(44,0,4,7,11), CH(46,0,4,7)], kit: 'soft',
+            kick: [0, 6], snare: [4, 8], bassSeq: { 0: [0, 4], 4: [7, 2], 6: [5, 2], 8: [12, 2] }, hatDiv: 2,
+            padWave: 'triangle', bell: true, arpWave: 'sine', arpSeq: [0, 2, 4, 5, 4, 2],
+            leadBell: true, leadOct: 36, motif: [0,null,2,null,4,null,5,null,4,null,2,null],
+            lv: { pad: .38, bass: .46, kick: .6, snare: .34, hat: .2, lead: .32, arp: .2 } },
+    p3:   { bpm: 100, spb: 12, style: 3, chords: [CH(44,0,4,7,11), CH(39,0,4,7), CH(41,0,3,7), CH(46,0,4,7)], kit: 'soft',
+            kick: [0, 6], snare: [4, 8, 10], bassSeq: { 0: [0, 4], 4: [7, 2], 6: [5, 2], 8: [12, 2] },
+            padWave: 'triangle', leadWave: 'triangle', lead2: 'sine', leadVib: 12, arpWave: 'sine', arpSeq: [0, 2, 4, 2, 1, 3],
+            motif: [4,null,null,3,null,null,2,null,null,1,null,null],
+            lv: { pad: .3, bass: .52, kick: .72, snare: .44, hat: .26, lead: .44, arp: .18 } },
+    p4:   { bpm: 108, spb: 12, style: 4, chords: [CH(44,0,4,7,11), CH(46,0,4,7), CH(39,0,4,7), CH(48,0,3,7)], kit: 'soft',
+            kick: [0, 3, 6, 9], snare: [4, 8], bassSeq: { 0: [0, 2], 2: [12, 2], 4: [7, 2], 6: [5, 2], 8: [12, 2], 10: [7, 2] },
+            padWave: 'triangle', leadWave: 'triangle', lead2: 'sine', leadVib: 14, arpWave: 'sine', arpSeq: [0, 2, 4, 5, 4, 2],
+            motif: [2,null,4,null,3,2,null,1,2,null,4,5],
+            lv: { pad: .24, bass: .58, kick: .84, snare: .52, hat: .36, lead: .48, arp: .22 } },
+    boss: { bpm: 120, spb: 12, style: 4, chords: [CH(48,0,3,7), CH(44,0,4,7,11), CH(39,0,4,7), CH(46,0,4,7,10)], kit: 'soft',
+            kick: [0, 3, 6, 9], snare: [4, 8, 11], bassSeq: { 0: [0, 2], 2: [12, 2], 4: [7, 2], 6: [0, 2], 8: [12, 2], 10: [7, 2] },
+            leadWave: 'square', lead2: 'triangle', leadVib: 10, arpWave: 'sine', arpSeq: [0, 2, 4, 6, 4, 2],
+            motif: [4,null,3,4,null,2,null,1,2,null,4,5],
+            lv: { pad: .22, bass: .64, kick: .9, snare: .58, hat: .42, lead: .5, arp: .28 } },
+    ending: { bpm: 62, spb: 12, style: 0, chords: [CH(44,0,4,7,11,14), CH(43,0,3,7,10), CH(41,0,3,7,10,14), CH(46,0,5,7,10)],
+            padWave: 'triangle', padLp: 1500, padVib: 8, bell: true, leadBell: true, leadOct: 36, motif: [4,null,null,null,5,null,4,null,null,null,2,null],
+            lv: { pad: .6, bass: .16, kick: 0, snare: 0, hat: 0, lead: .28, arp: .34 } },
   },
-  // CHAPTER Ⅳ「NYX」— the night and the dawn: F♯ minor, low choir-like pads, music box, a hopeful lead
+  // CHAPTER Ⅳ「NYX」— a night hymn that turns into the dawn: F♯ minor, a choir of pads, bowed strings,
+  // gated-reverb drums, reverse swells, and a boss in 7/8
   4: {
-    menu: { bpm: 68, style: 0, chords: [CH(42,0,3,7,10,14), CH(38,0,4,7,11,14), CH(45,0,4,7,11), CH(40,0,4,7,9,14)],
-            padLp: 560, bell: true, lv: { pad: .66, bass: .2, kick: 0, snare: 0, hat: 0, lead: 0, arp: .34 } },
-    p1:   { bpm: 96, style: 1, chords: [CH(42,0,3,7), CH(38,0,4,7), CH(45,0,4,7), CH(40,0,4,7)], padLp: 620,
-            hatDiv: 4, bell: true, arpWave: 'sine', arpSeq: [0, 2, 4, 2, 1, 3, 5, 3],
-            lv: { pad: .52, bass: .34, kick: .3, snare: 0, hat: .12, lead: 0, arp: .2 } },
-    p2:   { bpm: 104, style: 2, chords: [CH(42,0,3,7), CH(47,0,3,7), CH(38,0,4,7), CH(40,0,4,7)], padLp: 700, bassStyle: 2,
-            lv: { pad: .4, bass: .5, kick: .76, snare: .38, hat: .28, lead: 0, arp: .1 } },
-    p3:   { bpm: 112, style: 3, chords: [CH(42,0,3,7), CH(38,0,4,7), CH(40,0,4,7), CH(37,0,3,7)],
-            leadWave: 'sawtooth', lead2: 'triangle', motif: [0,null,2,null,4,null,2,3, 4,null,5,null,4,2,null,null],
-            lv: { pad: .3, bass: .55, kick: .8, snare: .5, hat: .36, lead: .4, arp: 0 } },
-    p4:   { bpm: 122, style: 4, chords: [CH(42,0,3,7), CH(38,0,4,7), CH(45,0,4,7), CH(40,0,4,7,10)],
-            leadWave: 'sawtooth', lead2: 'triangle', motif: [4,null,5,4,null,2,null,3, 4,null,6,null,5,4,2,null],
-            lv: { pad: .24, bass: .6, kick: .9, snare: .6, hat: .46, lead: .46, arp: .1 } },
-    boss: { bpm: 132, style: 4, chords: [CH(42,0,3,7), CH(43,0,4,7), CH(38,0,4,7), CH(37,0,4,7,10)], kick: [0, 3, 4, 8, 11, 12, 14],
-            leadWave: 'sawtooth', lead2: 'square', motif: [0,null,2,4,null,5,4,null, 2,null,4,6,null,5,4,2],
-            lv: { pad: .24, bass: .66, kick: .95, snare: .62, hat: .5, lead: .5, arp: .25 } },
+    menu: { bpm: 64, style: 0, chords: [CH(42,0,3,7,10,14), CH(38,0,4,7,11,14), CH(45,0,4,7,11), CH(40,0,4,7,9,14)],
+            padLp: 640, padQ: 7, padVib: 10, bell: true, swell: true, lv: { pad: .7, bass: .2, kick: 0, snare: 0, hat: 0, lead: 0, arp: .3 } },
+    p1:   { bpm: 92, style: 1, chords: [CH(42,0,3,7), CH(38,0,4,7), CH(45,0,4,7), CH(40,0,4,7)], kit: 'hymn',
+            padLp: 680, padQ: 7, padVib: 10, hatDiv: 4, swell: true, bell: true, arpWave: 'sine', arpSeq: [0, 2, 4, 2, 1, 3, 5, 3],
+            leadBow: true, leadWave: 'sawtooth', lead2: 'triangle', leadVib: 14, motif: [0,null,null,null,null,null,null,null, 2,null,null,null,1,null,null,null],
+            lv: { pad: .54, bass: .32, kick: .32, snare: 0, hat: .1, lead: .3, arp: .18 } },
+    p2:   { bpm: 100, style: 2, chords: [CH(42,0,3,7), CH(47,0,3,7), CH(38,0,4,7), CH(40,0,4,7)], kit: 'hymn', snare: [8], kick: [0, 10],
+            padLp: 720, padQ: 6, padVib: 10, swell: true, bassStyle: 1, leadBow: true, leadWave: 'sawtooth', lead2: 'triangle', leadVib: 14,
+            motif: [4,null,null,null,null,null,2,null, 3,null,null,null,1,null,null,null],
+            lv: { pad: .42, bass: .48, kick: .72, snare: .5, hat: .2, lead: .34, arp: .1 } },
+    p3:   { bpm: 108, style: 3, chords: [CH(42,0,3,7), CH(38,0,4,7), CH(40,0,4,7), CH(37,0,3,7)], kit: 'hymn', snare: [8], kick: [0, 6, 10], fill: true,
+            padQ: 5, swell: true, bassStyle: 2, leadWave: 'sawtooth', lead2: 'triangle', leadVib: 16,
+            motif: [0,null,2,null,4,null,2,3, 4,null,5,null,4,2,null,null],
+            lv: { pad: .32, bass: .55, kick: .8, snare: .56, hat: .32, lead: .42, arp: 0 } },
+    p4:   { bpm: 118, style: 4, chords: [CH(42,0,3,7), CH(38,0,4,7), CH(45,0,4,7), CH(40,0,4,7,10)], kit: 'hymn', fill: true, swell: true,
+            leadWave: 'sawtooth', lead2: 'triangle', leadVib: 16, motif: [4,null,5,4,null,2,null,3, 4,null,6,null,5,4,2,null],
+            lv: { pad: .26, bass: .6, kick: .9, snare: .62, hat: .44, lead: .48, arp: .12 } },
+    boss: { bpm: 128, spb: 14, style: 4, chords: [CH(42,0,3,7), CH(43,0,4,7), CH(38,0,4,7), CH(37,0,4,7,10)], kit: 'hymn', fill: true,
+            kick: [0, 4, 8, 11], snare: [4, 10], tom: [12, 13], stab: [0, 8],
+            leadWave: 'sawtooth', lead2: 'square', leadVib: 14, motif: [0,null,2,4,null,5,4,null,2,null,4,6,5,4],
+            lv: { pad: .26, bass: .66, kick: .95, snare: .64, hat: .48, lead: .52, arp: .24 } },
     ending: { bpm: 72, style: 0, chords: [CH(38,0,4,7,11,14), CH(45,0,4,7,14), CH(47,0,3,7,10,14), CH(40,0,5,7,10)],
-            padLp: 900, bell: true, lv: { pad: .64, bass: .22, kick: 0, snare: 0, hat: 0, lead: 0, arp: .42 } },
+            padLp: 900, padQ: 5, padVib: 8, bell: true, swell: true, leadBow: true, leadWave: 'sawtooth', lead2: 'triangle', leadVib: 12,
+            motif: [4,null,null,null,null,null,null,null, 5,null,null,null,6,null,null,null],
+            lv: { pad: .64, bass: .22, kick: 0, snare: 0, hat: 0, lead: .26, arp: .4 } },
   },
 };
 
 const Music = {
   started: false, section: 'menu', pending: null, theme: 1,
-  bpm: 88, step: 0, bar: 0, nextT: 0, timer: null,
+  bpm: 88, step: 0, sib: 0, bar: 0, nextT: 0, timer: null,
   intensity: 0, intensityTarget: 0, heat: 0,
   muffled: false, dying: false, timeScale: 1, comboNote: 0,
   _resumeTimer: null, _lvAcc: 0,
@@ -4303,7 +4338,7 @@ const Music = {
     if (!this.started) {
       this.started = true;
       this.applySection(section);
-      this.step = 0; this.bar = 0;
+      this.step = 0; this.sib = 0; this.bar = 0;
       this.nextT = a.currentTime + 0.08;
       this.tick();
     } else {
@@ -4325,9 +4360,10 @@ const Music = {
   setSection(name) { if (this.started && !this.dying && name !== this.section) this.pending = name; },
   // Make the next scheduled 16th a downbeat, so a pending section starts
   // immediately (used when a run starts — no waiting for the bar to end).
+  get spb() { return this.sec().spb || 16; },
   jumpToBar() {
-    if (this.step % 16 === 0) return;
-    this.step = Math.ceil(this.step / 16) * 16;
+    if (this.sib === 0) return;
+    this.sib = 0;
     this.bar++;
   },
 
@@ -4336,10 +4372,11 @@ const Music = {
     const a = audioCtx;
     if (this.nextT < a.currentTime - 0.2) this.nextT = a.currentTime + 0.05;   // fell behind: resync
     while (this.nextT < a.currentTime + 0.12) {
-      this.playStep(this.step % 16, this.nextT);
+      const sw = this.sib % 2 ? (this.sec().swing || 0) * this.stepDur : 0;     // swing: late off-16ths
+      this.playStep(this.sib, this.nextT + sw);
       this.nextT += this.stepDur;
       this.step++;
-      if (this.step % 16 === 0) this.bar++;
+      if (++this.sib >= this.spb) { this.sib = 0; this.bar++; }
     }
     this.timer = setTimeout(() => this.tick(), 25);
   },
@@ -4357,34 +4394,55 @@ const Music = {
 
     if (st === 0 && on('pad')) {
       for (const m of this.chord().q.map(iv => this.chord().r + 12 + iv)) {
-        for (const dt of [-7, 7]) voice({ type: sec.padWave || 'sawtooth', f: mtof(m), t, dur: this.barDur + 0.35, vol: sec.padWave === 'triangle' ? 0.075 : 0.05,
-          a: style === 0 ? 0.9 : 0.35, out: L.pad, lp: (sec.padLp || 900) + style * 120, q: 0.5, detune: dt, rev: 0.45 });
+        for (const dt of [-7, 7]) voice({ type: sec.padWave || 'sawtooth', f: mtof(m), t, dur: this.barDur * (this.spb / 16) + 0.35, vol: sec.padWave === 'triangle' ? 0.075 : sec.padQ ? 0.06 : 0.05,
+          a: style === 0 ? 0.9 : 0.35, out: L.pad, lp: (sec.padLp || 900) + style * 120, q: sec.padQ || 0.5, detune: dt, rev: sec.padQ ? 0.6 : 0.45,
+          vib: sec.padVib || 0, vibR: 4.6 + dt * 0.05 });
       }
     }
-    const b = BASS[sec.bassStyle ?? style](st);
+    const b = sec.bassSeq ? sec.bassSeq[st] : BASS[sec.bassStyle ?? style](st);
     if (b && on('bass')) {
       const f = mtof(this.chord().r - 12 + b[0]);
       const cut = 260 + style * 90 + this.intensity * 1600;
       const dur = Math.max(0.09, b[1] * sd * 0.9);
-      voice({ type: 'sawtooth', f, t, dur, vol: 0.22, a: 0.006, out: L.bass, lp: cut * 2.2, lp2: cut, q: 4 });
+      voice({ type: sec.kit === 'soft' ? 'triangle' : 'sawtooth', f, t, dur, vol: 0.22, a: 0.006, out: L.bass, lp: cut * 2.2, lp2: cut, q: 4 });
       voice({ type: 'sine', f: f / 2 < 30 ? f : f / 2, t, dur, vol: 0.28, a: 0.006, out: L.bass });
+      if (sec.bassDrive) voice({ type: 'square', f, t, dur, vol: 0.07, a: 0.004, out: L.bass, lp: cut * 3, lp2: cut * 1.2, q: 9, detune: -14 });   // the growl
     }
-    if ((sec.kick || KICK[style]).includes(st) && on('kick')) this.kick(t);
-    if ((sec.snare || SNARE[style]).includes(st) && on('snare')) this.snare(t, 0.5);
+    if (sec.stab && sec.stab.includes(st) && on('bass')) {              // brass-like chord stabs
+      for (const m of this.chord().q.slice(0, 3).map(iv => this.chord().r + 24 + iv))
+        for (const dt of [-10, 10]) voice({ type: 'sawtooth', f: mtof(m), t, dur: sd * 1.4, vol: 0.035, a: 0.01, out: L.bass, lp: 3200, lp2: 500, q: 2, detune: dt, rev: 0.2 });
+    }
+    if ((sec.kick || KICK[style]).includes(st) && on('kick')) this.kick(t, sec.kit);
+    if ((sec.snare || SNARE[style]).includes(st) && on('snare')) this.snare(t, 0.5, sec.kit);
+    if (sec.tom && sec.tom.includes(st) && on('kick')) this.tom(t, st < this.spb / 2 ? 0 : 1, sec.kit);
+    if (sec.fill && this.bar % 4 === 3 && st >= this.spb - 4 && on('snare')) this.tom(t, this.spb - st, sec.kit, 0.55);   // a tom roll into every 4th bar
+    if (sec.swell && this.bar % 2 === 1 && st === this.spb - 6 && on('pad'))                                          // a reverse swell into the next phrase
+      noiseHit({ t, dur: sd * 6, vol: 0.1, out: L.pad, type: 'bandpass', f: 400, f2: 3800, q: 2, swell: true, rev: 0.4 });
     if (on('hat')) {
       const dense = style === 4 || this.intensity > 0.35;
-      if (sec.hatDiv === 4 ? st % 4 === 0 : (st % 2 === 0 || dense)) {
+      if (sec.hatDiv ? st % sec.hatDiv === 0 : (st % 2 === 0 || dense)) {
         const open = st % 4 === 2 && style >= 2;
-        noiseHit({ t, dur: open ? 0.14 : 0.035, vol: (st % 4 === 2 ? 0.32 : 0.18) * (st % 2 ? 0.6 : 1),
-          out: L.hat, type: 'highpass', f: 7500, pan: st % 4 === 2 ? 0.25 : -0.15 });
+        if (sec.kit === 'soft') noiseHit({ t, dur: 0.12, vol: 0.12, a: 0.02, out: L.hat, type: 'bandpass', f: 5200, q: 0.8, pan: st % 4 ? 0.3 : -0.2 });   // brushes
+        else noiseHit({ t, dur: open ? 0.14 : 0.035, vol: (st % 4 === 2 ? 0.32 : 0.18) * (st % 2 ? 0.6 : 1),
+          out: L.hat, type: 'highpass', f: sec.kit === 'taiko' ? 6000 : 7500, pan: st % 4 === 2 ? 0.25 : -0.15 });
       }
     }
     if (sec.motif && on('lead')) {
       const deg = sec.motif[st];
       if (deg != null) {
         const m = this.tone(deg, sec.leadOct ?? 24) + (this.heat > 0.8 ? 12 : 0), soft = sec.leadWave === 'triangle';
-        voice({ type: sec.leadWave || 'square', f: mtof(m), t, dur: sd * (soft ? 2.4 : 1.6), vol: soft ? 0.1 : 0.07, out: L.lead, lp: 2800, q: 1, dly: 0.3, rev: soft ? 0.35 : 0.15 });
-        voice({ type: sec.lead2 || 'sawtooth', f: mtof(m), t, dur: sd * 1.6, vol: 0.04, out: L.lead, lp: 2400, detune: 9 });
+        if (sec.leadBell) {          // music box: a pure tone, its octave and a glassy twelfth
+          voice({ type: 'sine', f: mtof(m), t, dur: 1.4, vol: 0.11, a: 0.002, out: L.lead, rev: 0.45, dly: 0.2 });
+          voice({ type: 'sine', f: mtof(m + 12), t, dur: 0.6, vol: 0.04, a: 0.002, out: L.lead, rev: 0.4 });
+          voice({ type: 'triangle', f: mtof(m + 19), t, dur: 0.25, vol: 0.02, a: 0.002, out: L.lead });
+        } else if (sec.leadBow) {    // bowed: slow attack, long, singing
+          const d = sd * 7;
+          voice({ type: sec.leadWave || 'sawtooth', f: mtof(m), t, dur: d, vol: 0.06, a: d * 0.35, out: L.lead, lp: 1800, q: 1, rev: 0.5, vib: sec.leadVib || 12 });
+          voice({ type: sec.lead2 || 'triangle', f: mtof(m + 12), t, dur: d, vol: 0.03, a: d * 0.4, out: L.lead, lp: 2600, detune: 6, rev: 0.5 });
+        } else {
+          voice({ type: sec.leadWave || 'square', f: mtof(m), t, dur: sd * (soft ? 2.4 : 1.6), vol: soft ? 0.1 : 0.07, out: L.lead, lp: 2800, q: 1, dly: 0.3, rev: soft ? 0.35 : 0.15, vib: sec.leadVib || 0 });
+          voice({ type: sec.lead2 || 'sawtooth', f: mtof(m), t, dur: sd * 1.6, vol: 0.04, out: L.lead, lp: 2400, detune: 9 });
+        }
       }
     }
     if (on('arp')) {
@@ -4394,7 +4452,7 @@ const Music = {
         if (sec.bell && st % 4 === 0) voice({ type: 'sine', f: mtof(this.tone([4, 5, 3, 6][(st / 4) | 0], 48)), t, dur: 0.9, vol: 0.022, out: L.arp, rev: 0.6 });
       } else {
         const seq = sec.arpSeq || [0, 1, 2, 3, 4, 3, 2, 1];
-        const m = this.tone(seq[st % 8] + (st >= 8 ? 1 : 0), sec.bell ? 36 : 24);
+        const m = this.tone(seq[st % seq.length] + (!sec.arpSeq && st >= 8 ? 1 : 0), sec.bell ? 36 : 24);
         voice({ type: sec.arpWave || 'triangle', f: mtof(m), t, dur: sec.bell ? 0.4 : 0.16, vol: 0.085, out: L.arp, dly: 0.3, rev: sec.bell ? 0.4 : 0.1 });
         if (sec.bell && st % 4 === 0) voice({ type: 'sine', f: mtof(m + 12), t, dur: 0.5, vol: 0.03, out: L.arp, rev: 0.5 });
       }
@@ -4405,18 +4463,43 @@ const Music = {
     }
   },
 
-  kick(t) {
-    voice({ type: 'sine', f: 150, f2: 42, t, dur: 0.16, vol: 0.9, a: 0.002, out: AU.L.kick });
-    noiseHit({ t, dur: 0.02, vol: 0.25, out: AU.L.kick, type: 'highpass', f: 3000 });
+  kick(t, kit) {
+    if (kit === 'taiko') {             // a big drum skin: deep, long, a soft thud on top
+      voice({ type: 'sine', f: 120, f2: 36, t, dur: 0.42, vol: 1.0, a: 0.002, out: AU.L.kick, rev: 0.15 });
+      noiseHit({ t, dur: 0.08, vol: 0.3, out: AU.L.kick, type: 'lowpass', f: 600 });
+    } else if (kit === 'soft') {       // a felt kick
+      voice({ type: 'sine', f: 95, f2: 46, t, dur: 0.24, vol: 0.6, a: 0.004, out: AU.L.kick });
+    } else if (kit === 'hymn') {       // a deep kick in a big hall
+      voice({ type: 'sine', f: 130, f2: 38, t, dur: 0.3, vol: 0.95, a: 0.002, out: AU.L.kick, rev: 0.35 });
+      noiseHit({ t, dur: 0.03, vol: 0.18, out: AU.L.kick, type: 'highpass', f: 2500 });
+    } else {
+      voice({ type: 'sine', f: 150, f2: 42, t, dur: 0.16, vol: 0.9, a: 0.002, out: AU.L.kick });
+      noiseHit({ t, dur: 0.02, vol: 0.25, out: AU.L.kick, type: 'highpass', f: 3000 });
+    }
     // side-chain pump on the melodic layers
     const g = AU.kickDuck.gain;
     g.cancelScheduledValues(t);
     g.setValueAtTime(0.45, t);
     g.linearRampToValueAtTime(1, t + 0.2);
   },
-  snare(t, v) {
-    noiseHit({ t, dur: 0.16, vol: v, out: AU.L.snare, type: 'bandpass', f: 1900, q: 0.7, rev: 0.12 });
-    voice({ type: 'triangle', f: 200, f2: 150, t, dur: 0.09, vol: v * 0.6, out: AU.L.snare });
+  snare(t, v, kit) {
+    if (kit === 'taiko') {             // a rim crack and a wooden clack
+      noiseHit({ t, dur: 0.07, vol: v * 0.9, out: AU.L.snare, type: 'bandpass', f: 2600, q: 3, rev: 0.1 });
+      voice({ type: 'square', f: 420, f2: 300, t, dur: 0.05, vol: v * 0.3, out: AU.L.snare, lp: 2000 });
+    } else if (kit === 'soft') {       // a brush sweep
+      noiseHit({ t, dur: 0.26, vol: v * 0.55, a: 0.03, out: AU.L.snare, type: 'bandpass', f: 3200, q: 0.6, rev: 0.2 });
+    } else if (kit === 'hymn') {       // a huge gated-reverb snare
+      noiseHit({ t, dur: 0.32, vol: v * 1.1, out: AU.L.snare, type: 'bandpass', f: 1500, q: 0.6, rev: 0.6 });
+      voice({ type: 'triangle', f: 190, f2: 130, t, dur: 0.14, vol: v * 0.6, out: AU.L.snare, rev: 0.4 });
+    } else {
+      noiseHit({ t, dur: 0.16, vol: v, out: AU.L.snare, type: 'bandpass', f: 1900, q: 0.7, rev: 0.12 });
+      voice({ type: 'triangle', f: 200, f2: 150, t, dur: 0.09, vol: v * 0.6, out: AU.L.snare });
+    }
+  },
+  tom(t, k, kit, v = 0.5) {            // toms: k picks the pitch (higher k = lower drum)
+    const f = (kit === 'taiko' ? 150 : 190) * Math.pow(0.84, k);
+    voice({ type: 'sine', f, f2: f * 0.6, t, dur: kit === 'taiko' ? 0.4 : 0.26, vol: v, a: 0.002, out: AU.L.kick, rev: kit === 'hymn' ? 0.4 : 0.15 });
+    noiseHit({ t, dur: 0.05, vol: v * 0.25, out: AU.L.kick, type: 'lowpass', f: 900 });
   },
   crash(t, v = 0.28) {
     noiseHit({ t, dur: 1.8, vol: v, out: AU.musicBus, type: 'highpass', f: 4500, rev: 0.35 });
@@ -4431,7 +4514,7 @@ const Music = {
   riser(secs) {
     if (!this.started || this.dying) return;
     const now = audioCtx.currentTime;
-    const stepsToBar = (16 - (this.step % 16)) % 16;
+    const stepsToBar = (this.spb - this.sib) % this.spb;
     let tb = this.nextT + stepsToBar * this.stepDur;
     while (tb < now + secs) tb += this.barDur;
     const dur = tb - now;
