@@ -1084,6 +1084,7 @@ button { font-family: var(--f-ui) }
 .comm-name { font: 700 calc(8 * var(--px))/1 var(--f-disp); letter-spacing: calc(2 * var(--px)); }
 .comm.ray .comm-name { color: #5fd0ff; }
 .comm.pallas .comm-name { color: #7ff6ff; }
+.comm.paulo .comm-name { color: #ffb060; }
 .comm-text { margin-top: calc(3 * var(--px)); font: 600 calc(11 * var(--px))/1.35 var(--f-ui); color: #fff; min-height: calc(15 * var(--px)); }
 .pallas-eye { animation: pallas-eye 1.6s ease-in-out infinite; transform-origin: 32px 32px; }
 @keyframes pallas-eye { 50% { opacity: .55; transform: scale(.8); } }
@@ -2399,7 +2400,7 @@ import { GLTFLoader }      from 'three/addons/loaders/GLTFLoader.js';
 
 // Single source of truth for the version: shown on the title / portrait
 // screens and passed to the service worker, which names its cache after it.
-const VERSION = '3.5.1';
+const VERSION = '3.6.0';
 
 // ── 3D models (glTF). The ship, Ray and PALLAS are waited for (briefly) before
 // the scene is built; the flagships stream in the background — they are
@@ -4895,6 +4896,9 @@ const sfx = {
     } else if (sp === 'F') {   // SOL: big, warm, a bit rough
       const m = 60 + [0, 4, 7][(r * 3) | 0];
       voice({ type: 'triangle', f: mtof(m), f2: mtof(m - 3), t, dur: 0.08, vol: 0.06, out: AU.sfxBus, lp: 2200 });
+    } else if (sp === 'U') {   // PAULO: bright, bouncy beeps that slide up (a little too eager)
+      const m = 86 + [0, 4, 7, 12][(r * 4) | 0];
+      voice({ type: 'square', f: mtof(m), f2: mtof(m + 5), t, dur: 0.035, vol: 0.03, out: AU.sfxBus, lp: 3500 });
     } else if (sp === 'N') {   // NYX: low, calm, like a lullaby in a cathedral
       const m = 64 + [0, 3, 7, 10][(r * 4) | 0];
       voice({ type: 'sine', f: mtof(m), f2: mtof(m - 2), t, dur: 0.16, vol: 0.05, out: AU.sfxBus, rev: 0.6 });
@@ -4913,7 +4917,7 @@ const sfx = {
     const t = this.now();
     // radio channel opening: static burst + two-tone chirp
     noiseHit({ t, dur: 0.09, vol: 0.06, out: AU.sfxBus, type: 'bandpass', f: 2200, q: 1.5 });
-    if (sp === 'P') { voice({ type: 'sine', f: 1320, t, dur: 0.05, vol: 0.05, out: AU.sfxBus }); voice({ type: 'sine', f: 1760, t: t + 0.06, dur: 0.06, vol: 0.045, out: AU.sfxBus }); }
+    if (sp === 'P' || sp === 'U') { voice({ type: 'sine', f: sp === 'U' ? 1560 : 1320, t, dur: 0.05, vol: 0.05, out: AU.sfxBus }); voice({ type: 'sine', f: sp === 'U' ? 2080 : 1760, t: t + 0.06, dur: 0.06, vol: 0.045, out: AU.sfxBus }); }
     else if ('SAOCHTYNLE'.includes(sp)) { voice({ type: 'square', f: 440, t, dur: 0.06, vol: 0.04, out: AU.sfxBus, lp: 1800 }); voice({ type: 'square', f: 330, t: t + 0.07, dur: 0.08, vol: 0.04, out: AU.sfxBus, lp: 1800 }); }
     else voice({ type: 'triangle', f: 900, f2: 1500, t, dur: 0.09, vol: 0.06, out: AU.sfxBus });
   },
@@ -6908,7 +6912,7 @@ const commQ = [];
 let commCur = null;              // { sp, text, shown, hold }
 function commSay(lines) {
   if (gstate !== 'play') return;
-  const alone = chapter === 4 && (ch4Alone || (boss && boss.def.id === 'nyx'));   // PALLAS has become the shield's core: no voice from here on
+  const alone = chapter === PILOT || chapter === 4 && (ch4Alone || (boss && boss.def.id === 'nyx'));   // PALLAS has become the shield's core: no voice from here on (PILOT MODE: PAULO talks instead)
   for (const l of lines) if (commQ.length < 6 && !(alone && l[0] === 'P')) commQ.push(l);
 }
 function commClear() {
@@ -7024,7 +7028,7 @@ const CHAT = {
     { ch: 3, w: () => bossDone3() >= 3, l: [['R', '父さん、今ごろ何してるかな。'], ['P', 'ミモザさんに怒られているそうです。'], ['R', '……だろうな。']] },
     { ch: 3, w: () => bossDone3() >= 3, l: [['P', 'ソルから伝言です。「次は俺も飛ぶ」'], ['R', '……負けないぞ。']] },
     // PILOT MODE — PALLAS speaks through the shield network now; family and old enemies check in
-    { ch: 5, p: 4, l: [['R', 'パイロット・レイ、出る。'], ['P', '……記録しています。いってらっしゃい。']] },
+    { ch: 5, p: 4, l: [['R', 'パイロット・レイ、出る。'], ['U', 'パウロ、同行しまっす！ 先輩の出撃、記録開始っ！']] },
     { ch: 5, p: 3, l: [['F', 'よう、新人パイロット。今日はどこまで行く？'], ['R', '行けるところまで。']] },
     { ch: 5, p: 3, l: [['M', 'お弁当、持ったかい？'], ['R', 'ひまわりの種、三袋。'], ['M', 'よしよし。']] },
     { ch: 5, p: 2, l: [['H', '……残党が騒いでいる。片付けておけ。'], ['R', '命令すんなよ。……行くけど。']] },
@@ -7189,11 +7193,6 @@ const CHAT = {
     { ch: 3, l: [['R', '……ちょっと眠い。'], ['P', '霧のせいです。寝たら起こします。全力で。'], ['R', 'お手柔らかに。']] },
     { ch: 3, l: [['P', 'ソルは、どんな夢を見ているのでしょう。'], ['R', '……飛んでる夢だろ。きっと。']] },
     { ch: 3, l: [['R', '父さんに会ったら、なんて言おう。'], ['P', '「ただいま」ではなく「おかえり」ですね。']] },
-    { ch: 5, l: [['R', '見ろよ、あの星。輪っかがある。'], ['P', '観光案内を始めますか？'], ['R', '……頼む。']] },
-    { ch: 5, l: [['P', 'この星系の盾も、元気に光っています。'], ['R', 'ハデスが返したやつか。'], ['P', 'はい。']] },
-    { ch: 5, l: [['R', 'パラス、今の飛行、何点？'], ['P', '記録しました。……つまり、良い飛行です。'], ['R', 'へへ。']] },
-    { ch: 5, l: [['F', 'お前の飛び方、俺より丁寧だな。'], ['R', 'パラスにしつけられたから。'], ['P', '光栄です。']] },
-    { ch: 5, l: [['R', '平和になっても、残党はいるんだな。'], ['P', '掃除も、パイロットの仕事です。']] },
     { ch: 5, l: [['M', 'ヒナや、ちゃんと帰っておいでよ。'], ['R', '……うん。ちゃんと帰る。']] },
     { ch: 4, l: [['R', 'なあパラス、夜って怖いか？'], ['P', '……いいえ。あなたが光っていますから。'], ['R', '葉っぱのことか？'], ['P', 'そういうことにしておきます。']] },
     { ch: 4, l: [['P', 'レイ。……いえ、なんでもありません。'], ['R', 'なんだよ、気になるな。']] },
@@ -7219,7 +7218,7 @@ const GAGS = {
 };
 let gagThisRun = false;
 function nextGag() {
-  if (gagThisRun) return null;
+  if (gagThisRun || chapter === PILOT) return null;
   const open = Object.keys(GAGS).filter(k => (gagStep[k] || 0) < GAGS[k].length);
   if (!open.length) return null;
   const k = pick(open), i = gagStep[k] || 0;
@@ -7229,6 +7228,69 @@ function nextGag() {
   return GAGS[k][i];
 }
 
+// ── PILOT MODE crew: PAULO, the rookie AI. Not the brightest, fresh and curious, looks up to Ray
+// ("先輩") and loves hearing about Ray and PALLAS. A solid navigator — and a very keen record keeper.
+let pauloRec = +localStorage.getItem('hd_paulo_rec') || 0;
+const pauloRecNo = () => { pauloRec++; try { localStorage.setItem('hd_paulo_rec', String(pauloRec)); } catch (e) {} return pauloRec; };
+const PILOT = 5;   // chapter id of PILOT MODE
+const PAULO_CHAT = {
+  start: [
+    [['U', 'パウロ、起動しましたっ！ 本日もレイ先輩とご一緒できて光栄っす！'], ['R', '毎回それ言うのか。'], ['U', '毎回光栄なんで！']],
+    [['R', 'パイロット・レイ、出る。'], ['U', 'かっ……かっこいい……！ 今の、記録しました！'], ['R', '消せ。'], ['U', '永久保存っす！']],
+    [['U', '先輩、今日のルートはひまわり星雲経由っす！ たぶん！'], ['R', 'たぶんかよ。']],
+    [['U', '機体チェック、ヨシ！ 燃料、ヨシ！ 先輩、カッコいい、ヨシ！'], ['R', '最後のはいらない。']],
+    [['U', '先輩先輩、パラス先輩って、出撃前に何て言ってたんすか？'], ['R', '「壁にぶつからないこと」。'], ['U', 'メモしました！ 壁に、ぶつからない！']],
+    { p: 3, l: [['F', 'よう、新人パイロット。今日はどこまで行く？'], ['R', '行けるところまで。'], ['U', 'お父様！ はじめまして、パウロっす！'], ['F', 'お、元気だな。']] },
+    { p: 3, l: [['M', 'お弁当、持ったかい？'], ['R', 'ひまわりの種、三袋。'], ['U', '四袋目はパウロが預かってます！'], ['M', 'よしよし。']] },
+    { p: 2, l: [['H', '……残党が騒いでいる。片付けておけ。'], ['R', '命令すんなよ。……行くけど。'], ['U', 'ハ、ハデス様……！ 本物……！']] },
+    { p: 2, l: [['Y', 'いい天気だね。お昼寝日和だ。'], ['U', 'パウロはAIなので眠くならないっす！'], ['Y', '……ふわあ。'], ['T', '……飛べ。']] },
+    { w: () => storyRuns >= 20, l: [['U', () => `今日で ${storyRuns} 回目の出撃っす！ 全部記録してます！`], ['R', '……誰かさんにそっくりだな。']] },
+  ],
+  zone1: [ [['U', 'ひまわり星雲に入りましたっ！ 黄色いっす！'], ['R', '見ればわかる。']], [['U', '残党の弾が来まーす！ たぶん右から！ いや左っす！'], ['R', 'どっちだよ。']] ],
+  zone2: [ [['U', '星の街道っす！ 追いかけてくるドローンに注意っす！'], ['R', '了解。']], [['U', 'このへん、昔バイデントの航路だったらしいっす！'], ['R', '……知ってる。']] ],
+  zone3: [ [['U', '銀河の果てへ……！ パウロ、ちょっとドキドキしてます！'], ['R', '俺もだ。']], [['U', 'ここから先は記録にない宙域っす！ つまり、先輩が第一号っす！'], ['R', 'いい響きだな。']] ],
+  shield: [ [['U', 'シ、シールド！ 先輩、大丈夫っすか！？'], ['R', '平気だ。']], [['U', 'シールドが守ってくれました！ パラス先輩みたいっす！'], ['R', '……そうだな。']] ],
+  hull: [ [['U', () => `装甲が！ 残り ${P.hp} っす！ ひえ〜！`], ['R', '落ち着け。']], [['U', '被弾っす！ でも先輩なら大丈夫っす、たぶん！'], ['R', 'たぶんはやめろ。']] ],
+  repair: [ [['U', '修理完了っ！ パウロ、役に立ちました！？'], ['R', 'ああ、助かった。'], ['U', 'やったっす！']] ],
+  revive: [ [['R', '……まだだ。'], ['U', 'せ、先輩が立ち上がった……！ 今の、名場面フォルダ行きっす！']], [['U', '何度だって立ち上がる……本当だったんすね！'], ['R', '口ぐせなんでな。']] ],
+  record: [ [['U', '自己ベスト更新中っす！ すごいすごいすごい！'], ['R', 'まだ終わってないぞ。']], [['U', () => `記録しました！ 先輩の名場面 No.${pauloRecNo()}！`], ['R', '番号つけてるのか。']] ],
+  combo: [ [['U', '見ました今の！？ ギリギリっす！ かっこいいっす！'], ['R', 'だろ。']], [['U', '連続ニアミス！ パウロ、目が回りそうっす！'], ['R', 'お前、目一個だろ。']] ],
+  combo10: [ [['U', '十連続……！ 先輩、パラス先輩もこれ見てたんすか！？'], ['R', '……たぶん、今も見てる。']], [['U', () => `記録しました！ 名場面 No.${pauloRecNo()}「十連続」っす！`], ['R', 'タイトルまでつけるな。']] ],
+  overdrive: [ [['U', 'オーバードライブ！ うおおお、パウロも燃えてきたっす！'], ['R', 'AIが燃えるな。']] ],
+  near: [ [['U', 'ひえっ！ 今のギリギリっすよ先輩！'], ['R', '計算通りだ。'], ['U', 'さすがっす！']], [['U', '今の、記録しましたっ！'], ['R', '……どこかで聞いたな、それ。']] ],
+  firstkill: [ [['U', '残党、撃墜っす！ お見事っす！'], ['R', 'パイロットの仕事だからな。']], [['U', '先輩の射撃、教科書に載せたいっす！'], ['R', '載らない。']] ],
+  multikill: [ [['U', 'まとめて撃墜！ 何機か数えてなかったっす！'], ['R', '数えとけよ。'], ['U', 'あ、記録には残ってました！']] ],
+  reflect: [ [['U', '反射っ！ 今のどうやったんすか！？'], ['R', 'パラスに教わった。'], ['U', 'パラス先輩、すごいっす……！']] ],
+  warp: [ [['U', '衝突しそうだったのでゆっくりにしましたっ！ たぶん間に合いました！'], ['R', '……ギリギリだったぞ。']] ],
+  spam: [ [['U', '先輩、ボタン連打しすぎっす！ パウロの耳が！'], ['R', '耳あるのか。']] ],
+  ceiling: [ [['U', '先輩、天井っす！ 何か見えるんすか？'], ['R', '……星。'], ['U', 'ロマンっす！']] ],
+  floor: [ [['U', '高度低いっす！ 地面すれすれっす！'], ['R', '低空飛行も、かっこいいだろ。'], ['U', 'かっこいいっす！']] ],
+  m30: [ [['U', '30秒っす！ 順調っす！'], ['R', 'まだまだ。']] ],
+  m60: [ [['U', '1分っす！ 先輩、お腹すきません？'], ['R', '……すいた。'], ['U', 'ひまわりの種、出しますか？']] ],
+  m90: [ [['U', '90秒！ パラス先輩ならここで何て言うんすか？'], ['R', '「集中力、維持してください」。'], ['U', 'し、集中力、維持してくださいっ！']] ],
+  m180: [ [['U', '3分っす！ 先輩の翼、まだまだ元気っすね！'], ['R', 'お前もな。']] ],
+  m300: [ [['U', '5分！ パウロ、感動してます……！'], ['R', '大げさだな。']] ],
+  m420: [ [['U', '7分っす！ もはや伝説っす！ 伝説の先輩っす！'], ['R', 'それ、前にも言われた。']] ],
+  m600: [ [['U', '10分……！ パウロ、先輩の後輩で本当によかったっす！'], ['R', '……泣くなよ。'], ['U', 'AIなので泣けないっす！ 気持ちだけっす！']] ],
+  idle: [
+    [['U', '先輩先輩！ パラス先輩って、どんなAIだったんすか？'], ['R', '口が悪くて、たまに優しい。'], ['U', 'かっこいい……！']],
+    [['U', 'パラス先輩、先輩の衝突回数を全部数えてたって本当っすか？'], ['R', '本当だ。'], ['U', 'パウロも数えます！ 今のところ0回っす！']],
+    [['R', '見ろよ、あの星。輪っかがある。'], ['U', '観光案内しますっ！ えーと……輪っかのある星っす！'], ['R', '見ればわかる。']],
+    [['U', 'この星系の盾も光ってるっす！ ハデス様が返した盾っすよね！'], ['R', 'ああ。']],
+    [['U', '世界を救ったときって、どんな気持ちだったんすか？'], ['R', '……覚えてるよ。全部。'], ['U', '記録、しときますね。']],
+    [['R', '平和になっても、残党はいるんだな。'], ['U', 'お掃除もパイロットのお仕事っす！ ……って、研修で習いました！']],
+    [['U', 'パウロ、いつかパラス先輩に会えますかね？'], ['R', '丘の樹に行けば、会えるよ。'], ['U', '次の休み、絶対行くっす！']],
+    [['U', '先輩の口ぐせ、パウロも言っていいっすか？'], ['R', 'どれだ。'], ['U', '「何度だって立ち上がる」！'], ['R', '……いいぞ。']],
+    [['U', '先輩の飛行記録、フォルダ分けしたっす！「かっこいい」「すごくかっこいい」「伝説」！'], ['R', '分け方が雑だな。']],
+    [['U', 'パウロ、計算はちょっと苦手っすけど、記録は得意っす！'], ['R', '知ってる。'], ['U', 'えへへ。']],
+    [['F', 'お前の飛び方、俺より丁寧だな。'], ['R', 'パラスにしつけられたから。'], ['U', 'パウロにもしつけてほしいっす！']],
+    [['M', 'ヒナや、ちゃんと帰っておいでよ。'], ['R', '……うん。ちゃんと帰る。'], ['U', 'パウロが責任をもって送り届けまっす！']],
+    [['U', 'ひまわりの種って、おいしいんすか？'], ['R', '世界一うまい。'], ['U', 'データベースに登録しました！「世界一」！']],
+    [['U', 'あ、先輩、今の星座！ えっと……名前は知らないっす！'], ['R', 'ばあちゃんに聞いとく。']],
+  ],
+};
+for (const [k, arr] of Object.entries(PAULO_CHAT)) for (const e of arr) (CHAT[k] = CHAT[k] || []).push({ ...(Array.isArray(e) ? { l: e } : e), ch: PILOT });
+
 const resolveLines = l => l.map(([sp, t]) => [sp, typeof t === 'function' ? t() : t]);
 function chat(cat) {
   const pool = CHAT[cat];
@@ -7236,7 +7298,7 @@ function chat(cat) {
   const ok = [];
   pool.forEach((e, i) => {
     const en = Array.isArray(e) ? { l: e } : e;
-    if (en.ch && en.ch !== chapter) return;
+    if (chapter === PILOT ? en.ch !== PILOT : (en.ch && en.ch !== chapter)) return;   // PILOT MODE has its own crew (PAULO)
     if (!en.w || en.w()) ok.push({ ...en, i });
   });
   if (!ok.length) return null;
@@ -7892,7 +7954,6 @@ const BOSS_DEFS4 = [
     ] },
 ];
 // chapter 5 = PILOT MODE (after the final chapter): endless flight through a peaceful galaxy, remnants but no flagships
-const PILOT = 5;
 let chapter = [2, 3, 4, 5].includes(+localStorage.getItem('hd_chapter')) ? +localStorage.getItem('hd_chapter') : 1;   // chapter of the current / next run
 let bossBest2 = +localStorage.getItem('hd_boss2') || 0;            // CHAPTER 2 bosses ever defeated
 let bossBest3 = +localStorage.getItem('hd_boss3') || 0;            // CHAPTER 3 bosses ever defeated
@@ -7954,6 +8015,13 @@ const EREBUS_FACE = `<svg viewBox="0 0 64 64" aria-hidden="true"><rect x="6" y="
   <path d="M32 12l17 10v20L32 52 15 42V22z" fill="#121220" stroke="#3a2a7a" stroke-width="1.5"/><circle cx="32" cy="32" r="8" fill="#000"/>
   <circle cx="32" cy="32" r="10" fill="none" stroke="#8a6aff" stroke-width="1.6"/></svg>`;
 SPEAKERS.N = { name: 'NYX', face: NYX_FACE, cls: 'nyx' };
+// PAULO — the rookie AI issued to Pilot Ray: a little orange drone with one big curious eye and an antenna
+const PAULO_FACE = `<svg viewBox="0 0 64 64" aria-hidden="true"><rect x="6" y="6" width="52" height="52" rx="6" fill="#1a1206" stroke="#ffb84a" stroke-width="2"/>
+  <path d="M32 18v-7" stroke="#ffd890" stroke-width="2"/><circle cx="32" cy="10" r="3" fill="#7ff6ff"/>
+  <circle cx="32" cy="36" r="17" fill="#ffb84a"/><path d="M16 36a16 16 0 0 1 32 0" fill="#ffd27a"/>
+  <circle cx="32" cy="36" r="8.5" fill="#0a2030"/><circle cx="32" cy="36" r="5.5" fill="#7ff6ff"/><circle cx="34.5" cy="33.5" r="1.8" fill="#fff"/>
+  <path d="M15 40l-5 3M49 40l5 3" stroke="#ffd890" stroke-width="2" stroke-linecap="round"/></svg>`;
+SPEAKERS.U = { name: 'PAULO', face: PAULO_FACE, cls: 'paulo' };
 SPEAKERS.L = { name: 'LETHE', face: LETHE_FACE, cls: 'lethe' };
 SPEAKERS.E = { name: 'EREBUS', face: EREBUS_FACE, cls: 'erebus' };
 
@@ -10274,8 +10342,12 @@ const Prologue5 = {
   flag: 'hd_prologue5', music: 'menu',
   panels: [
     { mood: 'morning', lines: ['パイロット学校の制服を着たレイが、丘に立っている。', 'F:……似合ってるじゃないか。パイロット・レイ。', 'M:お弁当、三袋入れといたよ。',
-      'H:……せいぜい落ちるな。', 'R:落ちても、立ち上がるさ。', '樹の奥で、六角形の光がまたたいた。', 'P:……記録しています。いってらっしゃい、パイロット・レイ。', 'R:……行ってきます！'],
-      on: { 5: S => { S.blink = 0; sfx.comm('P'); } } },
+      'H:……せいぜい落ちるな。', 'R:落ちても、立ち上がるさ。',
+      'U:は、はじめまして！ 新米AIのパウロっす！ 本日付けで、レイ先輩の担当になりましたっ！', 'R:……先輩？',
+      'U:だって、世界を救ったパイロットっすよ！ 憧れっす！ よろしくお願いしまっす！',
+      '樹の奥で、六角形の光がまたたいた。', 'P:……レイを、よろしくお願いします。', 'U:パ、パラス先輩……！？ 本物だ……！ き、記録しましたっ！',
+      'P:……ふふ。いってらっしゃい、パイロット・レイ。', 'R:……行ってきます！'],
+      on: { 5: S => { S.paulo = true; sfx.comm('U'); }, 8: S => { S.blink = 0; sfx.comm('P'); } } },
   ],
   build(S) {
     Object.assign(S, cineStage(0x2a3a6a)); cineHill(S); cineShip(S);
@@ -10286,9 +10358,10 @@ const Prologue5 = {
     S.ray = cineRay(S); S.sol = cineBird(S, 'sol'); S.mimosa = cineBird(S, 'mimosa'); S.hades = cineBird(S, 'hades');
     S.tree = cineSapling(S, 1.4); S.tree.scale.setScalar(4.2); S.tree.userData.glow.scale.multiplyScalar(0.4);
     S.hex = cineHex(S, 0x7ff6ff, 2.2);
+    S.pauloD = cineHex(S, 0xffa040, 2.6);
   },
   reset(S) {
-    S.cine = false; S.lifted = S.veiled = false; S.vel.set(0, 0, 0); S.blink = -1;
+    S.cine = false; S.lifted = S.veiled = false; S.vel.set(0, 0, 0); S.blink = -1; S.paulo = false;
     S.hero.position.set(-62, S.groundY(-62, -36) + 6, -36); S.hero.rotation.set(0, 0.5, 0.03);
     S.ray.visible = true;
     for (const p of S.trail) { p.life = 0; p.g.visible = false; }
@@ -10302,7 +10375,9 @@ const Prologue5 = {
     const on = S.blink >= 0 ? (Math.floor(S.blink * 2.5) % 2 === 0 ? 1 : 0.3) : 0.25;
     S.hex.userData.glow.material.opacity = on * 0.8; S.hex.userData.m.material.emissiveIntensity = on * 1.4;
     const rx = 22, rz = 34;
-    S.ray.position.set(rx, G(rx, rz) + 11 + (li === 7 ? Math.abs(Math.sin(t * 7)) * 3 : Math.sin(t * 2) * 0.4), rz); S.ray.rotation.y = li >= 5 && li <= 6 ? Math.PI + 0.4 : -0.5; cineLeaf(S.ray, t);
+    S.ray.position.set(rx, G(rx, rz) + 11 + (li === 12 ? Math.abs(Math.sin(t * 7)) * 3 : Math.sin(t * 2) * 0.4), rz); S.ray.rotation.y = li >= 8 && li <= 11 ? Math.PI + 0.4 : li === 6 ? 0.6 : -0.5; cineLeaf(S.ray, t);
+    S.pauloD.visible = !!S.paulo && !S.cine;
+    if (S.pauloD.visible) { const ex = li === 10 ? Math.sin(t * 9) * 1.5 : 0; S.pauloD.position.set(rx + 13 + ex, G(rx, rz) + 40 + Math.sin(t * 4) * 1.6 + (li === 7 || li === 10 ? Math.abs(Math.sin(t * 8)) * 3 : 0), rz + 70); S.pauloD.rotation.y = Math.sin(t * 1.6) * 0.6; }
     if (S.sol) { S.sol.position.set(-6, G(-6, 30), 30); S.sol.rotation.y = li === 1 ? 0.9 : 0.35; const sc = S.sol.getObjectByName('scarf'); if (sc) sc.rotation.y = Math.sin(t * 2.4) * 0.2; }
     if (S.mimosa) { S.mimosa.position.set(-28, G(-28, 38), 38); S.mimosa.rotation.y = li === 2 ? 1.0 : 0.45; const w = S.mimosa.getObjectByName('wingR'); if (w) w.rotation.z = S.cine ? -0.9 + Math.sin(t * 10) * 0.4 : 0; }
     if (S.hades) { S.hades.position.set(52, G(52, 14), 14); S.hades.rotation.y = li === 3 ? -1.0 : -0.3; cineHadesTick(S.hades, t); }
@@ -10694,6 +10769,8 @@ function creditsCast() {
       '光を吸い込む、夜の盾。ほとんど何も話さない。') : '') +
     (bossBest4 >= 3 || (met.nyx || 0) > 0 ? C(NYX_FACE, '#d0d8ff', 'NYX', 'ニュクス', '夜の女神 ／ 双子の母',
       '「忘れていいの」。やさしさのつもりで、銀河を眠らせようとした。') : '') +
+    (localStorage.getItem('hd_prologue5') ? C(PAULO_FACE, '#ffa040', 'PAULO', 'パウロ', 'SHIP AI ／ 新米',
+      'パイロット・レイに支給された新米 AI。好奇心旺盛で、記録だけは誰より正確。パラス先輩の大ファン。') : '') +
     `</div>` +
     `<div class="cr-k">SETTING</div><div class="cr-v">PLANET AEGIS<br><small>最強の盾の名を冠した、美しい星</small></div>`;
 }
