@@ -1107,10 +1107,13 @@ button { font-family: var(--f-ui) }
   font: 700 10px/1 var(--f-disp) !important; letter-spacing: 2px;
   clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
 }
-.log-replay { display: flex; gap: 6px; padding: 8px 20px; overflow-x: auto; border-bottom: 1px solid rgba(95, 208, 255, 0.12); flex: none; }
-.log-replay .btn-mini { white-space: nowrap; flex: none; }
-.log-replay .btn-mini.ch2 { background: rgba(192, 138, 255, 0.16); color: #e2ccff; }
-.log-replay .btn-mini.ch3 { background: rgba(255, 176, 102, 0.16); color: #ffd8b0; }
+.log-replay { display: flex; flex-wrap: wrap; gap: 6px 14px; padding: 8px 20px; border-bottom: 1px solid rgba(95, 208, 255, 0.12); flex: none; }
+.rp-grp { display: flex; align-items: center; gap: 4px; }
+.rp-grp em { font: 900 11px/1 var(--f-disp); font-style: normal; color: #5fd0ff; padding-right: 2px; }
+.rp-grp.ch2 em { color: #c08aff; } .rp-grp.ch3 em { color: #ffb066; }
+.log-replay .btn-mini { white-space: nowrap; flex: none; padding: 8px 10px; letter-spacing: 1px; font-family: var(--f-ui) !important; }
+.rp-grp.ch2 .btn-mini { background: rgba(192, 138, 255, 0.16); color: #e2ccff; }
+.rp-grp.ch3 .btn-mini { background: rgba(255, 176, 102, 0.16); color: #ffd8b0; }
 .log-body { display: grid; grid-template-columns: minmax(200px, 34%) 1fr; }
 .log-list { overflow-y: auto; padding: 12px; display: grid; gap: 6px; align-content: start; border-right: 1px solid rgba(160, 200, 255, 0.09); }
 .log-item {
@@ -1136,7 +1139,7 @@ button { font-family: var(--f-ui) }
   .log-body { grid-template-columns: 1fr; grid-auto-rows: max-content; overflow-y: auto; }
   .log-list { border-right: none; grid-template-columns: 1fr 1fr; }
 }
-@media (max-height: 460px) { .log-page { padding: 12px 18px; } .lp-text p { font-size: 13px; line-height: 1.7; } }
+@media (max-height: 460px) { .log-replay { padding: 6px 14px; gap: 4px 10px; } .log-replay .btn-mini { padding: 7px 8px; } .log-page { padding: 12px 18px; } .lp-text p { font-size: 13px; line-height: 1.7; } }
 /* prologue overlay (the 3D scene renders underneath in the game canvas) */
 #story {
   display: none; position: fixed; inset: 0; z-index: 9000;
@@ -2351,7 +2354,7 @@ import { GLTFLoader }      from 'three/addons/loaders/GLTFLoader.js';
 
 // Single source of truth for the version: shown on the title / portrait
 // screens and passed to the service worker, which names its cache after it.
-const VERSION = '2.7.3';
+const VERSION = '2.7.4';
 
 // ── 3D models (glTF). The ship, Ray and PALLAS are waited for (briefly) before
 // the scene is built; the flagships stream in the background — they are
@@ -6936,19 +6939,23 @@ function renderLogUI() {
   });
 }
 // story scenes that can be watched again from the LOG
+// (grouped by chapter so the row wraps instead of running off a phone screen)
 const REPLAYS = [
-  { k: 'Ⅰ PROLOGUE', ok: () => true, go: () => Prologue.play(null) },
-  { k: 'Ⅰ EPILOGUE', ok: () => bossBest >= BOSS_DEFS.length, go: () => Epilogue.play(true) },
-  { k: 'Ⅱ PROLOGUE', ch2: true, ok: () => !!localStorage.getItem('hd_prologue2'), go: () => Prologue2.play({ fromLog: true }) },
-  { k: 'Ⅱ 告白', ch2: true, ok: () => bossBest2 >= 2, go: () => Confession.play({ fromLog: true }) },
-  { k: 'Ⅱ EPILOGUE', ch2: true, ok: () => bossBest2 >= BOSS_DEFS2.length, go: () => Epilogue2.play({ fromLog: true }) },
-  { k: 'Ⅲ PROLOGUE', ch3: true, ok: () => !!localStorage.getItem('hd_prologue3'), go: () => Prologue3.play({ fromLog: true }) },
-  { k: 'Ⅲ 夢', ch3: true, ok: () => bossBest3 >= 2, go: () => Dream.play({ fromLog: true }) },
-  { k: 'Ⅲ EPILOGUE', ch3: true, ok: () => bossBest3 >= BOSS_DEFS3.length, go: () => Epilogue3.play({ fromLog: true }) },
+  { ch: 1, k: '序章', ok: () => true, go: () => Prologue.play(null) },
+  { ch: 1, k: '終章', ok: () => bossBest >= BOSS_DEFS.length, go: () => Epilogue.play(true) },
+  { ch: 2, k: '序章', ok: () => !!localStorage.getItem('hd_prologue2'), go: () => Prologue2.play({ fromLog: true }) },
+  { ch: 2, k: '告白', ok: () => bossBest2 >= 2, go: () => Confession.play({ fromLog: true }) },
+  { ch: 2, k: '終章', ok: () => bossBest2 >= BOSS_DEFS2.length, go: () => Epilogue2.play({ fromLog: true }) },
+  { ch: 3, k: '序章', ok: () => !!localStorage.getItem('hd_prologue3'), go: () => Prologue3.play({ fromLog: true }) },
+  { ch: 3, k: '夢', ok: () => bossBest3 >= 2, go: () => Dream.play({ fromLog: true }) },
+  { ch: 3, k: '終章', ok: () => bossBest3 >= BOSS_DEFS3.length, go: () => Epilogue3.play({ fromLog: true }) },
 ];
 function renderReplays() {
   const row = document.getElementById('log-replay');
-  row.innerHTML = REPLAYS.map((r, i) => r.ok() ? `<button class="btn-mini${r.ch2 ? ' ch2' : ''}${r.ch3 ? ' ch3' : ''}" type="button" data-rp="${i}">${r.k} ▶</button>` : '').join('');
+  row.innerHTML = [1, 2, 3].map(ch => {
+    const bs = REPLAYS.map((r, i) => r.ch === ch && r.ok() ? `<button class="btn-mini" type="button" data-rp="${i}">${r.k} ▶</button>` : '').join('');
+    return bs ? `<span class="rp-grp ch${ch}"><em>${['Ⅰ', 'Ⅱ', 'Ⅲ'][ch - 1]}</em>${bs}</span>` : '';
+  }).join('');
   for (const b of row.querySelectorAll('[data-rp]')) onTap(b, () => { closeLog(); REPLAYS[+b.dataset.rp].go(); });
 }
 function openLog()  { ui.open(); renderLogUI(); renderReplays(); logModal.classList.add('open'); }
