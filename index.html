@@ -2385,7 +2385,7 @@ import { GLTFLoader }      from 'three/addons/loaders/GLTFLoader.js';
 
 // Single source of truth for the version: shown on the title / portrait
 // screens and passed to the service worker, which names its cache after it.
-const VERSION = '3.3.1';
+const VERSION = '3.4.0';
 
 // ── 3D models (glTF). The ship, Ray and PALLAS are waited for (briefly) before
 // the scene is built; the flagships stream in the background — they are
@@ -8081,6 +8081,7 @@ function startBoss(idx) {
   commSay(boss.again ? pick(BL.again) : BL.intro);
 }
 function cleanupBoss() {
+  if (boss && boss.allies) for (const a of boss.allies) { scene.remove(a.mesh); for (const t of a.trail) scene.remove(t.g); }
   if (boss && boss.mesh) {
     scene.remove(boss.mesh);
     boss.mesh.traverse(o => { if (o.material) o.material.dispose(); if (o.geometry && !o.isSprite) o.geometry.dispose(); });
@@ -8102,6 +8103,7 @@ function bossHit(dmg, x, y) {
       if (next.open) { boss.opening = true; for (const L of bossLasers) removeLaserMesh(L); bossLasers = []; boss.queue = [];
         shakeX = 12; shakeY = 8; fxFlash(next.color, 0.45); sfx.bossDown(); pushBonus(boss.x - 160, boss.y - 40, 'THE GATE OPENS', '#ffffff'); }
       boss.stage = st; boss.cycle = next.cycle; boss.pi = 0; boss.patT = 80;
+      if (next.allies) alliesArrive();
       if (st === n - 1) boss.rage = true;
       commSay(BOSS_LINES[boss.def.id]['stage' + st]);
     }
@@ -8351,12 +8353,51 @@ const PATTERNS = {
   },
 };
 
-// NYX's last stage: SOL, HADES and the twins fly in and help, one after another
+// NYX's last stage: SOL, HADES and the twins fly in on their own ships, take up formation round
+// Ray, fire at NYX, and one after another break formation to help
+const ALLY_SHIPS = {
+  F: { name: 'SOL',      hull: 0xff7a1a, wing: 0x8e2c1c, cockpit: 0xfff0d8, glow: 0xffb040, css: '#ffb066', off: [-46, -46] },
+  H: { name: 'HADES',    hull: 0x1a1420, wing: 0x7a1a22, cockpit: 0xff5a6a, glow: 0xff4a5a, css: '#ff7a8a', off: [-46, 46] },
+  Y: { name: 'HYPNOS',   hull: 0x3a3270, wing: 0xb8a0ff, cockpit: 0xffe0a0, glow: 0xb8a0ff, css: '#d8c8ff', off: [-88, -86] },
+  T: { name: 'THANATOS', hull: 0xd9d4c8, wing: 0x22242e, cockpit: 0xcfe8ff, glow: 0xcfe8ff, css: '#cfe8ff', off: [-88, 86] },
+};
+function alliesArrive() {
+  boss.allies = Object.entries(ALLY_SHIPS).map(([who, d], i) => {
+    const mesh = buildShipGroup(false);
+    mesh.traverse(o => {
+      if (!o.isMesh) return;
+      const n = o.name;
+      if (n === 'hull') o.material.color.setHex(d.hull);
+      else if (n === 'wingTop' || n === 'wingBottom') o.material.color.setHex(d.wing);
+      else if (n === 'cockpit') o.material.color.setHex(d.cockpit);
+      else if (n === 'engine' || n === 'flame') o.material.color.setHex(d.glow);
+    });
+    const glow = glowSprite(d.glow, 46, 0.7); glow.position.set(-12, 0, 2); mesh.add(glow);
+    scene.add(mesh);
+    const trail = [];
+    for (let k = 0; k < 10; k++) { const g = glowSprite(d.glow, 18, 0); g.visible = false; scene.add(g); trail.push({ g, life: 0 }); }
+    return { who, d, mesh, trail, ti: 0, x: -80 - i * 70, y: P.y + d.off[1], arrive: 0, act: 0, fireT: 40 + i * 25, said: false };
+  });
+}
+function allyMove(dt) {
+  for (const a of boss.allies) {
+    let tx = Math.max(30, P.x + a.d.off[0]), ty = Math.max(30, Math.min(VH - 30, P.y + a.d.off[1] + Math.sin(boss.t * 0.04 + a.d.off[0]) * 6));
+    if (a.act > 0) { a.act -= dt; tx = P.x + 150; ty = P.y + (a.d.off[1] > 0 ? 20 : -20); }      // breaking formation to help
+    const k = Math.min(1, (a.act > 0 ? 0.12 : 0.05) * dt);
+    a.x += (tx - a.x) * k; a.y += (ty - a.y) * k;
+    if (!a.said && a.x > 20) { a.said = true; pushBonus(a.x + 10, a.y - 18, a.d.name, a.d.css); }
+    // small shots at NYX now and then
+    a.fireT -= dt;
+    if (a.fireT <= 0 && a.x > 20 && boss.state === 'fight') { a.fireT = 70 + Math.random() * 40; bullets.push({ x: a.x + 16, y: a.y, vx: 9, vy: 0, prevX: a.x + 16, pierce: 0 }); }
+  }
+}
 function allyTick(dt) {
+  allyMove(dt);
   boss.allyT = (boss.allyT ?? 150) - dt;
   if (boss.allyT > 0) return;
   boss.allyT = 230;
   const who = ['F', 'H', 'Y', 'T'][(boss.allyN = (boss.allyN || 0) + 1) % 4];
+  const me = boss.allies && boss.allies.find(a => a.who === who); if (me) me.act = 70;
   const shots = enemies.filter(e => e.boss && !e.dead && !e.reflected);
   if (who === 'F') {          // SOL: a sunburst round the ship burns the shots away
     for (const e of shots) if (Math.hypot(e.x - P.x, e.y - P.y) < 180) killEnemy(e, 'ally');
@@ -8501,6 +8542,14 @@ function removeLaserMesh(L) {
 function syncBoss(sk) {
   bossKey.intensity += ((boss && boss.mesh.userData.tipDX ? 2.2 : 0) - bossKey.intensity) * 0.05;
   if (!boss) return;
+  if (boss.allies) for (const a of boss.allies) {          // the allies' ships, banking as they move, trailing light
+    if (boss.state === 'dying') a.x += 3;
+    const vy = a.y - (a.py ?? a.y); a.py = a.y;
+    a.mesh.position.copy(W(a.x, a.y, 2)).add(sk);
+    a.mesh.rotation.z = Math.max(-0.4, Math.min(0.4, -vy * 0.08));
+    if (Math.floor(boss.t) % 3 === 0) { const p = a.trail[a.ti++ % a.trail.length]; p.life = 1; p.g.visible = true; p.g.position.copy(W(a.x - 16, a.y, 1)); }
+    for (const p of a.trail) { if (p.life <= 0) continue; p.life -= 0.06; p.g.material.opacity = Math.max(0, p.life) * 0.5; p.g.scale.setScalar(14 + (1 - p.life) * 16); if (p.life <= 0) p.g.visible = false; }
+  }
   const m = boss.mesh;
   m.position.copy(W(boss.x, boss.y, -6)).add(sk);
   m.rotation.z = Math.sin(boss.t * 0.02) * 0.05 + (boss.state === 'dying' ? boss.t * 0.003 : 0);
