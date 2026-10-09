@@ -11,7 +11,7 @@ Three.js + WebGL で描画する、タップひとつで遊べる横スクロー
 - **やり込み**：パイロットレベル（最大 Lv80）、42 スキルのツリー、装備枠、HULL（耐久）、シナジー、スキン、9 つの隠し要素
 - **3D モデル**（glTF）と、プレイに合わせて変化する **手続き合成の BGM**
 
-[![Play](https://img.shields.io/badge/play-online-00e8ff?style=flat-square)](https://junia2009.github.io/hover-dodge/) ![Version](https://img.shields.io/badge/version-3.5.0-aa44ff?style=flat-square)
+[![Play](https://img.shields.io/badge/play-online-00e8ff?style=flat-square)](https://junia2009.github.io/hover-dodge/) ![Version](https://img.shields.io/badge/version-3.5.1-aa44ff?style=flat-square)
 
 ---
 
@@ -121,7 +121,7 @@ Three.js + WebGL で描画する、タップひとつで遊べる横スクロー
 ゴールはひたすら長く生き残ること。死んだら `RETRY` ですぐやり直せます。記録・XP・進行はすべて端末に保存されます。
 
 ### タイトル画面
-- **CHAPTER Ⅰ / Ⅱ / Ⅲ / Ⅳ / ✈ PILOT** — 章の選択（第二部以降の解放後。PILOT は最終章クリア後）
+- **STORY / ✈ PILOT** — モードの選択（最終章クリア後）。STORY を選ぶと、その下で **CHAPTER Ⅰ〜Ⅳ** を選べる（第二部以降の解放後）。PILOT から STORY に戻ると、最後に選んでいた章に戻る
 - **LOADOUT** — 所持スキルの装備・ランクアップ
 - **SHOP** — XP でスキルを解放
 - **SKIN** — 自機の色
@@ -477,6 +477,7 @@ hover-dodge/
 
 | Version | 内容 |
 | :---: | --- |
+| **3.5.1**  | タイトルの選択を 2 段に：まず STORY / ✈ PILOT を選び、STORY を選んだときだけその下に CHAPTER Ⅰ〜Ⅳ が出る（PILOT から戻ると最後の章へ） |
 | **3.5.0**  | ✈ **PILOT MODE**（最終章クリアで解放）：パイロットになったレイが平和な銀河を巡るエンドレスモード。ボスなし・残党あり、明るい空色の世界と流れていく惑星、旅仕様の区間名、専用の明るい BGM、家族や元敵との無線、初回の見送りシーン。あわせて各章のエピローグ後はランを続けず **CHAPTER CLEAR** のリザルトへ |
 | **3.4.1**  | 軽量化：第四部の「夜」の暗幕を毎フレーム描き直すのをやめ、大きな暗幕 1 枚を機体に合わせて動かす方式に（見た目は同じ、スマホでの描画負担を軽減）。ミラーモードでも光の位置が正しく |
 | **3.4.0**  | 最終決戦（NYX の最終段階）で、仲間が自分の機体で実際に飛んでくるように：ソル（オレンジ）・ハデス（黒と深紅）・ヒュプノス（紫）・タナトス（白）の 4 機が画面の左から駆けつけ、レイの周りで編隊を組んで NYX を撃ち、順番に編隊を抜けて援護する |
