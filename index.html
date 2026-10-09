@@ -1879,6 +1879,9 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
   .node .tile { width: 48px; height: 42px; }
   .node .ic { width: 20px; height: 20px; }
   .node .nm { font-size: 9px; }
+  .tree.rows4 .node .pr { display: none; }
+  .tree.rows4 .node .tile { width: 40px; height: 35px; }
+  .tree.rows4 .node { transform: translate(-50%, -18px); }
   .loadout { padding: 10px 12px; }
   .slots { margin-top: 8px; grid-template-columns: repeat(4, 1fr); gap: 6px; }
   .slot { height: 38px; justify-content: center; padding: 0 4px; }
@@ -2131,11 +2134,12 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
 
     <section class="howto-sec">
       <h3>PILOT LEVEL & HULL</h3>
-      <p>これまでに稼いだ <b>XP の累計</b>でパイロットレベルが上がる（SHOP で XP を使ってもレベルは下がらない）。最大 Lv60。レベルに応じて称号が CADET → PILOT（Lv10）→ ACE（20）→ VETERAN（30）→ COMMANDER（40）→ HERO（50）→ LEGEND（60）と上がる。</p>
+      <p>これまでに稼いだ <b>XP の累計</b>でパイロットレベルが上がる（SHOP で XP を使ってもレベルは下がらない）。最大 Lv80。レベルに応じて称号が CADET → PILOT（Lv10）→ ACE（20）→ VETERAN（30）→ COMMANDER（40）→ HERO（50）→ LEGEND（60）→ MYTHIC（70）→ ETERNAL（80）と上がる。</p>
       <dl>
         <dt>装備枠</dt><dd>Lv3 / 7 / 12 / 20 / 45 / 60 で 3〜8 枠</dd>
         <dt>基本耐久</dt><dd>Lv5 / 14 / 25 / 38 / 52 で機体の HULL（耐久）が +1</dd>
         <dt>Lv31〜</dt><dd>新スキル（TWIN PULSE / SECOND WIND / IMMORTAL / TREASURE HUNTER / ★TITAN FRAME）とレベル限定スキン（NEBULA Lv40 / AEGIS Lv50 / LEGEND Lv60）</dd>
+        <dt>Lv61〜</dt><dd>新スキル（NIGHT EYE Lv65 / ★MEMORY CORE Lv75）、基本耐久 +1（Lv66）、スキン（NIGHT Lv70 / DAWN Lv80）、称号 MYTHIC（70）/ ETERNAL（80）</dd>
         <dt>新スキル</dt><dd>VITAL 系スキルはレベルで解放される</dd>
         <dt>XP ボーナス</dt><dd>Lv30 まではレベルごとに獲得 XP +1.5%、それ以降は +1%</dd>
         <dt>HULL</dt><dd>左上のオレンジの六角形。被弾するとシールド→HULL の順に減り、短い無敵時間。0 になると墜落</dd>
@@ -2368,7 +2372,7 @@ import { GLTFLoader }      from 'three/addons/loaders/GLTFLoader.js';
 
 // Single source of truth for the version: shown on the title / portrait
 // screens and passed to the service worker, which names its cache after it.
-const VERSION = '3.2.0';
+const VERSION = '3.3.0';
 
 // ── 3D models (glTF). The ship, Ray and PALLAS are waited for (briefly) before
 // the scene is built; the flagships stream in the background — they are
@@ -2740,6 +2744,24 @@ const SHIP_SKINS = [
     flame:   0xffd870,
     light:   0xffb030,
   },
+  {
+    id: 'night', name: 'NIGHT', accent: '#8fa8ff', lv: 70, anim: 'night',
+    hull:    { color: 0x101a3a, emissive: 0x0a1030, specular: 0xd0d8ff },
+    wing:    { color: 0x3a2468, emissive: 0x120830 },
+    cockpit: { color: 0xdfe2f4, emissive: 0x101830, specular: 0xffffff },
+    engine:  0xc8d0ff,
+    flame:   0xa8b8ff,
+    light:   0x8fa8ff,
+  },
+  {
+    id: 'dawn', name: 'DAWN', accent: '#ffc890', lv: 80, anim: 'dawn',
+    hull:    { color: 0xfff4e8, emissive: 0x403020, specular: 0xffffff },
+    wing:    { color: 0xffa070, emissive: 0x402010 },
+    cockpit: { color: 0x9ff8ff, emissive: 0x0a3040, specular: 0xffffff },
+    engine:  0xffd890,
+    flame:   0xfff0c0,
+    light:   0xffc890,
+  },
   // ── SOL's colours: the sun-orange ace, unlocked by bringing him home (CHAPTER 3) ──
   {
     id: 'sol', name: 'SOL', accent: '#ff8a2a', story: 3,
@@ -2791,6 +2813,20 @@ function animateSkin(t) {
     const k = 0.5 + 0.5 * Math.sin(t * 0.05);
     shipParts.hull.material.emissive.setRGB(0.25 + k * 0.35, 0.14 + k * 0.2, 0.0);
     shipLight.color.setRGB(1, 0.65 + k * 0.15, 0.2);
+    return;
+  }
+  if (s.anim === 'night') {
+    // NIGHT: a starry hull — stars wink on and off across the paint
+    const tw = Math.max(0, Math.sin(t * 0.13) * Math.sin(t * 0.071 + 1.3));
+    shipParts.hull.material.emissive.setRGB(0.04 + tw * 0.35, 0.06 + tw * 0.38, 0.19 + tw * 0.45);
+    return;
+  }
+  if (s.anim === 'dawn') {
+    // DAWN: the paint drifts from the rose of first light to morning gold and back
+    const k = 0.5 + 0.5 * Math.sin(t * 0.01);
+    for (const w of shipParts.wings) w.material.color.copy(set(0.02 + k * 0.09, 1, 0.66));
+    shipParts.hull.material.emissive.setRGB(0.25 + k * 0.1, 0.17 + k * 0.1, 0.1);
+    shipLight.color.setRGB(1, 0.72 + k * 0.15, 0.5);
     return;
   }
   if (s.anim === 'prism') {
@@ -3442,6 +3478,8 @@ const SKILL_ICONS = {
   golden_orbs:      '<path d="M12 3l5 9-5 9-5-9z"/><path d="M7 12h10"/><path d="M19 4l.8 1.7L21.5 6.5l-1.7.8L19 9l-.8-1.7-1.7-.8 1.7-.8z"/>',
   combo_multiplier: '<path d="M4 8l6 8M10 8l-6 8"/><path d="M14 8h5l-3 3.5a2.5 2.5 0 1 1-2.5 3.5"/>',
   overdrive:        '<path d="M3 17a9 9 0 0 1 18 0"/><path d="M12 17l5-6"/><circle cx="12" cy="17" r="1.5"/><path d="M6.5 12.5l1 1M12 8v1.5M17.5 12.5l-1 1"/>',
+  night_eye:        '<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path d="M18 3l.6 1.4 1.4.6-1.4.6L18 7l-.6-1.4L16 5l1.4-.6z"/>',
+  memory_core:      '<path d="M12 2l8.5 5v10L12 22l-8.5-5V7z"/><path d="M12 7v5l3 2"/><path d="M8 4.5A8 8 0 0 0 5 9"/>',
   smaller_hitbox:   '<path d="M3 3l5 5M21 3l-5 5M3 21l5-5M21 21l-5-5"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/>',
   ghost_dash:       '<path d="M6 21V11a6 6 0 0 1 12 0v10l-2-1.6-2 1.6-2-1.6-2 1.6-2-1.6z"/><path d="M10 11v1M14 11v1"/><path d="M1 13h3M1 17h3"/>',
   hull_plating:     '<path d="M12 2l8 3v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V5z"/><path d="M8 9h8M8 13h8M10 17h4"/>',
@@ -3558,6 +3596,7 @@ function renderShopUI() {
   const { pos, edges } = layoutKind(shopTab);
   const tk = KIND_COLOR[shopTab];
   shopTreeEl.style.setProperty('--tk', tk);
+  shopTreeEl.classList.toggle('rows4', new Set([...pos.values()].map(p => p.y.toFixed(1))).size > 3);   // a 4-row branch: compact nodes on short screens
   let svg = '<svg viewBox="0 0 100 100" preserveAspectRatio="none">';
   for (const [a, b] of edges) {
     const pa = pos.get(a), pb = pos.get(b);
@@ -5086,6 +5125,11 @@ const SKILL_DEFS = [
     desc: 'PULSE の直後にもう一度衝撃波が走る（二重 PULSE）' },
   { id: 'immortal', name: 'IMMORTAL', kind: 'DEFENSE', price: 2200, requires: ['last_stand'], lvReq: 40,
     desc: '復活が2回に。復活するたびに LAST STAND（10秒間スコア・XP 2倍）' },
+  // ── Lv61+ ──
+  { id: 'night_eye', name: 'NIGHT EYE', kind: 'PASSIVE', price: 2400, requires: ['magnet'], lvReq: 65,
+    desc: '夜目。最終章の夜で見える範囲が 1.5 倍、スキルを忘れても半分の時間で思い出す' },
+  { id: 'memory_core', name: 'MEMORY CORE', kind: 'DEFENSE', price: 4000, requires: ['shield'], lvReq: 75, ult: true,
+    desc: 'パラスの記録。1 ランに 1 度、撃墜される瞬間に 2 秒前の位置へ巻き戻る（周りの弾と壁は消え、2 秒無敵）' },
   { id: 'treasure_hunter', name: 'TREASURE HUNTER', kind: 'PASSIVE', price: 1800, requires: ['golden_orbs'], lvReq: 44,
     desc: 'XPオーブの出現率UP（45%→75%）、金オーブの確率2倍' },
   // ── SOL (CHAPTER 3 cleared) ──
@@ -5113,12 +5157,12 @@ const SYNERGIES = [
 // ── Pilot level ── grows with the XP earned over all runs (spending XP in the
 // SHOP never lowers it). Levels open loadout slots, add base HULL, unlock the
 // VITAL skills and give a small XP bonus.
-const MAX_LEVEL = 60;
+const MAX_LEVEL = 80;
 const MAX_SLOTS = 8;
 const SLOT_LEVELS = [1, 1, 3, 7, 12, 20, 45, 60];  // pilot level that opens slot i+1
-const HULL_LEVELS = [5, 14, 25, 38, 52];           // +1 base HULL at each of these
+const HULL_LEVELS = [5, 14, 25, 38, 52, 66];       // +1 base HULL at each of these
 // pilot ranks (shown next to the level; reaching one is a LEVEL UP reward)
-const RANKS = [[1, 'CADET'], [10, 'PILOT'], [20, 'ACE'], [30, 'VETERAN'], [40, 'COMMANDER'], [50, 'HERO'], [60, 'LEGEND']];
+const RANKS = [[1, 'CADET'], [10, 'PILOT'], [20, 'ACE'], [30, 'VETERAN'], [40, 'COMMANDER'], [50, 'HERO'], [60, 'LEGEND'], [70, 'MYTHIC'], [80, 'ETERNAL']];
 const rankName = L => RANKS.filter(([l]) => L >= l).pop()[1];
 const LEGACY_SLOT_COSTS = { 3: 1200, 4: 3000 };    // pre-1.9 slot purchases (refunded)
 const lvXP = L => 40 * (L - 1) * (L - 1) + 160 * (L - 1);   // lifetime XP needed for level L
@@ -5213,6 +5257,7 @@ function saveProgression() {
 const skillDef = id => SKILL_DEFS.find(s => s.id === id);
 // HARDCORE (secret mode): skills are switched off for the run, XP doubled
 let hardcoreRun = false;
+let memoryUsed = false;         // MEMORY CORE: the one rewind of this run
 let forgetT = {};               // CHAPTER 4: skills LETHE made the pilot forget (frames left)
 let ch4Alone = false;           // CHAPTER 4: EREBUS has fallen this run — PALLAS has left to become the shield
 function hasSkill(id) { return !hardcoreRun && equippedSkills.includes(id) && !(forgetT[id] > 0); }
@@ -5491,7 +5536,7 @@ function startGame(opts = {}) {
   runLevel = pilotLevel(); lifeBefore = lifeXP;
   hullMax = calcHullMax(); P.hp = hullMax; repairT = 0;
   comboCount = 0; comboTimer = 0;
-  phoenixUsed = false; secondWindUsed = false;
+  phoenixUsed = false; secondWindUsed = false; memoryUsed = false; P.hist = [];
   revivesLeft = hasSkill('immortal') ? 2 : (hasSkill('phoenix') || hasSkill('last_stand')) ? 1 : 0;
   warpCD = 0; lastStandT = 0; xpMult = 1; shotCount = 0; overdriveOn = false;
   P.ghost = 0; P.ghostCD = 0;
@@ -5601,8 +5646,20 @@ function die() {
     Story.onShield();
     return;
   }
-  // HULL: each armour point soaks one hit
+  // HULL: each armour point soaks one hit (MEMORY CORE steps in just before the last one would be lost)
   if (P.hp > 1) { P.hp--; hullHit(); return; }
+  // MEMORY CORE: PALLAS's record — back to where the ship was two seconds ago, once a run
+  if (hasSkill('memory_core') && !memoryUsed && P.hist && P.hist.length) {
+    memoryUsed = true;
+    P.y = P.hist[0]; P.vy = 0; P.inv = 120; P.hist = [];
+    for (const e of enemies) if (!e.dead && !e.reflected && Math.hypot(e.x - P.x, e.y - P.y) < 220) killEnemy(e, 'pulse');
+    for (const w of walls.filter(w => Math.abs(w.x + w.w / 2 - P.x) < 90)) { removeWallMesh(w); walls = walls.filter(x => x !== w); }
+    timeScale = 0.2; fx.aberr = 1.2; fxFlash(0x7ff6ff, 0.5); shakeX = 8; shakeY = 6;
+    spawnRing(P.x, P.y, 0x7ff6ff, 0xfff3c0, 160);
+    pushBonus(P.x, P.y - 22, 'MEMORY — 記録から復元', '#9ff8ff');
+    sfx.phoenix(); vibrate([40, 30, 60]);
+    return;
+  }
   // PHOENIX skill: one-time per-run revive with 3s invulnerability.
   if (revivesLeft > 0) {
     revivesLeft--; phoenixUsed = true;
@@ -5712,7 +5769,7 @@ function forgetSkill() {
   const pool = equippedSkills.filter(id => !isForgotten(id));
   if (!pool.length) return;
   const id = pick(pool), sk = skillDef(id);
-  forgetT[id] = 480;
+  forgetT[id] = hasSkill('night_eye') ? 240 : 480;
   pushBonus(P.x, P.y - 26, `${sk ? sk.name : id} を忘れた…`, '#9fe8ff');
   spawnSparks(P.x, P.y, 12, { vMin: 1, vMax: 4, color: 0x9fe8ff });
   fxFlash(0x9fe8ff, 0.2); sfx.reflect();
@@ -5731,6 +5788,7 @@ function nightTick(dt) {
   // the pool of light: wide during a flare, narrow in an eclipse, and the dawn in NYX's last stage
   let want = 150;
   if (eclipseT > 0) want = 92;
+  if (hasSkill('night_eye')) want *= 1.5;
   if (flareT > 0) want = Math.max(want, 300);
   nightR += (want - nightR) * Math.min(1, 0.08 * dt);
 }
@@ -5899,6 +5957,7 @@ function update(dt) {
   else P.vy += GRAVITY * dt * (sleepT > 0 ? 1.25 : 1);     // drowsy: heavier
   if (P.vy > 14) P.vy = 14;
   P.y = Math.max(P.r, Math.min(VH - P.r, P.y + P.vy * dt));
+  if (P.hist) { P.hist.push(P.y); if (P.hist.length > 120) P.hist.shift(); }   // ~2 s of altitude for MEMORY CORE
   secretTick(dt);
   if (!boss) Story.tick(dt);
   bossTick(dt);
