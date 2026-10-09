@@ -11,7 +11,7 @@ Three.js + WebGL で描画する、タップひとつで遊べる横スクロー
 - **やり込み**：パイロットレベル（最大 Lv60）、38 スキルのツリー、装備枠、HULL（耐久）、シナジー、スキン、9 つの隠し要素
 - **3D モデル**（glTF）と、プレイに合わせて変化する **手続き合成の BGM**
 
-[![Play](https://img.shields.io/badge/play-online-00e8ff?style=flat-square)](https://junia2009.github.io/hover-dodge/) ![Version](https://img.shields.io/badge/version-2.7.3-aa44ff?style=flat-square)
+[![Play](https://img.shields.io/badge/play-online-00e8ff?style=flat-square)](https://junia2009.github.io/hover-dodge/) ![Version](https://img.shields.io/badge/version-2.7.4-aa44ff?style=flat-square)
 
 ---
 
@@ -68,7 +68,7 @@ Three.js + WebGL で描画する、タップひとつで遊べる横スクロー
 </details>
 
 ### 物語の見せ方
-- **3D カットシーン**：タップ / SPACE で進行、SKIP / ESC で飛ばせる。**LOG** から全 8 シーン（Ⅰ PROLOGUE / Ⅰ EPILOGUE / Ⅱ PROLOGUE / Ⅱ 告白 / Ⅱ EPILOGUE / Ⅲ PROLOGUE / Ⅲ 夢 / Ⅲ EPILOGUE）を見返せる
+- **3D カットシーン**：タップ / SPACE で進行、SKIP / ESC で飛ばせる。**LOG** から全 8 シーン（Ⅰ 序章・終章 / Ⅱ 序章・告白・終章 / Ⅲ 序章・夢・終章）を見返せる
 - **無線**：プレイ中、レイとパラス（ボス戦では敵も）の掛け合いが画面下に流れる。前回の死因・時間帯・章・進行状況に応じて変わり、出撃をまたいで進む連作ネタもある
 - **航海日誌（LOG）**：記録・フェーズ到達・ボス撃破などで全 20 ページが解放される
 - **リザルト**：レイの一言（クールに決めようとして決まらない）
@@ -431,6 +431,7 @@ hover-dodge/
 
 | Version | 内容 |
 | :---: | --- |
+| **2.7.4**  | LOG のシーン再生ボタンが横に並びきらず画面外にはみ出していたのを修正：章ごと（Ⅰ / Ⅱ / Ⅲ）にまとめ、ラベルを「序章・告白・夢・終章」に短縮、狭い画面では折り返す |
 | **2.7.3**  | 第三部クリア後、縦画面にソルが登場：レイの横をゆったり滑空し、ときどき宙返り。レイとすれ違うと二人でスピン（ハイタッチ）、ミモザも手を振る。タップで宙返り |
 | **2.7.2**  | 横画面（スマホ）で SHOP / LOADOUT のタブがはみ出し、SOL タブが右パネルに隠れて押せなかった問題を修正（タブを縮めて 2 段表示に） |
 | **2.7.1**  | ストーリーの整合性：ミモザ救出（告白）と夢のシーンは CHARON / HYPNOS の初撃破時だけ流れるように（以降は LOG から再生）。2 回目以降の撃破では物語セリフではなく軽い掛け合いに |
