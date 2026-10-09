@@ -6162,15 +6162,6 @@ function setChapter(ch) {
   if (ch === 3) loadPart3Models();
   ui.select(); refreshChapterUI(); refreshRotStats();
 }
-for (const b of document.querySelectorAll('#t-chapter [data-ch]')) b.classList.toggle('on', +b.dataset.ch === chapter);
-  setText(document.querySelector('.t-tag'), chapter === 2 ? '冥王ハデスの影を追え' : '宇宙海賊団バイデントを追え');
-}
-function setChapter(ch) {
-  if (ch === chapter) return;
-  chapter = ch; localStorage.setItem('hd_chapter', String(ch));
-  if (ch === 2) loadPart2Models();
-  ui.select(); refreshChapterUI();
-}
 for (const b of document.querySelectorAll('#t-chapter [data-ch]')) onTap(b, () => setChapter(+b.dataset.ch));
 
 // Result screen values are written once at death; the score counts up when
