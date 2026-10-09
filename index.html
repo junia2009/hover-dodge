@@ -430,6 +430,9 @@ button { font-family: var(--f-ui) }
 .rot-phase-timeline > div.ch3.reached { color: rgba(255, 190, 120, 0.95); }
 .rot-phase-timeline > div.ch3.reached::before { background: #ffb066; box-shadow: 0 0 6px rgba(255, 176, 102, 0.5); }
 .rot-phase-timeline > div.ch3.reached::after { background: #ffb066; border-color: #ffb066; box-shadow: 0 0 8px #ffb066; }
+.rot-phase-timeline > div.ch4.reached { color: rgba(190, 205, 255, 0.95); }
+.rot-phase-timeline > div.ch4.reached::before { background: #9fb8ff; box-shadow: 0 0 6px rgba(159, 184, 255, 0.5); }
+.rot-phase-timeline > div.ch4.reached::after { background: #9fb8ff; border-color: #9fb8ff; box-shadow: 0 0 8px #9fb8ff; }
 
 /* Phase progression timeline */
 .rot-phase-timeline {
@@ -548,6 +551,12 @@ button { font-family: var(--f-ui) }
 .hud-drowse.full { animation: rot-blink .5s steps(2) infinite; }
 #drowse-veil { position: absolute; inset: 0; pointer-events: none; z-index: 2; opacity: 0;
   background: radial-gradient(ellipse at var(--vx, 20%) var(--vy, 50%), rgba(20, 10, 40, 0) 12%, rgba(26, 14, 52, 0.6) 34%, rgba(8, 4, 20, 0.96) 60%); }
+/* CHAPTER 4: the night (a pool of light round the ship) + forgotten skills */
+#night-veil { position: absolute; inset: 0; pointer-events: none; z-index: 0; opacity: 0; transition: opacity .6s;
+  background: radial-gradient(circle at var(--vx, 20%) var(--vy, 50%), rgba(4, 6, 20, 0) 0, rgba(4, 6, 20, 0) calc(var(--nr, 150) * 0.7 * var(--px)),
+    rgba(6, 8, 26, 0.6) calc(var(--nr, 150) * 1.25 * var(--px)), rgba(2, 3, 12, 0.9) calc(var(--nr, 150) * 2.6 * var(--px))); }
+.hud-forget { margin-top: calc(6 * var(--px)); font: 700 calc(8 * var(--px))/1.2 var(--f-ui); letter-spacing: calc(1 * var(--px)); color: #9fe8ff; text-shadow: 0 0 6px #5ac8ff; }
+.hud-forget[hidden] { display: none; }
 #ui[data-state="play"] #hud-dom,
 #ui[data-state="paused"] #hud-dom { opacity: 1; }
 
@@ -1114,6 +1123,7 @@ button { font-family: var(--f-ui) }
 .log-replay .btn-mini { white-space: nowrap; flex: none; padding: 8px 10px; letter-spacing: 1px; font-family: var(--f-ui) !important; }
 .rp-grp.ch2 .btn-mini { background: rgba(192, 138, 255, 0.16); color: #e2ccff; }
 .rp-grp.ch3 .btn-mini { background: rgba(255, 176, 102, 0.16); color: #ffd8b0; }
+.rp-grp.ch4 em { color: #9fb8ff; } .rp-grp.ch4 .btn-mini { background: rgba(159, 184, 255, 0.16); color: #dfe6ff; }
 .log-body { display: grid; grid-template-columns: minmax(200px, 34%) 1fr; }
 .log-list { overflow-y: auto; padding: 12px; display: grid; gap: 6px; align-content: start; border-right: 1px solid rgba(160, 200, 255, 0.09); }
 .log-item {
@@ -1222,6 +1232,7 @@ button { font-family: var(--f-ui) }
 .t-chapter button.on { color: #fff; border-color: var(--ch-c, #00e8ff); background: rgba(20, 30, 70, 0.8); box-shadow: 0 0 14px var(--ch-c, #00e8ff); }
 .t-chapter button[data-ch="2"] { --ch-c: #c08aff; }
 .t-chapter button[data-ch="3"] { --ch-c: #ffb066; }
+.t-chapter button[data-ch="4"] { --ch-c: #9fb8ff; }
 .t-chapter button[hidden] { display: none; }
 .t-chapter + .t-start { margin-top: calc(12 * var(--px)); }
 .t-modes {
@@ -2209,6 +2220,7 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
 <div id="wrap">
   <canvas id="hud"></canvas>
   <div id="drowse-veil"></div>
+  <div id="night-veil"></div>
   <div id="ui" data-state="menu">
 
     <!-- In-run HUD -->
@@ -2219,6 +2231,7 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
         <div class="hud-best" id="hud-best">BEST<b id="hud-best-val">0</b></div>
         <div class="hud-hull" id="hud-hull" hidden></div>
         <div class="hud-drowse" id="hud-drowse" hidden><span>ZZZ</span><i><b id="hud-drowse-fill"></b></i></div>
+        <div class="hud-forget" id="hud-forget" hidden></div>
       </div>
       <div class="hud-phase" id="hud-phase">
         <div class="hud-phase-name" id="hud-phase-name">PHASE 1<span>WALLS</span></div>
@@ -2261,6 +2274,7 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
           <button type="button" data-ch="1">CHAPTER Ⅰ<small>BIDENT</small></button>
           <button type="button" data-ch="2">CHAPTER Ⅱ<small>CERBERUS</small></button>
           <button type="button" data-ch="3" hidden>CHAPTER Ⅲ<small>HYPNOS</small></button>
+          <button type="button" data-ch="4" hidden>CHAPTER Ⅳ<small>NYX</small></button>
         </div>
         <button class="btn-primary t-start" id="start-btn" type="button">START<kbd>SPACE</kbd></button>
         <div class="t-modes" id="t-modes"></div>
@@ -2354,7 +2368,7 @@ import { GLTFLoader }      from 'three/addons/loaders/GLTFLoader.js';
 
 // Single source of truth for the version: shown on the title / portrait
 // screens and passed to the service worker, which names its cache after it.
-const VERSION = '2.8.1';
+const VERSION = '3.0.0';
 
 // ── 3D models (glTF). The ship, Ray and PALLAS are waited for (briefly) before
 // the scene is built; the flagships stream in the background — they are
@@ -2383,6 +2397,13 @@ function loadPart3Models() {
   return part3Models;
 }
 if ((+localStorage.getItem('hd_boss2') || 0) >= 3) loadPart3Models();
+// CHAPTER 4 — the night: LETHE, EREBUS, NYX, and the cast for the final cutscenes
+let part4Models = null;
+function loadPart4Models() {
+  if (!part4Models) part4Models = Promise.all([loadPart3Models(), ...['lethe', 'erebus', 'nyx', 'hades', 'nyxbird', 'lethebird'].map(k => loadModel(k, `models/${k}.glb`))]);
+  return part4Models;
+}
+if ((+localStorage.getItem('hd_boss3') || 0) >= 3) loadPart4Models();
 await Promise.race([coreModels, new Promise(r => setTimeout(r, 6000))]);
 // deep clone with private materials (so skins / flashes don't leak between copies)
 function cloneModel(src) {
@@ -3271,6 +3292,7 @@ function firePulse() {
   vibrate(20);
   pulseUsedThisRun = true;
   nopulseStreak = 0;
+  if (chapter === 4) { flareT = 90; rememberAll(); }
   if (mists.length || drowsy > 0) clearMistAround(P.x, P.y, hasSkill('sunburst') ? 9999 : PULSE_MAX_R * 1.6);
   if (hasSynergy('barrier')) P.inv = Math.max(P.inv, 30);
 
@@ -3834,15 +3856,16 @@ function refreshRotStats() {
   bestEl.innerHTML = hi > 0 ? `${hi}<span class="unit">SEC</span>` : '<span class="nodata">— NO DATA —</span>';
   const lv = pilotLevel();
   document.getElementById('rot-pilot').innerHTML = `<b>Lv ${lv}</b> · <span class="rank">${rankName(lv)}</span>`;
-  const b1 = +localStorage.getItem('hd_boss') || 0, b2 = +localStorage.getItem('hd_boss2') || 0, b3 = +localStorage.getItem('hd_boss3') || 0, open2 = b1 >= 2;
+  const b1 = +localStorage.getItem('hd_boss') || 0, b2 = +localStorage.getItem('hd_boss2') || 0, b3 = +localStorage.getItem('hd_boss3') || 0, b4 = +localStorage.getItem('hd_boss4') || 0, open2 = b1 >= 2;
   // chapters Ⅰ–Ⅱ boss by boss; once Ⅱ is done, Ⅰ and Ⅱ fold into one node each and Ⅲ's bosses follow
   const nodes = b2 < 3
     ? [['STYX', 'Ⅰ', b1 >= 1], ['ACHERON', 'Ⅰ', b1 >= 2],
        [open2 ? 'ORTHROS' : '???', 'Ⅱ', b2 >= 1], [open2 ? 'CHARON' : '???', 'Ⅱ', b2 >= 2], [open2 ? 'CERBERUS' : '???', 'Ⅱ', b2 >= 3]]
-    : [['BIDENT', 'Ⅰ', true], ['CERBERUS', 'Ⅱ', true], ['THANATOS', 'Ⅲ', b3 >= 1], ['HYPNOS', 'Ⅲ', b3 >= 2], ['THE GATE', 'Ⅲ', b3 >= 3]];
+    : b3 < 3 ? [['BIDENT', 'Ⅰ', true], ['CERBERUS', 'Ⅱ', true], ['THANATOS', 'Ⅲ', b3 >= 1], ['HYPNOS', 'Ⅲ', b3 >= 2], ['THE GATE', 'Ⅲ', b3 >= 3]]
+    : [['CERBERUS', 'Ⅱ', true], ['THE GATE', 'Ⅲ', true], ['LETHE', 'Ⅳ', b4 >= 1], ['EREBUS', 'Ⅳ', b4 >= 2], ['NYX', 'Ⅳ', b4 >= 3]];
   const cur = nodes.findIndex(n => !n[2]);
   tl.innerHTML = nodes.map(([name, ch, done], i) =>
-    `<div class="${ch === 'Ⅱ' ? 'ch2' : ch === 'Ⅲ' ? 'ch3' : ''}${done ? ' reached' : ''}${i === cur ? ' current' : ''}">${name}<span class="sub">CHAPTER ${ch}</span></div>`).join('');
+    `<div class="${ch === 'Ⅱ' ? 'ch2' : ch === 'Ⅲ' ? 'ch3' : ch === 'Ⅳ' ? 'ch4' : ''}${done ? ' reached' : ''}${i === cur ? ' current' : ''}">${name}<span class="sub">CHAPTER ${ch}</span></div>`).join('');
   setText(document.querySelector('.rot-tagline'), CH_TAG[chapter] || CH_TAG[1]);
 }
 _shopMQ.addEventListener ? _shopMQ.addEventListener('change', () => refreshRotStats()) : _shopMQ.addListener(() => refreshRotStats());
@@ -4618,6 +4641,14 @@ const sfx = {
     } else if (sp === 'F') {   // SOL: big, warm, a bit rough
       const m = 60 + [0, 4, 7][(r * 3) | 0];
       voice({ type: 'triangle', f: mtof(m), f2: mtof(m - 3), t, dur: 0.08, vol: 0.06, out: AU.sfxBus, lp: 2200 });
+    } else if (sp === 'N') {   // NYX: low, calm, like a lullaby in a cathedral
+      const m = 64 + [0, 3, 7, 10][(r * 4) | 0];
+      voice({ type: 'sine', f: mtof(m), f2: mtof(m - 2), t, dur: 0.16, vol: 0.05, out: AU.sfxBus, rev: 0.6 });
+    } else if (sp === 'L') {   // LETHE: bright, bubbly, childlike
+      const m = 86 + [0, 2, 5, 9][(r * 4) | 0];
+      voice({ type: 'triangle', f: mtof(m), f2: mtof(m + 3), t, dur: 0.04, vol: 0.045, out: AU.sfxBus, rev: 0.3 });
+    } else if (sp === 'E') {   // EREBUS: a deep, swallowed rumble
+      voice({ type: 'sine', f: mtof(33), f2: mtof(31), t, dur: 0.2, vol: 0.07, out: AU.sfxBus, lp: 300, rev: 0.6 });
     } else if (sp === 'M') {   // MIMOSA: soft and warm
       const m = 72 + [0, 4, 7, 9][(r * 4) | 0];
       voice({ type: 'sine', f: mtof(m), f2: mtof(m - 2), t, dur: 0.07, vol: 0.05, out: AU.sfxBus });
@@ -4629,7 +4660,7 @@ const sfx = {
     // radio channel opening: static burst + two-tone chirp
     noiseHit({ t, dur: 0.09, vol: 0.06, out: AU.sfxBus, type: 'bandpass', f: 2200, q: 1.5 });
     if (sp === 'P') { voice({ type: 'sine', f: 1320, t, dur: 0.05, vol: 0.05, out: AU.sfxBus }); voice({ type: 'sine', f: 1760, t: t + 0.06, dur: 0.06, vol: 0.045, out: AU.sfxBus }); }
-    else if ('SAOCHTY'.includes(sp)) { voice({ type: 'square', f: 440, t, dur: 0.06, vol: 0.04, out: AU.sfxBus, lp: 1800 }); voice({ type: 'square', f: 330, t: t + 0.07, dur: 0.08, vol: 0.04, out: AU.sfxBus, lp: 1800 }); }
+    else if ('SAOCHTYNLE'.includes(sp)) { voice({ type: 'square', f: 440, t, dur: 0.06, vol: 0.04, out: AU.sfxBus, lp: 1800 }); voice({ type: 'square', f: 330, t: t + 0.07, dur: 0.08, vol: 0.04, out: AU.sfxBus, lp: 1800 }); }
     else voice({ type: 'triangle', f: 900, f2: 1500, t, dur: 0.09, vol: 0.06, out: AU.sfxBus });
   },
   // ── boss SFX ──
@@ -5017,7 +5048,9 @@ function saveProgression() {
 const skillDef = id => SKILL_DEFS.find(s => s.id === id);
 // HARDCORE (secret mode): skills are switched off for the run, XP doubled
 let hardcoreRun = false;
-function hasSkill(id) { return !hardcoreRun && equippedSkills.includes(id); }
+let forgetT = {};               // CHAPTER 4: skills LETHE made the pilot forget (frames left)
+let ch4Alone = false;           // CHAPTER 4: EREBUS has fallen this run — PALLAS has left to become the shield
+function hasSkill(id) { return !hardcoreRun && equippedSkills.includes(id) && !(forgetT[id] > 0); }
 function ownedRank(id) { return ownedSkills.includes(id) ? (skillRanks[id] || 1) : 0; }
 function rank(id) { return hasSkill(id) ? ownedRank(id) : 0; }
 function maxRank(sk) { return sk.ranks ? sk.ranks.length : 1; }
@@ -5246,6 +5279,7 @@ function clearWorld() {
   cleanupBoss();
   for (const m of mists) removeMist(m);
   mists = []; drowsy = 0; sleepT = 0; mistSpawnT = 600; runSaid = {};
+  forgetT = {}; eclipseT = 0; flareT = 0; nightR = 150; ch4Alone = false;
 }
 
 let introT = 0;                 // frames of the post-prologue fly-in (gravity held)
@@ -5500,6 +5534,56 @@ function syncMistUI() {
   veilEl.style.setProperty('--vx', (P.x / VW * 100).toFixed(1) + '%'); veilEl.style.setProperty('--vy', (P.y / VH * 100).toFixed(1) + '%');
 }
 
+// ── CHAPTER 4: the night and LETHE's forgetting ──
+// The whole chapter is flown at night: only a pool of light round the ship is clear. PULSE flares it
+// wide for a moment; EREBUS's eclipse squeezes it; in NYX's last stage the dawn creeps in as she
+// weakens. LETHE's bubbles don't hurt — they make the pilot forget one equipped skill for 8 s.
+// PULSE brings every forgotten skill back.
+let eclipseT = 0, flareT = 0, nightR = 150;
+const nightEl = document.getElementById('night-veil'), forgetEl = document.getElementById('hud-forget');
+const isForgotten = id => forgetT[id] > 0;
+function forgetSkill() {
+  const pool = equippedSkills.filter(id => !isForgotten(id));
+  if (!pool.length) return;
+  const id = pick(pool), sk = skillDef(id);
+  forgetT[id] = 480;
+  pushBonus(P.x, P.y - 26, `${sk ? sk.name : id} を忘れた…`, '#9fe8ff');
+  spawnSparks(P.x, P.y, 12, { vMin: 1, vMax: 4, color: 0x9fe8ff });
+  fxFlash(0x9fe8ff, 0.2); sfx.reflect();
+  sayOnceRun('forget', [['R', '……あれ？ 今、何を……'], ['P', 'スキルを忘れさせられています！ PULSE で思い出して！']]);
+}
+function rememberAll() {
+  if (!Object.keys(forgetT).some(isForgotten)) return;
+  forgetT = {};
+  pushBonus(P.x, P.y - 40, '思い出した！', '#e8fbff');
+}
+function nightTick(dt) {
+  for (const k in forgetT) if (forgetT[k] > 0) forgetT[k] -= dt;
+  if (chapter !== 4) return;
+  if (eclipseT > 0) eclipseT -= dt;
+  if (flareT > 0) flareT -= dt;
+  // the pool of light: wide during a flare, narrow in an eclipse, and the dawn in NYX's last stage
+  let want = 150;
+  if (eclipseT > 0) want = 92;
+  if (flareT > 0) want = Math.max(want, 300);
+  nightR += (want - nightR) * Math.min(1, 0.08 * dt);
+}
+function nightDawn() {      // 0 = full night, 1 = morning (NYX's last stage, as her HP falls)
+  return boss && boss.def.id === 'nyx' && boss.stage === 2 ? Math.min(1, (34 - boss.hp) / 34) : 0;
+}
+function syncNightUI() {
+  const on = chapter === 4 && (gstate === 'play' || gstate === 'paused' || gstate === 'dead');
+  const names = equippedSkills.filter(isForgotten).map(id => (skillDef(id) || {}).name || id);
+  forgetEl.hidden = !(on && names.length);
+  if (names.length) setText(forgetEl, '忘却: ' + names.join(' / '));
+  if (!on) { nightEl.style.opacity = 0; return; }
+  const dawn = nightDawn();
+  nightEl.style.opacity = ((boss && boss.state !== 'dying' ? 0.8 : 0.92) * (1 - dawn * 0.85)).toFixed(3);   // a little lighter while a flagship is in view
+  nightEl.style.setProperty('--vx', (P.x / VW * 100).toFixed(1) + '%'); nightEl.style.setProperty('--vy', (P.y / VH * 100).toFixed(1) + '%');
+  nightEl.style.setProperty('--nr', (nightR * (1 + dawn * 2)).toFixed(0));
+  nightEl.classList.toggle('eclipse', eclipseT > 0);
+}
+
 function update(dt) {
   tick += dt;
   // Exponential decay approximated linearly for small dt
@@ -5653,6 +5737,7 @@ function update(dt) {
   if (!boss) Story.tick(dt);
   bossTick(dt);
   mistTick(dt);
+  nightTick(dt);
 
   // Bullets (FORWARD SHOT skill).
   // Swept collision: the bullet moves up to 11*dt px/frame which can exceed
@@ -5809,7 +5894,7 @@ function update(dt) {
       if (e.dead) continue;
       const dist = Math.hypot(pr.x - e.x, pr.y - e.y);
       if (dist > pr.r + e.r || dist < pr.prevR - e.r) continue;
-      if (e.type === 'p' && e.dark) { killEnemy(e, 'pulse'); continue; }
+      if (e.type === 'p' && (e.dark || e.forget)) { killEnemy(e, 'pulse'); continue; }
       if (e.type === 'p') {
         if (!e.reflected) { e.reflected = true; e.life = 400; sfx.reflect(); Story.onReflect(); pushBonus(e.x, e.y - 14, 'REFLECT', '#7ff6ff'); spawnSparks(e.x, e.y, 10, { color: 0x7ff6ff }); }
         continue;
@@ -5913,6 +5998,7 @@ function update(dt) {
   for (const e of enemies) {
     if (e.reflected) continue;
     const dx = P.x-e.x, dy = P.y-e.y, rr = P.r+e.r;
+    if (e.forget) { if (dx*dx + dy*dy < rr*rr && !e.dead) { e.dead = true; e.life = 0; forgetSkill(); } continue; }
     if (dx*dx + dy*dy < rr*rr) { deathCause = e.type === 's' ? 'seeker' : e.type === 'p' ? 'plasma' : 'bullet'; die(); return; }
   }
 }
@@ -6060,6 +6146,7 @@ function syncScene() {
     if (e.type === 'p') {
       const ring = grp.getObjectByName('pring'), core = grp.getObjectByName('pcore');
       ring.rotation.set(e.spin * 0.6, e.spin, 0);
+      if (e.forget && !e._recol) { e._recol = true; core.material.color.setHex(0xe8fbff); ring.material.color.setHex(0x9fe8ff); grp.children[2].material.color.setHex(0x5ac8ff); }
       if (e.dark && !e._recol) { e._recol = true; core.material.color.setHex(0x2a0a4a); ring.material.color.setHex(0x8a3aff); grp.children[2].material.color.setHex(0x6a20e0); }
       if (e.reflected && !e._recol) { e._recol = true; core.material.color.setHex(0x7ff6ff); ring.material.color.setHex(0xd0fbff); grp.children[2].material.color.setHex(0x00e8ff); }
       grp.scale.setScalar(1.25 + Math.sin(e.spin * 2) * 0.08);
@@ -6215,12 +6302,13 @@ function refreshTitleInfo() {
   refreshRotStats();
 }
 // CHAPTER select: appears once ACHERON has fallen
-const CH_TAG = { 1: '宇宙海賊団バイデントを追え', 2: '冥王ハデスの影を追え', 3: '眠りの門の向こうへ' };
+const CH_TAG = { 1: '宇宙海賊団バイデントを追え', 2: '冥王ハデスの影を追え', 3: '眠りの門の向こうへ', 4: '夜を越えて、夜明けへ' };
 function refreshChapterUI() {
-  const open2 = bossBest >= BOSS_DEFS.length, open3 = bossBest2 >= BOSS_DEFS2.length;
-  if (!open2 || (chapter === 3 && !open3)) chapter = 1;
+  const open2 = bossBest >= BOSS_DEFS.length, open3 = bossBest2 >= BOSS_DEFS2.length, open4 = bossBest3 >= BOSS_DEFS3.length;
+  if (!open2 || (chapter === 3 && !open3) || (chapter === 4 && !open4)) chapter = 1;
   document.getElementById('t-chapter').hidden = !open2;
   document.querySelector('#t-chapter [data-ch="3"]').hidden = !open3;
+  document.querySelector('#t-chapter [data-ch="4"]').hidden = !open4;
   for (const b of document.querySelectorAll('#t-chapter [data-ch]')) b.classList.toggle('on', +b.dataset.ch === chapter);
   setText(document.querySelector('.t-tag'), CH_TAG[chapter]);
 }
@@ -6229,6 +6317,7 @@ function setChapter(ch) {
   chapter = ch; localStorage.setItem('hd_chapter', String(ch));
   if (ch === 2) loadPart2Models();
   if (ch === 3) loadPart3Models();
+  if (ch === 4) loadPart4Models();
   ui.select(); refreshChapterUI(); refreshRotStats();
 }
 for (const b of document.querySelectorAll('#t-chapter [data-ch]')) onTap(b, () => setChapter(+b.dataset.ch));
@@ -6499,7 +6588,8 @@ const commQ = [];
 let commCur = null;              // { sp, text, shown, hold }
 function commSay(lines) {
   if (gstate !== 'play') return;
-  for (const l of lines) if (commQ.length < 6) commQ.push(l);
+  const alone = chapter === 4 && (ch4Alone || (boss && boss.def.id === 'nyx'));   // PALLAS has become the shield's core: no voice from here on
+  for (const l of lines) if (commQ.length < 6 && !(alone && l[0] === 'P')) commQ.push(l);
 }
 function commClear() {
   commQ.length = 0; commCur = null;
@@ -6555,6 +6645,7 @@ const isMorning = () => { const h = hourNow(); return h >= 5 && h < 10; };
 const bossDone = () => (typeof bossBest === 'number' ? bossBest : 0);
 const bossDone2 = () => (typeof bossBest2 === 'number' ? bossBest2 : 0);
 const bossDone3 = () => (typeof bossBest3 === 'number' ? bossBest3 : 0);
+const bossDone4 = () => (typeof bossBest4 === 'number' ? bossBest4 : 0);
 const secCount = () => (typeof secretsFound !== 'undefined' ? secretsFound.length : 0);
 
 const CHAT = {
@@ -6612,6 +6703,12 @@ const CHAT = {
     { ch: 3, w: () => bossDone3() === 2, p: 6, l: [['P', '門は270秒地点です。'], ['R', '……今度こそ、連れて帰る。']] },
     { ch: 3, w: () => bossDone3() >= 3, l: [['R', '父さん、今ごろ何してるかな。'], ['P', 'ミモザさんに怒られているそうです。'], ['R', '……だろうな。']] },
     { ch: 3, w: () => bossDone3() >= 3, l: [['P', 'ソルから伝言です。「次は俺も飛ぶ」'], ['R', '……負けないぞ。']] },
+    // CHAPTER 4
+    { ch: 4, p: 3, l: [['R', '……暗いな。'], ['P', '夜です。機体のまわりしか見えません。PULSE で照らせます。']] },
+    { ch: 4, w: () => bossDone4() === 0, p: 6, l: [['P', '忘却の河の反応、90秒地点。'], ['R', '忘れてたまるか。']] },
+    { ch: 4, w: () => bossDone4() === 1, p: 6, l: [['P', 'エレボスは180秒地点。光を吸い込む盾です。'], ['R', 'お前が照らしてくれるだろ。'], ['P', '……はい。']] },
+    { ch: 4, w: () => bossDone4() === 2, p: 6, l: [['P', 'ニュクスは270秒地点です。'], ['R', '……ああ。'], ['P', '……大丈夫。あなたなら。']] },
+    { ch: 4, w: () => bossDone4() >= 3, l: [['P', '夜明け後の哨戒任務です。'], ['R', '……今日も、ちゃんと見てろよ。'], ['P', '記録しています。']] },
   ],
   zone1: [
     [['P', 'バイデントの前線に入ります。砲撃に注意。'], ['R', '見えてる。……たぶん。']],
@@ -6724,11 +6821,13 @@ const CHAT = {
   m60:  [[['P', '1分経過。悪くないペースです。'], ['R', '悪くない、じゃなくて最高、だろ。']], [['R', '1分か。腹が減ってきた。'], ['P', '早すぎます。']]],
   m90:  [{ ch: 2, l: [['P', '猟犬の反応、接近。'], ['R', '来い、ワンコロ。']] },
          { ch: 3, l: [['P', '前方に冷たい反応。……門の番人です。'], ['R', '……来るか。']] },
+         { ch: 4, l: [['P', '前方に、泡の反応。……レテです。'], ['R', '覚えてる。全部な。']] },
          { ch: 1, w: () => bossDone() === 0, l: [['P', '大型艦の反応が近づいています。'], ['R', '……来るなら来い。']] },
          [['P', '90秒。集中力、維持してください。'], ['R', '維持どころか上がってる。']]],
   m180: [[['R', '3分……翼がしびれてきた。'], ['P', 'あと少しです。たぶん。']], { ch: 1, w: () => bossNext === 1, l: [['P', '3分経過。'], ['R', 'アケロンまで、あと1分か。']] },
          { ch: 2, w: () => bossNext === 2, l: [['P', '3分経過。カロンの反応、消失。'], ['R', 'みんな……無事でいてくれ。']] },
-         { ch: 3, w: () => bossNext === 2, l: [['P', '3分経過。……門が、見えてきました。'], ['R', 'あの向こうに、父さんが。']] }],
+         { ch: 3, w: () => bossNext === 2, l: [['P', '3分経過。……門が、見えてきました。'], ['R', 'あの向こうに、父さんが。']] },
+         { ch: 4, w: () => bossNext === 2, l: [['P', '3分経過。……夜の盾が、見えてきました。'], ['R', '……照らしてやる。']] }],
   m300: [[['P', '5分経過。驚異的です。'], ['R', '知ってた。']]],
   m420: [[['P', '7分。もはや伝説です。'], ['R', '伝説の鳥、レイ。いい響きだ。']]],
   m600: [[['P', '10分。……あなたは本当に、パイロットです。'], ['R', '……知ってるよ。']]],
@@ -6765,6 +6864,9 @@ const CHAT = {
     { ch: 3, l: [['R', '……ちょっと眠い。'], ['P', '霧のせいです。寝たら起こします。全力で。'], ['R', 'お手柔らかに。']] },
     { ch: 3, l: [['P', 'ソルは、どんな夢を見ているのでしょう。'], ['R', '……飛んでる夢だろ。きっと。']] },
     { ch: 3, l: [['R', '父さんに会ったら、なんて言おう。'], ['P', '「ただいま」ではなく「おかえり」ですね。']] },
+    { ch: 4, l: [['R', 'なあパラス、夜って怖いか？'], ['P', '……いいえ。あなたが光っていますから。'], ['R', '葉っぱのことか？'], ['P', 'そういうことにしておきます。']] },
+    { ch: 4, l: [['P', 'レイ。……いえ、なんでもありません。'], ['R', 'なんだよ、気になるな。']] },
+    { ch: 4, l: [['R', 'ハデスのやつ、意外といいとこあるよな。'], ['P', '父親同士で張り合っているそうです。'], ['R', '……なんでだよ。']] },
   ],
 };
 
@@ -6966,6 +7068,14 @@ const LOGS = [
     text: '目を覚ました父さんの最初の言葉は「でかくなったな」だった。ばあちゃんと同じこと言うな。\nその夜、父さんはばあちゃんにこってり怒られていた。パラスは記録していた。\n家族写真が一枚増えた。……門の奥で、何かが光った気がしたけど、今夜はいい。' },
   { id: 'sun', title: '太陽', hint: 'CHAPTER Ⅲ をクリアして、ソルの機体を見る', ok: () => bossBest3 >= 3,
     text: '父さんの機体は、オレンジの太陽みたいな色をしている。\n「次は俺も飛ぶ」って言ってた。望むところだ。\n何度だって立ち上がる。——今度は、親子で。' },
+  { id: 'night', title: '夜', hint: 'CHAPTER Ⅳ を始める', ok: () => !!localStorage.getItem('hd_prologue4'),
+    text: '星がひとつずつ消えていく。ばあちゃんは黙って空を見ていた。\nハデスが丘に降りてきた。父さんは身構えたけど、あいつは「夜が来る」としか言わなかった。\nパラスが、少しだけ静かだった。' },
+  { id: 'lethe', title: '証拠', hint: 'CHAPTER Ⅳ：レテを撃破', ok: () => bossBest4 >= 1,
+    text: 'パラスのせいじゃなかった。証拠は、食べられてたんだ。\nパラスは「記録しておきます」とだけ言った。いつもより、声が小さかった。\nハデスは盾を返した。「夜が怖かった」って。……王様も、怖いんだな。' },
+  { id: 'record', title: '記録しました', hint: 'CHAPTER Ⅳ：エレボスを撃破', ok: () => bossBest4 >= 2,
+    text: 'あいつは全部数えてた。俺が落ちた回数も、立ち上がった回数も。\n「いってらっしゃい」って言われた。……おかえりは、言わせてくれないのかよ。\n何度だって立ち上がる。今度は、ひとりで。' },
+  { id: 'dawn', title: '夜明け', hint: 'CHAPTER Ⅳ：ニュクスを越える', ok: () => bossBest4 >= 3,
+    text: '夜が明けた。丘の樹は、見上げるくらい大きくなった。\n樹の奥で、ときどき小さな六角形の光がまたたく。俺が良い飛行をした日に限って。\n……ちゃんと見てるんだな、相棒。' },
   { id: 'secrets', title: '隠し機能', hint: 'SECRETS を5つ発見', ok: () => secretsFound.length >= 5,
     text: 'この機体、隠し機能が多すぎる。ロゴを叩くと画面が緑になるし、逆さに回すと世界が反転する。\nパラスに聞いたら「設計者の趣味です」とだけ返ってきた。\nアイギスの技術者、たぶん俺と気が合う。' },
 ];
@@ -7014,12 +7124,16 @@ const REPLAYS = [
   { ch: 3, k: '序章', ok: () => !!localStorage.getItem('hd_prologue3'), go: () => Prologue3.play({ fromLog: true }) },
   { ch: 3, k: '夢', ok: () => bossBest3 >= 2, go: () => Dream.play({ fromLog: true }) },
   { ch: 3, k: '終章', ok: () => bossBest3 >= BOSS_DEFS3.length, go: () => Epilogue3.play({ fromLog: true }) },
+  { ch: 4, k: '序章', ok: () => !!localStorage.getItem('hd_prologue4'), go: () => Prologue4.play({ fromLog: true }) },
+  { ch: 4, k: '盾', ok: () => bossBest4 >= 1, go: () => Shields.play({ fromLog: true }) },
+  { ch: 4, k: '記録', ok: () => bossBest4 >= 2, go: () => Record.play({ fromLog: true }) },
+  { ch: 4, k: '終章', ok: () => bossBest4 >= BOSS_DEFS4.length, go: () => Epilogue4.play({ fromLog: true }) },
 ];
 function renderReplays() {
   const row = document.getElementById('log-replay');
-  row.innerHTML = [1, 2, 3].map(ch => {
+  row.innerHTML = [1, 2, 3, 4].map(ch => {
     const bs = REPLAYS.map((r, i) => r.ch === ch && r.ok() ? `<button class="btn-mini" type="button" data-rp="${i}">${r.k} ▶</button>` : '').join('');
-    return bs ? `<span class="rp-grp ch${ch}"><em>${['Ⅰ', 'Ⅱ', 'Ⅲ'][ch - 1]}</em>${bs}</span>` : '';
+    return bs ? `<span class="rp-grp ch${ch}"><em>${['Ⅰ', 'Ⅱ', 'Ⅲ', 'Ⅳ'][ch - 1]}</em>${bs}</span>` : '';
   }).join('');
   for (const b of row.querySelectorAll('[data-rp]')) onTap(b, () => { closeLog(); REPLAYS[+b.dataset.rp].go(); });
 }
@@ -7352,6 +7466,11 @@ const Prologue = (() => {
 })();
 // START from the title: the first time, the prologue plays before the run
 function requestStart() {
+  if (chapter === 4) {                       // CHAPTER 4: its own prologue the first time
+    if (!localStorage.getItem('hd_prologue4')) Prologue4.play({ onDone: () => startGame({ intro: true }) });
+    else startGame();
+    return;
+  }
   if (chapter === 3) {                       // CHAPTER 3: its own prologue the first time
     if (!localStorage.getItem('hd_prologue3')) Prologue3.play({ onDone: () => startGame({ intro: true }) });
     else startGame();
@@ -7415,12 +7534,32 @@ const BOSS_DEFS3 = [
       { open: true, label: '開かれた扉', color: 0xa890ff, cycle: ['cores', 'spiral', 'mist', 'plasma', 'cores', 'dark', 'jaws', 'spiral', 'plasma'] },
     ] },
 ];
-let chapter = [2, 3].includes(+localStorage.getItem('hd_chapter')) ? +localStorage.getItem('hd_chapter') : 1;   // chapter of the current / next run
+// CHAPTER 4 (unlocked by opening THE GATE): the night. LETHE (the river of forgetting — her bubbles
+// make the pilot forget a skill), EREBUS (the shield of night that drinks the light) and NYX herself,
+// whose last stage is flown without PALLAS — and with everyone else.
+const BOSS_AT4 = [90, 180, 270];
+const BOSS_DEFS4 = [
+  { id: 'lethe', name: 'LETHE', title: '忘却の河', color: 0x9fe8ff, css: '#9fe8ff', hull: 0x2a4a5a,
+    cannon: 16, reflect: 8, bullet: 0.5, rail: 3, xp: 1200,
+    cycle: ['cores', 'forget', 'river', 'plasma', 'cores', 'lullaby', 'forget', 'river', 'plasma'], every: 92, rageEvery: 70 },
+  { id: 'erebus', name: 'EREBUS', title: '闇の盾', color: 0x8a6aff, css: '#a890ff', hull: 0x0b0b12,
+    cannon: 13, reflect: 6.5, bullet: 0.4, rail: 2.5, xp: 1500,
+    cycle: ['cores', 'nightwall', 'plasma', 'eclipse', 'cores', 'sweep', 'nightwall', 'mines', 'plasma'], every: 96, rageEvery: 74 },
+  { id: 'nyx', name: 'NYX', title: '夜の女神', color: 0xc8d0ff, css: '#d0d8ff', hull: 0x101a3a,
+    cannon: 10, reflect: 5, bullet: 0.3, rail: 2, xp: 2500, every: 92, rageEvery: 70,
+    stages: [
+      { label: '夜の帳', color: 0xa8b0ff, cycle: ['cores', 'starfall', 'plasma', 'lullaby', 'cores', 'moonring', 'starfall', 'plasma'] },
+      { label: '月の涙', color: 0xe0e4ff, cycle: ['cores', 'moonring', 'forget', 'plasma', 'cores', 'deathshot', 'starfall', 'nightwall', 'plasma'] },
+      { allies: true, label: '永遠の夜', color: 0xffd890, cycle: ['cores', 'starfall', 'eclipse', 'plasma', 'cores', 'spiral', 'moonring', 'forget', 'plasma'] },
+    ] },
+];
+let chapter = [2, 3, 4].includes(+localStorage.getItem('hd_chapter')) ? +localStorage.getItem('hd_chapter') : 1;   // chapter of the current / next run
 let bossBest2 = +localStorage.getItem('hd_boss2') || 0;            // CHAPTER 2 bosses ever defeated
 let bossBest3 = +localStorage.getItem('hd_boss3') || 0;            // CHAPTER 3 bosses ever defeated
-const chBossDefs = () => chapter === 3 ? BOSS_DEFS3 : chapter === 2 ? BOSS_DEFS2 : BOSS_DEFS;
-const chBossAt   = () => chapter === 3 ? BOSS_AT3 : chapter === 2 ? BOSS_AT2 : BOSS_AT;
-const chBossBest = () => chapter === 3 ? bossBest3 : chapter === 2 ? bossBest2 : bossBest;
+let bossBest4 = +localStorage.getItem('hd_boss4') || 0;            // CHAPTER 4 bosses ever defeated
+const chBossDefs = () => chapter === 4 ? BOSS_DEFS4 : chapter === 3 ? BOSS_DEFS3 : chapter === 2 ? BOSS_DEFS2 : BOSS_DEFS;
+const chBossAt   = () => chapter === 4 ? BOSS_AT4 : chapter === 3 ? BOSS_AT3 : chapter === 2 ? BOSS_AT2 : BOSS_AT;
+const chBossBest = () => chapter === 4 ? bossBest4 : chapter === 3 ? bossBest3 : chapter === 2 ? bossBest2 : bossBest;
 let boss = null;                 // active fight
 let bossNext = 0;                // next boss index this run
 let bossLasers = [];
@@ -7463,6 +7602,20 @@ const HYPNOS_FACE = `<svg viewBox="0 0 64 64" aria-hidden="true"><rect x="6" y="
   <path d="M28 46q4 2 8 0" stroke="#a890ff" stroke-width="1.5" fill="none"/></svg>`;
 SPEAKERS.T = { name: 'THANATOS', face: THANATOS_FACE, cls: 'thanatos' };
 SPEAKERS.Y = { name: 'HYPNOS', face: HYPNOS_FACE, cls: 'hypnos' };
+const NYX_FACE = `<svg viewBox="0 0 64 64" aria-hidden="true"><rect x="6" y="6" width="52" height="52" rx="6" fill="#060a1c" stroke="#d0d8ff" stroke-width="2"/>
+  <path d="M10 56c0-20 10-34 22-34s22 14 22 34z" fill="#3a3a7a" opacity="0.6"/><circle cx="32" cy="36" r="13" fill="#1e2a5a"/>
+  <path d="M25 36q3 2 6 0M33 36q3 2 6 0" stroke="#d0d8ff" stroke-width="2" fill="none"/><path d="M29 41l3 3 3-3" fill="#c8c8e8"/>
+  <path d="M24 14a10 10 0 1 0 16 0a8 8 0 1 1-16 0z" fill="#dfe2f4"/><circle cx="20" cy="22" r="1.4" fill="#fff"/><circle cx="44" cy="22" r="1.4" fill="#fff"/></svg>`;
+const LETHE_FACE = `<svg viewBox="0 0 64 64" aria-hidden="true"><rect x="6" y="6" width="52" height="52" rx="6" fill="#0a1c24" stroke="#9fe8ff" stroke-width="2"/>
+  <circle cx="32" cy="38" r="17" fill="#bfeeff"/><circle cx="25" cy="35" r="5.5" fill="#fff"/><circle cx="39" cy="35" r="5.5" fill="#fff"/>
+  <circle cx="26" cy="36" r="3.2" fill="#9a6ae0"/><circle cx="40" cy="36" r="3.2" fill="#9a6ae0"/><path d="M29 43l3 4 3-4" fill="#ffd6a0"/>
+  <path d="M38 18l-8-6v12zM38 18l8-6v12z" fill="#c8a8ff"/><circle cx="38" cy="18" r="2.5" fill="#c8a8ff"/></svg>`;
+const EREBUS_FACE = `<svg viewBox="0 0 64 64" aria-hidden="true"><rect x="6" y="6" width="52" height="52" rx="6" fill="#020206" stroke="#8a6aff" stroke-width="2"/>
+  <path d="M32 12l17 10v20L32 52 15 42V22z" fill="#121220" stroke="#3a2a7a" stroke-width="1.5"/><circle cx="32" cy="32" r="8" fill="#000"/>
+  <circle cx="32" cy="32" r="10" fill="none" stroke="#8a6aff" stroke-width="1.6"/></svg>`;
+SPEAKERS.N = { name: 'NYX', face: NYX_FACE, cls: 'nyx' };
+SPEAKERS.L = { name: 'LETHE', face: LETHE_FACE, cls: 'lethe' };
+SPEAKERS.E = { name: 'EREBUS', face: EREBUS_FACE, cls: 'erebus' };
 
 const BOSS_LINES = {
   styx: {
@@ -7567,6 +7720,34 @@ Object.assign(BOSS_LINES, {
     defeatAgain: [ [['Y', 'またね。'], ['R', 'もう来ないかもな。'], ['P', '来ますよ、きっと。']] ],
   },
 });
+Object.assign(BOSS_LINES, {
+  lethe: {
+    intro:  [['L', 'ねえねえ、あなたがレイ？'], ['L', 'その葉っぱ、いい匂い。……記憶の匂いがする。'], ['R', '誰だ、お前。'], ['L', 'レテ。忘れさせてあげる係。'],
+             ['P', '忘却の泡です。触れるとスキルを忘れます。PULSE で思い出せます。']],
+    rage:   [['L', 'もう、なんで忘れないの？'], ['R', '忘れたくないことばっかりなんでな。']],
+    defeat: [['L', '……あ、そうだ。いいこと教えてあげる。'], ['L', '一年前の、裏口の証拠。……あたしが食べたの。おいしかったよ。'], ['P', '…………。'], ['R', '……パラス。お前のせいじゃ、なかったんだ。']],
+    again: [ [['L', 'また来たの？ 今度こそ、ちょうだい。'], ['R', 'やらない。']], [['L', 'ねえ、忘れたいことってない？'], ['R', '……あるけど、やらない。']] ],
+    defeatAgain: [ [['L', 'ちぇー。'], ['P', '記録しました。']], [['L', '覚えてなさいよー。'], ['R', 'お前が言うな。']] ],
+  },
+  erebus: {
+    intro:  [['E', '…………'], ['P', '巨大な反応。……光を吸い込んでいます。'], ['H', 'エレボス。夜の盾だ。……我の盾ですら、あれは破れなかった。'], ['R', 'なら、俺たちが破る。'],
+             ['P', '光を吸われたら、PULSE で照らして。']],
+    rage:   [['E', '…………'], ['P', '盾の表面に亀裂。押し切って！']],
+    defeat: [['E', '……ひかり……'], ['P', '夜の盾、崩壊。ニュクスへの道が開きました。'], ['R', '……パラス？'], ['P', '……いえ。何でもありません。']],
+    again: [ [['E', '…………'], ['R', '相変わらず無口だな。']], [['P', '夜の盾、再展開を確認。'], ['R', '何度でも破ってやる。']] ],
+    defeatAgain: [ [['E', '……'], ['R', '通してもらうぞ。']] ],
+  },
+  nyx: {
+    intro:  [['N', 'いらっしゃい、坊や。'], ['N', 'たくさん傷ついたでしょう。……もういいのよ。忘れていいの。'], ['R', '忘れない。'],
+             ['R', '……全部、覚えててくれた奴がいるんだ。だから俺も、覚えてる。']],
+    stage1: [['N', '……強い子ね。でも、夜はまだ深いわ。'], ['R', '（見てろよ、パラス）']],
+    stage2: [['N', 'どうして……どうしてそこまで、覚えていたいの？'], ['F', 'レイ！ 待たせたな！'], ['H', '……借りを返しに来た。'], ['Y', 'かあさん……もう、いいんだよ。'], ['T', '……行け、鳥。']],
+    rage:   [['N', '……あたたかい。']],
+    defeat: [['Y', '……おやすみ、かあさん。今度は、ぼくが子守唄を歌うよ。'], ['N', '……あなたは、覚えていることを選ぶのね。'], ['R', '……ああ。全部、持っていく。']],
+    again: [ [['N', 'また来たのね、坊や。'], ['R', '何度だって来る。']], [['N', '眠っていけばいいのに。'], ['R', '起きてる方が、楽しいんだ。']] ],
+    defeatAgain: [ [['N', '……おやすみなさい。'], ['R', 'おやすみ。']], [['N', '……覚えていてね。'], ['R', '忘れるもんか。']] ],
+  },
+});
 const sayOnce = (b, key, lines) => { if (!b.said[key]) { b.said[key] = true; commSay(lines); } };
 
 // ── Flagship model ──
@@ -7574,7 +7755,8 @@ const sayOnce = (b, key, lines) => { if (!b.said[key]) { b.said[key] = true; com
 // where the ship parks — the models are ~2× the old procedural ones
 const BOSS_MODEL = { styx: { tipDX: 324, tipDY: 80, bossX: VW + 10 }, acheron: { tipDX: 324, tipDY: 80, bossX: VW - 20 },
   orthros: { scale: 0.9, bossX: VW - 10 }, charon: { scale: 0.85, bossX: VW + 30 }, cerberus: { scale: 0.7, bossX: VW + 50, heads: true },
-  thanatos: { scale: 0.6, bossX: VW - 40 }, hypnos: { scale: 0.55, bossX: VW - 70 }, gate: { scale: 0.5, bossX: VW - 70 } };
+  thanatos: { scale: 0.6, bossX: VW - 40 }, hypnos: { scale: 0.55, bossX: VW - 70 }, gate: { scale: 0.5, bossX: VW - 70 },
+  lethe: { scale: 0.5, bossX: VW - 40 }, erebus: { scale: 0.42, bossX: VW - 100, halo: 520 }, nyx: { scale: 0.36, bossX: VW - 140, halo: 640 } };
 function buildBossShip(def, second) {
   const g = new THREE.Group();
   if (MODELS[def.id]) {
@@ -7601,6 +7783,7 @@ function buildBossShip(def, second) {
     for (const n of ['engine_L', 'engine_R']) { const p = at(n); if (p) { const sp = glowSprite(def.color, 130, 0.7); sp.position.copy(p); g.add(sp); } }
     const c = at('core');
     if (c) { const cg = glowSprite(def.color, def.coreGlow || 200, 0.55); cg.position.copy(c); cg.name = 'coreGlow'; g.add(cg); }
+    if (c && BM.halo) { const h = glowSprite(def.color, BM.halo, 0.28); h.position.copy(c); h.position.z -= 40; g.add(h); }   // CHAPTER 4: a corona so the dark flagships read against the night
     let hull = null; m.traverse(o => { if (o.isMesh && o.material.name === 'hull') hull = o.material; });
     g.userData.hullMat = hull || new THREE.MeshStandardMaterial();
     Object.assign(g.userData, { bossX: BM.bossX, tipDX: g.userData.tipDX ?? BM.tipDX, tipDY: g.userData.tipDY ?? BM.tipDY });
@@ -7868,6 +8051,55 @@ const PATTERNS = {
     });
     sfx.bossFire(true);
   },
+  // ── CHAPTER 4 ──
+  forget() {                                 // LETHE's bubbles: harmless, but touching one makes you forget a skill
+    const n = boss.rage ? 4 : 3;
+    for (let i = 0; i < n; i++) bossLater(i * 16, () => {
+      const s = i % 2 ? 1 : -1, x = TIP_X(s), y = tipY(s);
+      enemies.push({ x, y, vx: -2.1, vy: 0, r: 10, type: 'p', forget: true, spin: 0, life: 800, boss: true, wave: 1.3, wp: i * 1.7 });
+      sfx.bossFire(true);
+    });
+    sayOnce(boss, 'forget', [['P', '泡に触れると、スキルを忘れます。PULSE で割れます。']]);
+  },
+  river() {                                  // two streams that wind like a river
+    const n = boss.rage ? 16 : 12;
+    for (let i = 0; i < n; i++) bossLater(i * 5, () => {
+      for (const s of [1, -1]) { const x = TIP_X(s), y = tipY(s);
+        enemies.push({ x, y, vx: -3.3, vy: 0, r: 5, type: 'b', spin: 0, life: 700, boss: true, wave: 2.2, wp: s > 0 ? 0 : Math.PI }); }
+    });
+    sfx.bossFire();
+  },
+  nightwall() {                              // EREBUS: a wall of night with one gap
+    const n = boss.rage ? 2 : 1;
+    for (let w = 0; w < n; w++) bossLater(w * 60, () => {
+      const x = boss.x - 150, gc = 70 + Math.random() * (VH - 140), gap = 70;
+      for (let y = 12; y < VH; y += 22) if (Math.abs(y - gc) > gap) bossShot(x, y, Math.PI, 2.6);
+      sfx.bossFire(true);
+    });
+    sayOnce(boss, 'nightwall', [['P', '闇の壁です。隙間を探して。']]);
+  },
+  eclipse() {                                // EREBUS / NYX: the light around the ship is swallowed for a while
+    eclipseT = boss.rage ? 300 : 240;
+    fxFlash(0x2a1a5a, 0.3);
+    sayOnce(boss, 'eclipse', [['P', '光が吸われています！ PULSE で照らして！']]);
+  },
+  starfall() {                               // NYX: stars fall from the night sky
+    const n = boss.rage ? 14 : 10;
+    for (let i = 0; i < n; i++) bossLater(i * 7, () => {
+      const x = 260 + Math.random() * (VW - 300), a = Math.PI * (0.62 + Math.random() * 0.12);
+      bossShot(x, -8, a, 3.2 + Math.random() * 0.8);
+    });
+    sfx.bossFire(true);
+  },
+  moonring() {                               // NYX: a ring of moonlight from her face
+    const n = boss.rage ? 22 : 18, waves = boss.rage ? 2 : 1;
+    for (let w = 0; w < waves; w++) bossLater(w * 30, () => {
+      const c = boss.mesh.getObjectByName('core'), p = c ? c.getWorldPosition(new THREE.Vector3()) : null;
+      const x = p ? p.x + VW / 2 : TIP_X(), y = p ? VH / 2 - p.y : boss.y;
+      for (let i = 0; i < n; i++) { const a = (i + w * 0.5) / n * Math.PI * 2; if (Math.cos(a) < 0.35) bossShot(x, y, a, 2.5); }
+      sfx.bossFire(true);
+    });
+  },
   dark() {                                   // darkness head: plasma that cannot be reflected
     const [x, y] = bossHeadXY('C'), n = boss.rage ? 3 : 2;
     for (let i = 0; i < n; i++) bossLater(i * 22, () => {
@@ -7878,6 +8110,39 @@ const PATTERNS = {
     });
   },
 };
+
+// NYX's last stage: SOL, HADES and the twins fly in and help, one after another
+function allyTick(dt) {
+  boss.allyT = (boss.allyT ?? 150) - dt;
+  if (boss.allyT > 0) return;
+  boss.allyT = 230;
+  const who = ['F', 'H', 'Y', 'T'][(boss.allyN = (boss.allyN || 0) + 1) % 4];
+  const shots = enemies.filter(e => e.boss && !e.dead && !e.reflected);
+  if (who === 'F') {          // SOL: a sunburst round the ship burns the shots away
+    for (const e of shots) if (Math.hypot(e.x - P.x, e.y - P.y) < 180) killEnemy(e, 'ally');
+    spawnRing(P.x, P.y, 0xffc060, 0xff5a1a, 180); fxFlash(0xffb040, 0.25);
+    pushBonus(P.x, P.y - 44, 'SOL — SUNBURST', '#ffb066'); bossHit(2.5, boss.x - 60, boss.y);
+  } else if (who === 'H') {   // HADES: his shield over the ship for a moment
+    P.inv = Math.max(P.inv, 100);
+    spawnRing(P.x, P.y, 0xff5a6a, 0x7a1a22, 90); fxFlash(0xff5a6a, 0.2);
+    pushBonus(P.x, P.y - 44, 'HADES — SHIELD', '#ff7a8a');
+  } else if (who === 'Y') {   // HYPNOS: a lullaby slows every shot down
+    for (const e of shots) { e.vx *= 0.4; e.vy *= 0.4; if (e.wave) e.wave *= 0.4; }
+    fxFlash(0xb8a0ff, 0.2);
+    pushBonus(P.x, P.y - 44, 'HYPNOS — LULLABY', '#d8c8ff');
+  } else {                    // THANATOS: a scythe clears a band through the shots
+    for (const e of shots) if (Math.abs(e.y - P.y) < 70) killEnemy(e, 'ally');
+    addLaserFx(P.y); fxFlash(0xcfe8ff, 0.2);
+    pushBonus(P.x, P.y - 44, 'THANATOS — REAP', '#cfe8ff'); bossHit(2.5, boss.x - 60, boss.y);
+  }
+  sweepDeadEnemies();
+  sfx.talk(who); sfx.talk(who);
+}
+function addLaserFx(y) {     // a harmless white streak across the screen
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(VW + 60, 10), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false }));
+  m.position.copy(W(VW / 2, y, 9)); scene.add(m);
+  beams.push({ mesh: m, life: 1, decay: 0.05, op: 0.9 });
+}
 
 // AEGIS CANNON: fires automatically once 3 cores are collected
 function fireCannon() {
@@ -7932,6 +8197,8 @@ function bossTick(dt) {
     PATTERNS[name]();
     boss.patT = boss.rage ? boss.def.rageEvery : boss.def.every;
   }
+  if (boss.def.stages && boss.def.stages[boss.stage].allies) allyTick(dt);
+  if (!boss) return;
   for (const q of boss.queue) { q.t -= dt; if (q.t <= 0 && !q.done) { q.done = true; q.fn(); } }
   if (boss && boss.queue.length) boss.queue = boss.queue.filter(q => !q.done);
   // lasers: telegraph → fire
@@ -7959,7 +8226,8 @@ function finishBoss() {
   pushBonus(P.x, P.y - 50, `${def.name} DEFEATED`, def.css);
   timeScale = 1;
   const firstClear = chBossBest() <= idx;   // story scenes mid-chapter play on the first win only (LOG replays them)
-  if (chapter === 3) { if (idx + 1 > bossBest3) { bossBest3 = idx + 1; localStorage.setItem('hd_boss3', String(bossBest3)); } }
+  if (chapter === 4) { if (idx + 1 > bossBest4) { bossBest4 = idx + 1; localStorage.setItem('hd_boss4', String(bossBest4)); } }
+  else if (chapter === 3) { if (idx + 1 > bossBest3) { bossBest3 = idx + 1; localStorage.setItem('hd_boss3', String(bossBest3)); } }
   else if (chapter === 2) { if (idx + 1 > bossBest2) { bossBest2 = idx + 1; localStorage.setItem('hd_boss2', String(bossBest2)); } }
   else if (idx + 1 > bossBest) { bossBest = idx + 1; localStorage.setItem('hd_boss', String(bossBest)); }
   cleanupBoss();
@@ -7969,7 +8237,10 @@ function finishBoss() {
   if (chapter === 2 && idx === 1 && firstClear) Confession.play({ live: true });
   if (chapter === 2 && idx === BOSS_DEFS2.length - 1) { loadPart3Models(); Epilogue2.play({ live: true }); }
   if (chapter === 3 && idx === 1 && firstClear) Dream.play({ live: true });
-  if (chapter === 3 && idx === BOSS_DEFS3.length - 1) Epilogue3.play({ live: true });
+  if (chapter === 3 && idx === BOSS_DEFS3.length - 1) { loadPart4Models(); Epilogue3.play({ live: true }); }
+  if (chapter === 4 && idx === 0 && firstClear) Shields.play({ live: true });
+  if (chapter === 4 && idx === 1) { ch4Alone = true; if (firstClear) Record.play({ live: true }); }
+  if (chapter === 4 && idx === BOSS_DEFS4.length - 1) Epilogue4.play({ live: true });
 }
 // laser hit test (called from the collision section)
 function bossLaserHits() {
@@ -9189,6 +9460,438 @@ const Epilogue3 = {
 };
 for (const c of [Prologue3, Dream, Epilogue3]) c.play = (o = {}) => loadPart3Models().then(() => Cine.play(c, o));
 
+// ══ CHAPTER 4 cutscenes ══════════════════════════════════════════════════════
+// a glowing hexagonal shield (the legendary shields HADES gives back; PALLAS's records)
+function cineHex(S, color, size = 8) {
+  const g = new THREE.Group();
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(size, size, size * 0.18, 6), new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.8, roughness: 0.3, metalness: 0.3, transparent: true, opacity: 0.9 }));
+  m.rotation.x = Math.PI / 2; g.add(m);
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(size * 1.02, size * 0.08, 4, 6), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+  rim.rotation.z = Math.PI / 6; g.add(rim);
+  const glow = glowSprite(color, size * 6, 0.6); g.add(glow);
+  g.userData = { m, glow }; S.E.add(g); return g;
+}
+// a few bright stars that go out one after another (the night spreading)
+function cineDyingStars(S, n = 24) {
+  S.lights = [];
+  for (let i = 0; i < n; i++) {
+    const g = glowSprite(i % 3 ? 0xe8f0ff : 0xffe8c8, 26 + Math.random() * 20, 0.9);
+    g.position.set(-900 + Math.random() * 1800, 260 + Math.random() * 700, -1600 - Math.random() * 400);
+    S.E.add(g); S.lights.push({ g, at: 0.6 + i * 0.32 + Math.random() * 0.2 });
+  }
+}
+function cineDyingTick(S, t) {
+  for (const L of S.lights) { const k = Math.min(1, Math.max(0, (t - L.at) / 0.5)); L.g.material.opacity = 0.9 * (1 - k) * (0.85 + Math.sin(t * 6 + L.at * 9) * 0.15); }
+}
+function cineHadesTick(h, t) {
+  if (!h) return;
+  const c = h.getObjectByName('cape'); if (c) c.rotation.x = 0.1 + Math.sin(t * 1.8) * 0.08;
+}
+const hillNight = S => {
+  S.paintSky([[0, 0x02040e], [0.5, 0x0a1430], [0.72, 0x16204a], [1, 0x080a14]]);
+  S.E.background = S.skyTex; S.E.fog = new THREE.Fog(0x0a1030, 500, 1800); S.stars.material.opacity = 0.5;
+  S.hemi.intensity = 1.0; S.key.color.setHex(0xa8b8ff); S.key.intensity = 1.2; S.key.position.set(-1, 1.4, 1.2);
+};
+const placeHero = S => { S.hero.position.set(-62, S.groundY(-62, -36) + 6, -36); S.hero.rotation.set(0, 0.5, 0.03); };
+
+// ── CHAPTER 4 prologue: a month after SOL's return, the stars go out; HADES lands on the hill ──
+const Prologue4 = {
+  flag: 'hd_prologue4', music: 'menu',
+  panels: [
+    { mood: 'night', lines: ['SOL RETURNS から、ひと月。', 'M:……星が、ひとつずつ消えていくねえ。', 'F:ああ。……嫌な夜だ。', 'R:パラス、あれ……',
+      'P:各星系のシールド反応、消失しています。……夜が、広がっています。'] },
+    { mood: 'hades', lines: ['!ズズン……', 'H:……夜が来る。', 'F:ハデス……！', 'H:待て、ソル。……戦いに来たのではない。',
+      'H:我が盾を集めたのは、このためだった。……あれが来ると、知っていたからだ。', 'R:あれ……？', 'H:夜の女神ニュクス。門の奥で眠っていた、双子の母だ。',
+      'P:…………', 'P:（盾の核……。なれるのは、私だけ）', 'R:パラス？', 'P:……いえ。発進準備、できています。', 'R:行くぞ。夜明けを取り戻しに。'],
+      on: { 0: S => { S.landT = 0; S.shake = 1; } } },
+  ],
+  build(S) {
+    Object.assign(S, cineStage(0x050a24)); cineHill(S); cineShip(S); hillNight(S); cineDyingStars(S);
+    S.ray = cineRay(S); S.pallas = cinePallas(S); S.mimosa = cineBird(S, 'mimosa'); S.sol = cineBird(S, 'sol'); S.hades = cineBird(S, 'hades');
+    S.tree = cineSapling(S, 1.4);
+    S.landGlow = glowSprite(0xff5a6a, 90, 0); S.E.add(S.landGlow);
+  },
+  reset(S) {
+    S.cine = false; S.lifted = S.veiled = false; S.vel.set(0, 0, 0); S.landT = -1;
+    placeHero(S); S.ray.visible = true; if (S.pallas) { S.pallas.visible = true; S.pallas.scale.setScalar(5.5); }
+    for (const p of S.trail) { p.life = 0; p.g.visible = false; }
+  },
+  mood(S, m) { if (S.hades) S.hades.visible = m === 'hades'; },
+  update(S, m, t, s, li) {
+    const G = S.groundY;
+    cineDyingTick(S, m === 'night' ? t : 99);
+    S.tree.position.set(-48, G(-48, -10), -10); S.tree.userData.glow.material.opacity = 0.3 + Math.sin(t * 2) * 0.1;
+    const fx = -8, fz = 26, mx = -30, mz = 34, rx = 18, rz = 34;
+    if (S.sol) { S.sol.position.set(fx, G(fx, fz), fz); S.sol.rotation.set(m === 'hades' ? 0 : -0.3, m === 'hades' ? -1.0 : 2.6, 0); const sc = S.sol.getObjectByName('scarf'); if (sc) sc.rotation.y = Math.sin(t * 2.4) * 0.2; }
+    if (S.mimosa) { S.mimosa.position.set(mx, G(mx, mz), mz); S.mimosa.rotation.set(m === 'night' ? -0.25 : 0, m === 'night' ? 2.8 : -0.6, 0); }
+    S.ray.position.set(rx, G(rx, rz) + 11 + Math.sin(t * 2) * 0.4, rz); S.ray.rotation.y = m === 'night' ? 2.6 : -2.2; cineLeaf(S.ray, t);
+    if (S.hades && m === 'hades') {          // drops out of the sky, lands heavily, then stands
+      S.landT += s;
+      const k = Math.min(1, S.landT / 1.4), hx = 56, hz = 6, e = 1 - (1 - k) * (1 - k);
+      S.hades.position.set(hx, G(hx, hz) + (1 - e) * 140, hz); S.hades.rotation.y = -1.25;
+      S.landGlow.position.set(hx, G(hx, hz) + 4, hz); S.landGlow.material.opacity = k < 1 ? 0.2 : Math.max(0, 0.6 - (S.landT - 1.4) * 0.5);
+      if (k >= 1 && !S.landed) { S.landed = true; S.shake = 1.2; sfx.bossDown(); }
+      cineHadesTick(S.hades, t);
+    } else S.landed = false;
+    if (S.pallas) {
+      if (S.cine) { const ck = S.hero.position.clone(); ck.y += 8; S.pallas.position.lerp(ck, Math.min(1, s * 5)); S.pallas.scale.multiplyScalar(Math.max(0.8, 1 - s * 3)); if (S.pallas.scale.x < 0.8) S.pallas.visible = false; }
+      else S.pallas.position.set(30, G(30, 20) + 32 + Math.sin(t * 2.2) * 1.5, 20);
+      cinePallasTick(S.pallas, t, m === 'hades' && li === 8 ? S.tree.position : S.ray.position, li === 8 ? 0.5 : 1);
+    }
+    if (!S.cine) {
+      if (m === 'night') { S.camPos.set(-4, S.g0 + 30, 230 - Math.min(t, 6) * 2); S.camTarget.set(-6, S.g0 + 70 + Math.min(t, 4) * 8, -80); }
+      else { S.camPos.set(70 - t * 0.8, S.g0 + 30, 205); S.camTarget.set(18, S.g0 + 22, 8); }
+      cineEngine(S, false);
+    }
+    cineTrail(S, s);
+  },
+  cineStart(S) { S.cine = true; S.ray.visible = false; sfx.ignite(); if (Music.started) Music.riser(1.6); },
+  cine(S, ct, s) { S.camPos.set(60, S.g0 + 20, 180); return cineTakeoff(S, ct, s); },
+  end(o) { this.S.cine = false; this.S.landed = false; if (o.onDone) o.onDone(); else if (Music.started) Music.setSection('menu'); },
+};
+
+// ── after LETHE: PALLAS learns it was never her fault; HADES gives the shields back; PALLAS tells MIMOSA ──
+const Shields = {
+  music: 'ending',
+  panels: [
+    { mood: 'river', lines: ['忘却の河が、静かに引いていく。', 'P:……ずっと、自分のせいだと思っていました。', 'R:お前のせいじゃない。証拠を消されてたんだ。', 'P:……はい。……記録、しておきます。'] },
+    { mood: 'shields', lines: ['H:……受け取れ。我が奪った、伝説の盾だ。', 'H:我は……夜が怖かったのだ。だから集めた。守るためではない。',
+      'F:……一回撃退しただけだろ。根に持つなよ。', 'H:……持っておらぬ。', 'R:盾を、みんなの星に返そう。', '盾はひとつずつ、それぞれの星へ帰っていった。'],
+      on: { 5: S => { S.release = true; sfx.shield(); } } },
+    { mood: 'mimosa', lines: ['——その夜。', 'P:ミモザさん。……お話があります。', 'P:夜を止めるには、盾の樹を、銀河を包む盾に育てるしかありません。',
+      'P:盾には、核が要ります。……なれるのは、私だけです。', 'M:…………', 'P:レイには、言わないでください。', 'M:……あんたも、うちの子だよ。', 'P:……記録、しました。'],
+      on: { 6: S => { S.pat = true; } } },
+  ],
+  build(S) {
+    Object.assign(S, cineStage(0x060a20)); cineHill(S); cineShip(S);
+    S.wreck = cineWreck(S, BOSS_DEFS4[0]);
+    S.ray = cineRay(S); S.pallas = cinePallas(S); S.mimosa = cineBird(S, 'mimosa'); S.sol = cineBird(S, 'sol'); S.hades = cineBird(S, 'hades');
+    S.tree = cineSapling(S, 1.4);
+    const cols = [0xffd25a, 0x6ae0ff, 0xff7a8a, 0x8dff9a, 0xc08aff, 0xffb066, 0xe8f0ff];
+    S.shields = cols.map((c, i) => { const h = cineHex(S, c, 6); h.userData.dest = new THREE.Vector3(-700 + i * 230, 500 + (i % 3) * 140, -1500); return h; });
+    S.bubbles = [];
+    for (let i = 0; i < 24; i++) { const g = glowSprite(0x9fe8ff, 10 + Math.random() * 12, 0); S.E.add(g); S.bubbles.push({ g, x: -200 + Math.random() * 400, y: -120 + Math.random() * 160, z: -380 + Math.random() * 120, v: 10 + Math.random() * 16 }); }
+  },
+  reset(S) { S.release = S.pat = false; S.cine = false; S.relT = 0; },
+  mood(S, m) {
+    const hill = m !== 'river';
+    for (const o of S.hillSet) o.visible = hill;
+    S.wreck.w.visible = !hill; for (const b of S.bubbles) b.g.visible = !hill;
+    S.ray.visible = m === 'shields'; if (S.sol) S.sol.visible = m === 'shields'; if (S.hades) S.hades.visible = m === 'shields';
+    if (S.mimosa) S.mimosa.visible = m === 'mimosa';
+    for (const h of S.shields) h.visible = m === 'shields';
+    S.tree.visible = hill;
+    if (hill) { hillNight(S); placeHero(S); }
+    else { S.E.background = new THREE.Color(0x060a20); S.E.fog = null; S.stars.material.opacity = 0.8; S.hemi.intensity = 1; }
+  },
+  update(S, m, t, s, li) {
+    const G = S.groundY;
+    if (m === 'river') {
+      S.wreck.w.position.set(40, -t * 6, -420); S.wreck.w.rotation.set(0.08, -0.4, -0.04 - t * 0.015);
+      cinePops(S, S.wreck.g, s * 0.25);
+      for (const b of S.bubbles) { b.y += b.v * s; if (b.y > 120) b.y = -120; b.g.position.set(b.x + Math.sin(b.y * 0.05) * 8, b.y, b.z); b.g.material.opacity = 0.45 * Math.sin((b.y + 120) / 240 * Math.PI); }
+      cineEngine(S, true); S.hero.position.set(-230 + Math.min(1, t / 3) * 90, 30, 190); S.hero.rotation.set(0, 0.45, 0);
+      if (S.pallas) { S.pallas.visible = true; S.pallas.position.set(S.hero.position.x + 40, 52 + Math.sin(t * 2) * 2, 190); cinePallasTick(S.pallas, t, S.wreck.w.position, li >= 1 ? 0.6 : 1); }
+      S.camPos.set(-380, 140, 520); S.camTarget.set(-40, 0, -200);
+      return;
+    }
+    cineEngine(S, false);
+    S.tree.position.set(-48, G(-48, -10), -10); S.tree.userData.glow.material.opacity = 0.3 + Math.sin(t * 2) * 0.1;
+    if (m === 'shields') {
+      const hx = 44, hz = 8;
+      if (S.hades) { S.hades.position.set(hx, G(hx, hz), hz); S.hades.rotation.y = -1.3; cineHadesTick(S.hades, t); }
+      if (S.sol) { S.sol.position.set(-10, G(-10, 28), 28); S.sol.rotation.y = 1.1; }
+      S.ray.position.set(16, G(16, 36) + 11 + Math.sin(t * 2) * 0.4, 36); S.ray.rotation.y = 1.6; cineLeaf(S.ray, t);
+      if (S.pallas) { S.pallas.position.set(4, G(4, 30) + 34 + Math.sin(t * 2.2) * 1.5, 30); cinePallasTick(S.pallas, t, S.hades ? S.hades.position : null); }
+      if (S.release) S.relT += s;
+      S.shields.forEach((h, i) => {
+        const a = (i / S.shields.length) * Math.PI * 1.4 - Math.PI * 0.2 + t * 0.2;
+        const home = new THREE.Vector3(hx - 10 + Math.cos(a) * 26, G(hx, hz) + 34 + Math.sin(a) * 14, hz + 10);
+        const k = Math.min(1, Math.max(0, (S.relT - i * 0.25) / 2.2)), e = k * k;
+        h.position.copy(home).lerp(h.userData.dest, e); h.rotation.set(0.3, t + i, 0);
+        h.scale.setScalar(1 - e * 0.6); h.userData.glow.material.opacity = 0.5 + Math.sin(t * 4 + i) * 0.15;
+      });
+      S.camPos.set(10 - t * 0.8, S.g0 + 34, 200); S.camTarget.set(16, S.g0 + 16 + (S.release ? Math.min(S.relT, 2) * 22 : 0), 0);
+      return;
+    }
+    // MIMOSA and PALLAS alone under the tree
+    const mx = -14, mz = 26;
+    if (S.mimosa) {
+      S.mimosa.position.set(mx, G(mx, mz), mz); S.mimosa.rotation.y = 0.9;
+      const w = S.mimosa.getObjectByName('wingR'); if (w) w.rotation.z += ((S.pat ? -1.1 + Math.sin(t * 3) * 0.12 : 0) - w.rotation.z) * Math.min(1, s * 4);
+    }
+    if (S.pallas) {
+      S.pallas.position.set(mx + (S.pat ? 9 : 14), G(mx, mz) + (S.pat ? 22 : 26) + Math.sin(t * 1.6) * 0.8, mz + 4);
+      cinePallasTick(S.pallas, t, S.mimosa ? S.mimosa.position : null, li >= 3 && li <= 5 ? 0.55 : 1);
+    }
+    S.camPos.set(4 - t * 0.5, S.g0 + 20, 104); S.camTarget.set(-4, S.g0 + 10, 24);
+  },
+  cineStart(S) { S.cine = true; },
+  cine(S, ct, s) {
+    if (!S.veiled && ct > 0.8) { S.veiled = true; return 'veil'; }
+    if (ct > 1.8) { S.veiled = false; return 'done'; }
+    S.camPos.y += s * 8;
+    return null;
+  },
+  end(o) {
+    this.S.cine = false;
+    if (o.fromLog) { if (Music.started) Music.setSection('menu'); return; }
+    gstate = 'play'; P.inv = Math.max(P.inv, 150);
+    if (Music.started) Music.setSection('p' + (curPhase + 1));
+    commSay([['P', 'エレボスの反応、180秒地点。'], ['R', '……行こう、パラス。'], ['P', 'はい。']]);
+  },
+};
+
+// ── after EREBUS: "I have recorded it." PALLAS opens her secret folder — the player's own record —
+// and leaves to become the shield's core. NYX is flown alone.
+const Record = {
+  music: 'ending',
+  panels: [
+    { mood: 'dark', lines: ['夜の盾が崩れ、その奥に——夜そのものが広がっていた。', 'N:……いらっしゃい、坊や。', 'P:レイ。……少しだけ、時間をください。'] },
+    { mood: 'record', lines: [] },
+  ],
+  build(S) {
+    Object.assign(S, cineStage(0x02030c)); cineShip(S);
+    S.nyx = cineWreck(S, BOSS_DEFS4[2]);
+    S.ray = cineRay(S); S.pallas = cinePallas(S);
+    S.tiles = [];
+    for (let i = 0; i < 14; i++) S.tiles.push(cineHex(S, i % 4 ? 0x7ff6ff : 0xfff3c0, 3 + (i % 3)));
+    S.light = glowSprite(0xdffcff, 120, 0); S.E.add(S.light);
+  },
+  reset(S) {
+    // the record: the player's own numbers
+    const falls = Math.max(0, storyRuns - 1), hi = +localStorage.getItem('hd_hi') || 0;
+    this.panels[1].lines = [
+      'P:「記録しました」。……あれは、あなたの良い飛行を保存していた合図です。',
+      `P:あなたは、${falls}回、落ちました。`,
+      `P:そして、${falls}回、立ち上がりました。……一回も、残らず。`,
+      `P:いちばん長い飛行は、${hi}秒。……全部、ここにあります。`,
+      'R:……なんで今、そんなこと言うんだよ。',
+      'P:夜を止めるには、盾の樹に核が要ります。……私が、なります。',
+      'R:……は？ 待てよ。ふざけるな！',
+      'P:ソルの最後の命令は「次にこいつで飛ぶ奴を、守ってくれ」でした。',
+      'P:……命令だから、ではありません。守りたいから、です。',
+      'R:……パラス……',
+      'P:何度だって立ち上がるんでしょう？ ……今度は、私なしで。',
+      'P:……いってらっしゃい、レイ。',
+    ];
+    S.cine = false; S.go = 0; S.veiled = false;
+    for (const tl of S.tiles) tl.visible = true;
+    if (S.pallas) { S.pallas.visible = true; S.pallas.scale.setScalar(5.5); }
+  },
+  mood(S, m) {
+    const rec = m === 'record';
+    S.nyx.w.visible = !rec; S.hero.visible = !rec; S.ray.visible = rec;
+    for (const tl of S.tiles) tl.visible = rec;
+    S.E.background = new THREE.Color(rec ? 0x050c22 : 0x02030c); S.stars.material.opacity = rec ? 0.35 : 0.9;
+  },
+  update(S, m, t, s, li) {
+    if (m === 'dark') {
+      S.nyx.w.position.set(80, 40, -620); S.nyx.w.rotation.set(0.05, -0.3, Math.sin(t * 0.3) * 0.02);
+      cineEngine(S, true); S.hero.position.set(-200 + Math.min(1, t / 3) * 60, -20, 220); S.hero.rotation.set(0, 0.5, 0);
+      if (S.pallas) { S.pallas.position.set(S.hero.position.x + 36, 22 + Math.sin(t * 2) * 2, 220); cinePallasTick(S.pallas, t, S.camPos); }
+      S.camPos.set(-360, 60, 520); S.camTarget.set(0, 30, -300);
+      return;
+    }
+    // a quiet space of light: RAY and PALLAS face to face, her records turning around her
+    const px = 20, py = 6, pz = 0;
+    S.ray.position.set(-26, -6 + Math.sin(t * 1.4) * 0.6, 6); S.ray.rotation.y = 1.25; cineLeaf(S.ray, t);
+    const shown = Math.min(S.tiles.length, 2 + li * 2);
+    S.tiles.forEach((tl, i) => {
+      const a = i / S.tiles.length * Math.PI * 2 + t * 0.25, r = 30 + (i % 3) * 7;
+      tl.visible = i < shown && !S.cine;
+      tl.position.set(px + Math.cos(a) * r, py + Math.sin(a * 2 + i) * 9, pz + Math.sin(a) * r);
+      tl.rotation.set(0.2, -a, 0); tl.userData.glow.material.opacity = 0.35 + Math.sin(t * 3 + i) * 0.15;
+    });
+    if (S.pallas && !S.cine) { S.pallas.position.set(px, py + 4 + Math.sin(t * 1.8) * 1.2, pz); cinePallasTick(S.pallas, t, S.ray.position, li >= 9 ? 1.6 : 1); }
+    if (!S.cine) { S.camPos.set(-4 + Math.sin(t * 0.2) * 6, 10, 92 - Math.min(t, 10) * 1.2); S.camTarget.set(0, 2, 0); }
+  },
+  cineStart(S) { S.cine = true; sfx.shield(); if (Music.started) Music.riser(2.4); },
+  cine(S, ct, s) {
+    // PALLAS rises and burns brighter and brighter, then streaks away toward home
+    const k = Math.min(1, ct / 2.2);
+    if (S.pallas) {
+      S.pallas.position.set(20 + (ct > 2.2 ? (ct - 2.2) * 260 : 0), 10 + k * 26 + (ct > 2.2 ? (ct - 2.2) * 160 : 0), ct > 2.2 ? -(ct - 2.2) * 600 : 0);
+      cinePallasTick(S.pallas, ct, null, 1 + k * 3);
+      if (ct > 2.2) S.pallas.scale.setScalar(Math.max(0.01, 5.5 * (1 - (ct - 2.2) * 0.8)));
+    }
+    S.light.position.copy(S.pallas ? S.pallas.position : new THREE.Vector3()); S.light.material.opacity = Math.min(1, k * 1.2); S.light.scale.setScalar(80 + k * 160);
+    S.camTarget.lerp(S.light.position, Math.min(1, s * 2));
+    if (ct > 2.2 && !S.flashed) { S.flashed = true; fxFlash(0xdffcff, 0.5); sfx.liftoff(); }
+    if (ct > 4.0 && !S.veiled) { S.veiled = true; return 'veil'; }
+    if (ct > 5.0) { S.flashed = false; return 'done'; }
+    return null;
+  },
+  end(o) {
+    this.S.cine = false; this.S.light.material.opacity = 0;
+    if (o.fromLog) { if (Music.started) Music.setSection('menu'); return; }
+    gstate = 'play'; P.inv = Math.max(P.inv, 150);
+    if (Music.started) Music.setSection('p' + (curPhase + 1));
+    commSay([['R', '……ニュクスは、270秒地点。'], ['R', '……行ってくる。']]);
+  },
+};
+
+// ── after NYX: the lullaby; the tree grows into a shield round the galaxy; the dawn ──
+const Epilogue4 = {
+  music: 'ending', title: ['DAWN', '夜が明けた。——盾は、覚えている。'],
+  panels: [
+    { mood: 'nyx', lines: ['ヒュプノスの子守唄が、夜にひびく。', 'N:……あたたかい子守唄ね。', 'N:覚えていることは、痛いわ。……それでも？',
+      'R:それでも。……痛いのも、全部俺だ。', 'N:……そう。……おやすみなさい、坊や。'], on: { 4: S => { S.sleep = true; } } },
+    { mood: 'tree', lines: ['アイギスの丘で、盾の樹が光りはじめた。', 'F:……おい、見ろ。', 'M:……あの子の光だよ。', 'H:……返した盾が、応えている。',
+      '星々で、返された盾がいっせいに輝く。', '光は樹とつながり——銀河を包む、ひとつの盾になった。', 'R:……パラス。', 'R:何度だって立ち上がる。……今度は、みんなで。'],
+      on: { 0: S => { S.grow = true; sfx.shield(); }, 4: S => { S.link = true; sfx.record(); } } },
+  ],
+  build(S) {
+    Object.assign(S, cineStage(0x02030c)); cineHill(S); cineShip(S);
+    S.nyx = cineBird(S, 'nyxbird');
+    S.ray = cineRay(S); S.sol = cineBird(S, 'sol'); S.mimosa = cineBird(S, 'mimosa'); S.hades = cineBird(S, 'hades');
+    S.tree = cineSapling(S, 1.4);
+    S.core = glowSprite(0x9ff8ff, 40, 0); S.E.add(S.core);
+    S.dome = new THREE.Mesh(new THREE.SphereGeometry(1, 48, 24), new THREE.MeshBasicMaterial({ color: 0x8dfff0, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.BackSide }));
+    S.E.add(S.dome);
+    const cols = [0xffd25a, 0x6ae0ff, 0xff7a8a, 0x8dff9a, 0xc08aff, 0xffb066, 0xe8f0ff];
+    S.far = cols.map((c, i) => { const g = glowSprite(c, 60, 0); g.position.set(-900 + i * 300, 420 + (i % 3) * 160, -1600); S.E.add(g); return g; });
+    S.links = S.far.map(f => {
+      const geo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), f.position.clone()]);
+      const l = new THREE.Line(geo, new THREE.LineBasicMaterial({ color: 0x9ff8ff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending })); S.E.add(l); return l;
+    });
+    S.sun = glowSprite(0xffb060, 420, 0); S.E.add(S.sun);
+    S.motes = [];
+    for (let i = 0; i < 20; i++) { const g = glowSprite(0xd0d8ff, 6 + Math.random() * 8, 0); S.E.add(g); S.motes.push({ g, a: Math.random() * 6.28, r: 40 + Math.random() * 60, y: Math.random() * 60 }); }
+  },
+  reset(S) { S.sleep = S.grow = S.link = false; S.cine = false; S.gk = 0; S.lk = 0; S.titled = S.veiled = false; },
+  mood(S, m) {
+    const hill = m === 'tree';
+    for (const o of S.hillSet) o.visible = hill;
+    if (S.nyx) S.nyx.visible = !hill; for (const mo of S.motes) mo.g.visible = !hill;
+    for (const o of [S.ray, S.sol, S.mimosa, S.hades, S.tree, S.core, S.dome, S.sun, S.hero, ...S.far, ...S.links]) if (o) o.visible = hill;
+    if (hill) {
+      S.dawn = [[0, 0x02040e, 0x2c5aa8], [0.45, 0x0a1430, 0x5a70b8], [0.62, 0x16204a, 0xe88a6a], [0.75, 0x2a2a5a, 0xffc890], [1, 0x080a14, 0x9a5a50]];
+      S.paintSky(S.dawn, 0); S.E.background = S.skyTex; S.E.fog = new THREE.Fog(0x0a1030, 500, 2200); S.stars.material.opacity = 0.4;
+      S.hemi.intensity = 1.0; S.key.color.setHex(0xa8b8ff); S.key.intensity = 1.2; S.key.position.set(-0.1, 0.4, -1);
+      placeHero(S);
+    } else { S.E.background = new THREE.Color(0x02030c); S.E.fog = null; S.stars.material.opacity = 0.3; S.hemi.intensity = 1.1; S.key.position.set(-1, 1.4, 1.2); }
+  },
+  update(S, m, t, s, li) {
+    const G = S.groundY;
+    if (m === 'nyx') {
+      // the goddess, drifting in the dark, slowly lulled to sleep
+      if (S.nyx) {
+        S.nyx.scale.setScalar(2.2); S.nyx.position.set(0, -26 + Math.sin(t * 0.8) * 2, -60);
+        S.nyx.rotation.set(S.sleep ? Math.min(0.5, S.nyx.rotation.x + s * 0.2) : 0.05, 0.2 + Math.sin(t * 0.3) * 0.1, S.sleep ? Math.min(0.3, S.nyx.rotation.z + s * 0.1) : 0);
+        const v = S.nyx.getObjectByName('veil'); if (v) v.rotation.x = Math.sin(t * 1.2) * 0.08;
+      }
+      for (const mo of S.motes) { mo.a += s * 0.3; mo.y += s * 6; if (mo.y > 90) mo.y = 0; mo.g.position.set(Math.cos(mo.a) * mo.r, -30 + mo.y, -60 + Math.sin(mo.a) * mo.r); mo.g.material.opacity = 0.5 * Math.sin(mo.y / 90 * Math.PI); }
+      S.camPos.set(30 - t, 10, 140); S.camTarget.set(0, 0, -60);
+      return;
+    }
+    cineEngine(S, false);
+    // the tree grows; PALLAS's light shines at its heart; the shields answer from the stars
+    if (S.grow) S.gk = Math.min(1, S.gk + s / 6);
+    if (S.link) S.lk = Math.min(1, S.lk + s / 2.5);
+    const gk = S.gk * S.gk * (3 - 2 * S.gk), tx = -40, tz = -20;
+    S.tree.position.set(tx, G(tx, tz), tz); S.tree.scale.setScalar(1 + gk * 3.2);
+    S.tree.userData.glow.material.opacity = 0.35 + gk * 0.4 + Math.sin(t * 2) * 0.1;
+    S.core.position.set(tx, G(tx, tz) + 24 * (1 + gk * 3.2) * 1.4, tz + 4);
+    S.core.material.opacity = (0.4 + gk * 0.6) * (0.75 + Math.sin(t * 4) * 0.25); S.core.scale.setScalar(30 + gk * 40);
+    S.dome.position.copy(S.core.position); S.dome.scale.setScalar(20 + S.lk * 1800); S.dome.material.opacity = S.lk * 0.12 * (1 - S.lk * 0.5);
+    S.far.forEach((f, i) => { f.material.opacity = Math.min(1, Math.max(0, S.lk * 1.6 - i * 0.08)) * (0.8 + Math.sin(t * 5 + i) * 0.2); });
+    S.links.forEach((l, i) => { l.geometry.attributes.position.setXYZ(0, S.core.position.x, S.core.position.y, S.core.position.z); l.geometry.attributes.position.needsUpdate = true; l.material.opacity = Math.max(0, S.lk - i * 0.06) * 0.7; });
+    const fx = -2, fz = 30, mx = -24, mz = 38, rx = 20, rz = 38, hx = 44, hz = 18;
+    if (S.sol) { S.sol.position.set(fx, G(fx, fz), fz); S.sol.rotation.set(-0.15, 2.7, 0); const sc = S.sol.getObjectByName('scarf'); if (sc) sc.rotation.y = Math.sin(t * 2.4) * 0.2; }
+    if (S.mimosa) { S.mimosa.position.set(mx, G(mx, mz), mz); S.mimosa.rotation.set(-0.15, 2.5, 0); }
+    if (S.hades) { S.hades.position.set(hx, G(hx, hz), hz); S.hades.rotation.set(-0.1, 3.4, 0); cineHadesTick(S.hades, t); }
+    S.ray.position.set(rx, G(rx, rz) + 11 + Math.sin(t * 2) * 0.4, rz); S.ray.rotation.y = li >= 6 ? -2.8 : 2.9; cineLeaf(S.ray, t);
+    const lf = S.ray.getObjectByName('leaf');
+    if (lf && lf.material && lf.material.emissive) lf.material.emissiveIntensity = li === 6 ? 1.6 + Math.sin(t * 6) * 0.4 : 0.3;
+    if (!S.cine) {
+      if (li < 4) { S.camPos.set(40, S.g0 + 34, 250 - Math.min(t, 6) * 2); S.camTarget.set(-14, S.g0 + 34 + gk * 50, -10); }
+      else { S.camPos.set(10, S.g0 + 30, 220); S.camTarget.set(-30, S.g0 + 140, -400); }
+    }
+  },
+  cineStart(S) { S.cine = true; if (Music.started) Music.riser(2.4); },
+  cine(S, ct, s) {
+    const k = Math.min(1, ct / 3.6), e = k * k * (3 - 2 * k);
+    S.paintSky(S.dawn, e);
+    S.sun.position.set(-170, S.g0 - 120 + e * 240, -1500); S.sun.material.opacity = Math.min(1, ct / 1.2);
+    S.stars.material.opacity = 0.4 * (1 - e); S.key.intensity = 1.2 + e; S.hemi.intensity = 1 + e * 0.4;
+    S.camPos.set(10 + e * 40, S.g0 + 30 + e * 30, 220 + e * 60); S.camTarget.set(-30, S.g0 + 60, -300);
+    if (ct > 5.0 && !S.titled) { S.titled = true; return 'title'; }
+    if (ct > 9.4 && !S.veiled) { S.veiled = true; return 'veil'; }
+    if (ct > 10.4) return 'done';
+    return null;
+  },
+  end(o) {
+    const S = this.S; S.cine = false; S.titled = S.veiled = false;
+    showCredits('story4', () => Afterword.play(o));
+  },
+};
+
+// ── after the credits: the tree on the hill, a little hexagonal light — and the fourth exam ──
+const Afterword = {
+  music: 'ending',
+  panels: [
+    { mood: 'after', lines: ['——それから。', '丘の盾の樹は、今日も星を守っている。', 'R:……行ってくる。', '樹の奥で、小さな六角形の光が、またたいた。', 'P:……記録しました。'],
+      on: { 3: S => { S.blink = 0; }, 4: S => { sfx.comm('P'); } } },
+    { mood: 'exam', lines: ['パイロット学校、入学試験。——四回目。', '筆記試験・最終問題「盾とは何か、述べよ」', 'R:（……そんなの、決まってる）',
+      '「忘れないこと。何度だって、立ち上がること。」', '合格者発表。', 'R:……あった。'], on: { 5: S => { S.jump = true; } } },
+  ],
+  build(S) {
+    Object.assign(S, cineStage(0x2a3a6a)); cineHill(S);
+    S.paintSky([[0, 0x1c4a98], [0.45, 0x4a7ac0], [0.7, 0x7aa8e0], [1, 0x5a7080]]);
+    S.E.background = S.skyTex; S.E.fog = new THREE.Fog(0x6a88b0, 900, 2800); S.stars.material.opacity = 0;
+    S.hemi.intensity = 0.9; S.key.color.setHex(0xfff0d8); S.key.intensity = 1.3;
+    for (const o of S.hillSet) if (o.material && o === S.hillSet[0]) o.material = new THREE.MeshLambertMaterial({ color: 0x3a7a4a });
+    S.ray = cineRay(S); S.tree = cineSapling(S, 1.4); S.tree.scale.setScalar(4.2); S.tree.userData.glow.scale.multiplyScalar(0.4);
+    S.hex = cineHex(S, 0x7ff6ff, 2.2);
+    // the results board
+    const cv = document.createElement('canvas'); cv.width = 256; cv.height = 160; const x = cv.getContext('2d');
+    x.fillStyle = '#f4f1e8'; x.fillRect(0, 0, 256, 160); x.strokeStyle = '#3a2a1a'; x.lineWidth = 6; x.strokeRect(3, 3, 250, 154);
+    x.fillStyle = '#1a2a4a'; x.font = 'bold 24px sans-serif'; x.textAlign = 'center'; x.fillText('合格者', 128, 36);
+    x.font = 'bold 20px sans-serif'; ['No.001 ———', 'No.002 ———', 'No.004  RAY'].forEach((l, i) => { x.fillStyle = i === 2 ? '#c8202a' : '#4a5a6a'; x.fillText(l, 128, 74 + i * 30); });
+    const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace;
+    S.board = new THREE.Group();
+    const b = new THREE.Mesh(new THREE.PlaneGeometry(40, 25), new THREE.MeshBasicMaterial({ map: tex, fog: false })); b.position.y = 30; S.board.add(b);
+    for (const sx of [-16, 16]) { const p = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, 30, 6), new THREE.MeshLambertMaterial({ color: 0x5a3a2a })); p.position.set(sx, 15, -0.5); S.board.add(p); }
+    S.E.add(S.board);
+  },
+  reset(S) { S.cine = false; S.jump = false; S.blink = -1; S.veiled = false; },
+  mood(S, m) { S.board.visible = m === 'exam'; S.tree.visible = m === 'after'; S.hex.visible = m === 'after'; },
+  update(S, m, t, s, li) {
+    const G = S.groundY;
+    if (m === 'after') {
+      const tx = -30, tz = -30;
+      S.tree.position.set(tx, G(tx, tz), tz); S.tree.userData.glow.material.opacity = 0.35 + Math.sin(t * 1.5) * 0.08;
+      S.hex.position.set(tx + 6, G(tx, tz) + 70, tz + 14); S.hex.rotation.y = t * 0.6;
+      if (S.blink >= 0) S.blink += s;
+      const on = S.blink >= 0 ? (Math.floor(S.blink * 2.5) % 2 === 0 ? 1 : 0.25) : 0.2;
+      S.hex.userData.glow.material.opacity = on * 0.8; S.hex.userData.m.material.emissiveIntensity = on * 1.4;
+      const rx = 22, rz = 36;
+      S.ray.position.set(rx, G(rx, rz) + 11 + Math.sin(t * 2) * 0.4, rz); S.ray.rotation.y = li >= 3 ? -2.5 : 1.6; cineLeaf(S.ray, t);
+      S.camPos.set(60 - t * 0.6, S.g0 + 34, 270); S.camTarget.set(-14, S.g0 + 60, -20);
+      return;
+    }
+    const bx = -14, bz = 0, rx = 24, rz = 26;
+    S.board.position.set(bx, G(bx, bz), bz); S.board.rotation.y = 0.2;
+    S.ray.position.set(rx, G(rx, rz) + 11 + (S.jump ? Math.abs(Math.sin(t * 8)) * 8 : Math.sin(t * 2) * 0.4), rz); S.ray.rotation.y = Math.PI + 0.5; cineLeaf(S.ray, t);
+    S.camPos.set(56, S.g0 + 24, 120); S.camTarget.set(-2, S.g0 + 26, 4);
+  },
+  cineStart(S) { S.cine = true; },
+  cine(S, ct, s) {
+    if (!S.veiled && ct > 1.4) { S.veiled = true; return 'veil'; }
+    if (ct > 2.4) return 'done';
+    return null;
+  },
+  end(o) {
+    this.S.cine = false;
+    if (o.fromLog) { if (Music.started) Music.setSection('menu'); return; }
+    gstate = 'play'; P.inv = Math.max(P.inv, 150);
+    if (Music.started) Music.setSection('p' + (curPhase + 1));
+    commSay([['R', '……よし。飛ぶか。']]);
+  },
+};
+for (const c of [Prologue4, Shields, Record, Epilogue4, Afterword]) c.play = (o = {}) => loadPart4Models().then(() => Cine.play(c, o));
+
 // ── Secrets ───────────────────────────────────────────────────────────────────
 // Hidden touch gestures / play feats that unlock cosmetic modes, skins and
 // titles. Only the *count* is ever shown to players (SECRETS n/9); the
@@ -9212,6 +9915,7 @@ const SECRET_TITLES = [
   { id: 'story',    title: 'AEGIS PILOT' },
   { id: 'story2',   title: 'SHIELD BEARER' },
   { id: 'story3',   title: 'SON OF THE SUN' },
+  { id: 'story4',   title: 'DAWN BRINGER' },
 ];
 const SHIP_SIZES = { normal: 1, mini: 0.6, big: 1.45 };
 
@@ -9221,7 +9925,7 @@ catch (e) { secretsFound = []; }
 let secOpts = { retro: false, mirror: false, size: 'normal', midnight: false, hardcore: false, title: '' };
 try { Object.assign(secOpts, JSON.parse(localStorage.getItem('hd_sec_opts') || '{}') || {}); } catch (e) {}
 
-const hasSecret = id => id === 'complete' ? secretsComplete() : id === 'story' ? bossBest >= 2 : id === 'story2' ? bossBest2 >= 3 : id === 'story3' ? bossBest3 >= 3 : secretsFound.includes(id);
+const hasSecret = id => id === 'complete' ? secretsComplete() : id === 'story' ? bossBest >= 2 : id === 'story2' ? bossBest2 >= 3 : id === 'story3' ? bossBest3 >= 3 : id === 'story4' ? bossBest4 >= 3 : secretsFound.includes(id);
 function secretsComplete() { return SECRET_DEFS.every(d => secretsFound.includes(d.id)); }
 function saveSecrets() {
   localStorage.setItem('hd_secrets', JSON.stringify(secretsFound));
@@ -9506,6 +10210,12 @@ function creditsCast() {
       '双子の弟。「眠っていれば痛くない」と信じている。') : '') +
     (bossBest3 >= 3 ? C(SPEAKERS.F.face, '#ff8a2a', 'SOL', 'ソル', 'アイギス防衛隊 エース ／ レイの父',
       '豪快で、少し抜けている。レイの決め台詞は、だいたいこの人の真似。') : '') +
+    (bossBest4 >= 1 || (met.lethe || 0) > 0 ? C(LETHE_FACE, '#9fe8ff', 'LETHE', 'レテ', '忘却の河',
+      '記憶を「おいしい」と言う、無邪気な少女。パラスの証拠を消した張本人。') : '') +
+    (bossBest4 >= 2 || (met.erebus || 0) > 0 ? C(EREBUS_FACE, '#a890ff', 'EREBUS', 'エレボス', '闇の盾',
+      '光を吸い込む、夜の盾。ほとんど何も話さない。') : '') +
+    (bossBest4 >= 3 || (met.nyx || 0) > 0 ? C(NYX_FACE, '#d0d8ff', 'NYX', 'ニュクス', '夜の女神 ／ 双子の母',
+      '「忘れていいの」。やさしさのつもりで、銀河を眠らせようとした。') : '') +
     `</div>` +
     `<div class="cr-k">SETTING</div><div class="cr-v">PLANET AEGIS<br><small>最強の盾の名を冠した、美しい星</small></div>`;
 }
@@ -9513,11 +10223,12 @@ function showCredits(ending, onClose = null) {
   if (creditsOpen) return;
   creditsOpen = true;
   creditsOnClose = onClose;
-  const story = ending === 'story', story2 = ending === 'story2', story3 = ending === 'story3';
+  const story = ending === 'story', story2 = ending === 'story2', story3 = ending === 'story3', story4 = ending === 'story4';
   const roll = document.getElementById('cr-roll');
   const L = (k, v) => `<div class="cr-k">${k}</div><div class="cr-v">${v}</div>`;
   roll.innerHTML =
-    (story3 ? `<div class="cr-end">SOL RETURNS</div><div class="cr-thanks">そして、最後の章へ——</div>`
+    (story4 ? `<div class="cr-end">DAWN</div><div class="cr-thanks">夜が明けた。——盾は、覚えている。</div>`
+     : story3 ? `<div class="cr-end">SOL RETURNS</div><div class="cr-thanks">そして、最後の章へ——</div>`
      : story2 ? `<div class="cr-end">CERBERUS FALLS</div><div class="cr-thanks">そして、門の向こうへ——</div>`
      : story ? `<div class="cr-end">BIDENT FALLS</div><div class="cr-thanks">そして、レイの旅は続く。</div>`
      : ending ? `<div class="cr-end">ALL SECRETS FOUND</div><div class="cr-thanks">すべての秘密を見つけてくれて、ありがとう。</div>` : '') +
@@ -9531,7 +10242,8 @@ function showCredits(ending, onClose = null) {
     L('VISUALS', 'Three.js · WebGL · Bloom<br><small>3D models: glTF</small>') +
     L('TYPEFACES', 'Orbitron · Rajdhani') +
     L('SPECIAL THANKS', 'YOU') +
-    (story3 ? `<div class="cr-reward">◆ SOL の機体を解放（SKIN・SKILL）<br>◆ TITLE: SON OF THE SUN</div><div class="cr-fin">TO BE CONTINUED</div>`
+    (story4 ? `<div class="cr-reward">◆ TITLE: DAWN BRINGER</div><div class="cr-fin">THE END</div>`
+     : story3 ? `<div class="cr-reward">◆ SOL の機体を解放（SKIN・SKILL）<br>◆ TITLE: SON OF THE SUN</div><div class="cr-fin">TO BE CONTINUED</div>`
      : story2 ? `<div class="cr-reward">◆ TITLE: SHIELD BEARER</div><div class="cr-fin">TO BE CONTINUED</div>`
      : story ? `<div class="cr-reward">◆ TITLE: AEGIS PILOT</div>`
      : ending ? `<div class="cr-reward">◆ PRISM SKIN UNLOCKED<br>◆ TITLE: SECRET MASTER</div>` : '') +
@@ -9592,6 +10304,7 @@ function loop(now) {
   Cine.update(realDt);
   syncBossHUD();
   syncMistUI();
+  syncNightUI();
   commTick(realDt);
   fx.aberr *= Math.pow(0.9, realDt);
   fx.flash *= Math.pow(0.86, realDt);
