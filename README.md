@@ -11,7 +11,7 @@ Three.js + WebGL で描画する、タップひとつで遊べる横スクロー
 - **やり込み**：パイロットレベル（最大 Lv80）、42 スキルのツリー、装備枠、HULL（耐久）、シナジー、スキン、9 つの隠し要素
 - **3D モデル**（glTF）と、プレイに合わせて変化する **手続き合成の BGM**
 
-[![Play](https://img.shields.io/badge/play-online-00e8ff?style=flat-square)](https://junia2009.github.io/hover-dodge/) ![Version](https://img.shields.io/badge/version-3.6.1-aa44ff?style=flat-square)
+[![Play](https://img.shields.io/badge/play-online-00e8ff?style=flat-square)](https://junia2009.github.io/hover-dodge/) ![Version](https://img.shields.io/badge/version-3.6.2-aa44ff?style=flat-square)
 
 ---
 
@@ -478,6 +478,7 @@ hover-dodge/
 
 | Version | 内容 |
 | :---: | --- |
+| **3.6.2**  | 見送りシーンのレイの制帽をやめて、憧れのパパ（ソル）と**おそろいのフライトゴーグル**に（ソルのモデルから写してレイの頭に合わせている）。赤いネッカチーフはそのまま |
 | **3.6.1**  | 見送りシーンのレイが、セリフどおり**防衛隊パイロットの制服姿**に（金の翼章つきの制帽・赤いネッカチーフ。頭の葉っぱは帽子から出ている） |
 | **3.6.0**  | ✈ PILOT MODE の相棒が新米 AI **パウロ** に。パラスは樹の中にいるので飛行中は話さず、代わりにパウロがあらゆる場面（開始・区間・被弾・コンボ・撃破・ワープ・距離の節目・放置など）でしゃべり、ソル・ミモザ・ハデス・双子とも掛け合う。見送りシーンにパウロ（オレンジの六角ドローン）とパラスとの初対面を追加、CAST にも登場 |
 | **3.5.1**  | タイトルの選択を 2 段に：まず STORY / ✈ PILOT を選び、STORY を選んだときだけその下に CHAPTER Ⅰ〜Ⅳ が出る（PILOT から戻ると最後の章へ） |
