@@ -552,8 +552,10 @@ button { font-family: var(--f-ui) }
 #drowse-veil { position: absolute; inset: 0; pointer-events: none; z-index: 2; opacity: 0;
   background: radial-gradient(ellipse at var(--vx, 20%) var(--vy, 50%), rgba(20, 10, 40, 0) 12%, rgba(26, 14, 52, 0.6) 34%, rgba(8, 4, 20, 0.96) 60%); }
 /* CHAPTER 4: the night (a pool of light round the ship) + forgotten skills */
-#night-veil { position: absolute; inset: 0; pointer-events: none; z-index: 0; opacity: 0; transition: opacity .6s;
-  background: radial-gradient(circle at var(--vx, 20%) var(--vy, 50%), rgba(4, 6, 20, 0) 0, rgba(4, 6, 20, 0) calc(var(--nr, 150) * 0.7 * var(--px)),
+/* one oversized sheet with the hole in its middle, slid under the ship with a transform (no repaint per frame) */
+#night-veil { position: absolute; left: 0; top: 0; width: 300%; height: 300%; pointer-events: none; z-index: 0; opacity: 0; transition: opacity .6s;
+  will-change: transform, opacity;
+  background: radial-gradient(circle at 50% 50%, rgba(4, 6, 20, 0) 0, rgba(4, 6, 20, 0) calc(var(--nr, 150) * 0.7 * var(--px)),
     rgba(6, 8, 26, 0.6) calc(var(--nr, 150) * 1.25 * var(--px)), rgba(2, 3, 12, 0.9) calc(var(--nr, 150) * 2.6 * var(--px))); }
 .hud-forget { margin-top: calc(6 * var(--px)); font: 700 calc(8 * var(--px))/1.2 var(--f-ui); letter-spacing: calc(1 * var(--px)); color: #9fe8ff; text-shadow: 0 0 6px #5ac8ff; }
 .hud-forget[hidden] { display: none; }
@@ -2385,7 +2387,7 @@ import { GLTFLoader }      from 'three/addons/loaders/GLTFLoader.js';
 
 // Single source of truth for the version: shown on the title / portrait
 // screens and passed to the service worker, which names its cache after it.
-const VERSION = '3.4.0';
+const VERSION = '3.4.1';
 
 // ── 3D models (glTF). The ship, Ray and PALLAS are waited for (briefly) before
 // the scene is built; the flagships stream in the background — they are
@@ -5808,6 +5810,7 @@ function nightTick(dt) {
 function nightDawn() {      // 0 = full night, 1 = morning (NYX's last stage, as her HP falls)
   return boss && boss.def.id === 'nyx' && boss.stage === 2 ? Math.min(1, (34 - boss.hp) / 34) : 0;
 }
+addEventListener('resize', () => { nightEl._ww = 0; });
 function syncNightUI() {
   const on = chapter === 4 && (gstate === 'play' || gstate === 'paused' || gstate === 'dead');
   const names = equippedSkills.filter(isForgotten).map(id => (skillDef(id) || {}).name || id);
@@ -5816,9 +5819,13 @@ function syncNightUI() {
   if (!on) { nightEl.style.opacity = 0; return; }
   const dawn = nightDawn();
   nightEl.style.opacity = ((boss && boss.state !== 'dying' ? 0.8 : 0.92) * (1 - dawn * 0.85)).toFixed(3);   // a little lighter while a flagship is in view
-  nightEl.style.setProperty('--vx', (P.x / VW * 100).toFixed(1) + '%'); nightEl.style.setProperty('--vy', (P.y / VH * 100).toFixed(1) + '%');
-  nightEl.style.setProperty('--nr', (nightR * (1 + dawn * 2)).toFixed(0));
-  nightEl.classList.toggle('eclipse', eclipseT > 0);
+  // slide the sheet so its hole sits on the ship (compositor-only), and touch the gradient only when the radius really changes
+  if (!nightEl._ww) { nightEl._ww = nightEl.parentElement.clientWidth; nightEl._wh = nightEl.parentElement.clientHeight; }   // measured once (and after a resize)
+  const ww = nightEl._ww, wh = nightEl._wh;
+  const sx = (secOpts.mirror ? VW - P.x : P.x) / VW * ww - 1.5 * ww, sy = P.y / VH * wh - 1.5 * wh;
+  nightEl.style.transform = `translate3d(${sx.toFixed(1)}px, ${sy.toFixed(1)}px, 0)`;
+  const nr = Math.round(nightR * (1 + dawn * 2) / 3) * 3;
+  if (nr !== nightEl._nr) { nightEl._nr = nr; nightEl.style.setProperty('--nr', nr); }
 }
 
 function update(dt) {
