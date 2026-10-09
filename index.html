@@ -1922,6 +1922,19 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
   .howto-body { padding: 14px; }
   .m-head { padding-left: 20px; }
 }
+/* narrow portrait: keep the whole header (and its × button) on screen however big the XP number gets */
+@media (max-width: 480px) {
+  .m-head { gap: 6px; padding: 10px 10px 10px 14px; }
+  .m-head > div:first-child { min-width: 0; flex: 0 1 auto; }
+  .m-title { font-size: 15px; letter-spacing: 2px; white-space: nowrap; }
+  .m-spacer { flex: 1 1 0; min-width: 0; }
+  .pilot-badge { margin-right: 0; padding: 5px 8px; flex: none; }
+  .pilot-badge b { font-size: 13px; }
+  .wallet { padding: 5px 8px; gap: 5px; flex: none; }
+  .wallet span { font-size: 8px; letter-spacing: 1px; }
+  .wallet b { font-size: 13px; }
+  .m-close { width: 32px; height: 32px; }
+}
 </style>
 </head>
 <body>
@@ -2372,7 +2385,7 @@ import { GLTFLoader }      from 'three/addons/loaders/GLTFLoader.js';
 
 // Single source of truth for the version: shown on the title / portrait
 // screens and passed to the service worker, which names its cache after it.
-const VERSION = '3.3.0';
+const VERSION = '3.3.1';
 
 // ── 3D models (glTF). The ship, Ray and PALLAS are waited for (briefly) before
 // the scene is built; the flagships stream in the background — they are
