@@ -2354,7 +2354,7 @@ import { GLTFLoader }      from 'three/addons/loaders/GLTFLoader.js';
 
 // Single source of truth for the version: shown on the title / portrait
 // screens and passed to the service worker, which names its cache after it.
-const VERSION = '2.8.0';
+const VERSION = '2.8.1';
 
 // ── 3D models (glTF). The ship, Ray and PALLAS are waited for (briefly) before
 // the scene is built; the flagships stream in the background — they are
@@ -2937,6 +2937,7 @@ scene.add(trailMesh);
 const trailColor = new THREE.Color(0x55ccff);
 
 // ── Shield bubble ─────────────────────────────────────────────────────────────
+const sunGlow = glowSprite(0xffa040, 110, 0); sunGlow.visible = false; scene.add(sunGlow);   // SUN DIVE aura
 const shieldGroup = new THREE.Group();
 const shieldGlow = glowSprite(0x66ffaa, 70, 0.35);
 const shieldRing = new THREE.Mesh(
@@ -3276,11 +3277,13 @@ function firePulse() {
   // 発射時バーストスパーク
   spawnSparks(P.x, P.y, 14, { vMin: 3, vMax: 8, szMax: 2.6, color: 0x00e8ff });
   fx.aberr = Math.max(fx.aberr, 0.5);
-  if (hasSkill('solar_flare')) for (const w of walls) {
-    const dx = Math.max(0, w.x - P.x, P.x - (w.x + w.w));
-    if (dx > PULSE_MAX_R) continue;
-    const k = 1 - dx / PULSE_MAX_R, a = meltWall(w, -1, 28 * k) + meltWall(w, 1, 28 * k);
-    if (a > 0) for (const y of [w.gapY, w.gapY + w.gap]) spawnSparks(w.x + w.w / 2, y, 6, { vMin: 1, vMax: 5, color: 0xffa040 });
+  if (hasSkill('solar_flare')) for (const w of walls) {      // PULSE: every wall on screen melts wide open
+    if (w.x + w.w < P.x) continue;
+    if (meltWall(w, -1, 999) + meltWall(w, 1, 999) > 0) for (const y of [w.gapY, w.gapY + w.gap]) spawnSparks(w.x + w.w / 2, y, 6, { vMin: 1, vMax: 5, color: 0xffa040 });
+  }
+  if (hasSkill('sun_breaker')) {
+    sunDiveT = SUN_DIVE;
+    pushBonus(P.x, P.y - 40, 'SUN DIVE', '#ffb066');
   }
   const sun = hasSkill('sunburst');
   fxFlash(sun ? 0xffb040 : 0x00e8ff, 0.12);
@@ -4895,9 +4898,9 @@ const SKILL_DEFS = [
   { id: 'ace_instinct', name: 'ACE INSTINCT', kind: 'SOL', price: 1500, requires: ['sunburst'],
     desc: 'エースの勘。NEAR の判定が広がり、NEAR 5 回ごとに耐久が 1 回復' },
   { id: 'solar_flare', name: 'SOLAR FLARE', kind: 'SOL', price: 1800, requires: ['sunburst'],
-    desc: '壁を焼き切る。弾が壁に当たると壁が溶けて隙間が広がり、PULSE は近くの壁をまとめて溶かす（隙間は最大 +60%）' },
+    desc: '太陽の熱で壁を焼き切る。前方の壁はすべて近づくだけで溶けて隙間 +40%。弾が当たった縁も溶け、PULSE は画面の壁を一気に最大（+70%）まで溶かす' },
   { id: 'sun_breaker', name: 'SUN BREAKER', kind: 'SOL', price: 3000, requires: ['solar_flare'], ult: true,
-    desc: 'ソルの突撃。壁に激突しても、壁を粉砕して突き抜ける（ノーダメージ・+20 XP、再使用まで 10 秒）' },
+    desc: 'PULSE のたびに SUN DIVE（2.5 秒）：機体が太陽になり、ぶつかった壁を何枚でも粉砕して突き抜ける（1 枚 +5 XP）' },
 ];
 
 // Two specific skills equipped together unlock a bonus effect.
@@ -5247,29 +5250,27 @@ function clearWorld() {
 
 let introT = 0;                 // frames of the post-prologue fly-in (gravity held)
 let aceNears = 0;               // ACE INSTINCT: NEARs counted toward the next repair
-let breakCD = 0;                // SUN BREAKER cooldown (frames); 0 = ready
-const BREAK_CD = 600;
-// SOLAR FLARE: queue some melting on one lip of a wall (eased in by the wall loop); the gap
-// can grow to at most +60% of what it was born with
+let sunDiveT = 0;               // SUN BREAKER: frames left of the SUN DIVE (walls shatter on contact)
+const SUN_DIVE = 150;
+const FLARE_HEAT = 0.2, FLARE_MAX = 1.7;   // SOLAR FLARE: each lip recedes 20% on approach; gap tops out at +70%
+// SOLAR FLARE: queue some melting on one lip of a wall (eased in by the wall loop)
 function meltWall(w, side, px) {
   if (w.gap0 == null) { w.gap0 = w.gap; w.meltT = 0; w.meltB = 0; }
-  const room = w.gap0 * 1.6 - w.gap - w.meltT - w.meltB;
+  const room = w.gap0 * FLARE_MAX - w.gap - w.meltT - w.meltB;
   const d = Math.max(0, Math.min(px, room));
   if (side < 0) w.meltT += d; else w.meltB += d;
   return d;
 }
+// SUN DIVE: the wall the ship flies into shatters (as many as it meets while the dive lasts)
 function sunBreak(w) {
-  breakCD = BREAK_CD;
   const cx = w.x + w.w / 2;
-  for (let y = 10; y < VH; y += 26) if (y < w.gapY || y > w.gapY + w.gap)
-    spawnSparks(cx, y, 4, { vMin: 2, vMax: 9, szMax: 3, color: [20, 35, 50] });
-  spawnRing(P.x, P.y, 0xffc060, 0xff5a1a, 120);
+  for (let y = 10; y < VH; y += 30) if (y < w.gapY || y > w.gapY + w.gap)
+    spawnSparks(cx, y, 3, { vMin: 2, vMax: 9, szMax: 3, color: [20, 35, 50] });
   removeWallMesh(w); walls = walls.filter(x => x !== w);
-  P.inv = Math.max(P.inv, 20);
-  shakeX = 10; shakeY = 6; fx.aberr = 1.2; fxFlash(0xffa040, 0.4); timeScale = Math.min(timeScale, 0.4);
-  const xp0 = runXP; addRunXP(20);
-  pushBonus(P.x, P.y - 22, `SUN BREAK! +${Math.round(runXP - xp0)} XP`, '#ffb066');
-  sfx.shield(); vibrate([30, 20, 50]);
+  shakeX = Math.max(shakeX, 6); shakeY = Math.max(shakeY, 4); fx.aberr = Math.max(fx.aberr, 0.8);
+  const xp0 = runXP; addRunXP(5);
+  pushBonus(P.x, P.y - 22, `BREAK +${Math.round(runXP - xp0)} XP`, '#ffb066');
+  sfx.near(true); vibrate(15);
 }
 function startGame(opts = {}) {
   loadProgression();           // refresh equipped skills from shop
@@ -5298,7 +5299,7 @@ function startGame(opts = {}) {
   // Apply PULSE skill modifiers (rank-scaled)
   PULSE_COOLDOWN = Math.round(PULSE_COOLDOWN_BASE * [1, 0.7, 0.55][rank('rapid_pulse')]);
   PULSE_MAX_R    = Math.round(PULSE_MAX_R_BASE    * [1, 1.3, 1.6][rank('mega_pulse')] * (hasSkill('sunburst') ? 1.35 : 1));
-  aceNears = 0; breakCD = 0;
+  aceNears = 0; sunDiveT = 0;
   bonusPopups = [];
   clearWorld();
   lastGapCentre = VH / 2;
@@ -5577,7 +5578,10 @@ function update(dt) {
   // Timed skill states
   if (lastStandT > 0) { lastStandT -= dt; if (lastStandT <= 0) { lastStandT = 0; xpMult = 1; } }
   if (warpCD > 0) warpCD -= dt;
-  if (breakCD > 0) { breakCD -= dt; if (breakCD <= 0 && hasSkill('sun_breaker')) { pushBonus(P.x, P.y - 30, 'SUN BREAKER READY', '#ffb066'); spawnSparks(P.x, P.y, 8, { color: 0xffb066 }); } }
+  if (sunDiveT > 0) {                      // the ship burns like a small sun while diving
+    sunDiveT -= dt;
+    if (Math.random() < 0.6 * dt) spawnSparks(P.x - 6, P.y, 2, { vMin: 1, vMax: 3, szMax: 2.6, color: [20, 35, 50] });
+  }
   if (hasSkill('regen_shield') && shieldCharges < Math.max(1, shieldMax)) {
     shieldRegen += dt;
     if (shieldRegen >= 1200) {
@@ -5667,13 +5671,12 @@ function update(dt) {
     if (boss && boss.state === 'fight' && b.x > boss.x - 170 && Math.abs(b.y - boss.y) < 80) {
       bossHit(boss.def.bullet, b.x, b.y); removeBulletMesh(b); return false;
     }
-    if (hasSkill('solar_flare')) for (const w of walls) {
-      if (Math.max(b.prevX, b.x) < w.x || Math.min(b.prevX, b.x) > w.x + w.w) continue;
+    if (hasSkill('solar_flare')) for (const w of walls) {      // shots burn the lip they hit and fly on
+      if (b.lastWall === w || Math.max(b.prevX, b.x) < w.x || Math.min(b.prevX, b.x) > w.x + w.w) continue;
       const top = b.y < w.gapY;
       if (!top && b.y < w.gapY + w.gap) continue;
-      meltWall(w, top ? -1 : 1, 12);
-      spawnSparks(w.x, top ? w.gapY : w.gapY + w.gap, 5, { vMin: 1, vMax: 4, szMax: 2, color: 0xffa040 });
-      removeBulletMesh(b); return false;
+      b.lastWall = w;
+      if (meltWall(w, top ? -1 : 1, 14) > 0) spawnSparks(w.x, top ? w.gapY : w.gapY + w.gap, 5, { vMin: 1, vMax: 4, szMax: 2, color: 0xffa040 });
     }
     for (const e of enemies) {
       if (e.dead || e.type === 'p') continue;
@@ -5702,8 +5705,13 @@ function update(dt) {
   for (const w of walls) {
     w.x -= spd * dt;
     w.pulse += 0.042 * dt;
-    if (w.meltT > 0) { const d = Math.min(w.meltT, 3 * dt, Math.max(0, w.gapY - 6)); w.gapY -= d; w.gap += d; w.meltT = d > 0 ? w.meltT - d : 0; }
-    if (w.meltB > 0) { const d = Math.min(w.meltB, 3 * dt, Math.max(0, VH - 6 - w.gapY - w.gap)); w.gap += d; w.meltB = d > 0 ? w.meltB - d : 0; }
+    if (!w.heated && hasSkill('solar_flare') && w.x > P.x && w.x - P.x < 340) {   // SOLAR FLARE: every wall ahead melts open
+      w.heated = true;
+      if (meltWall(w, -1, w.gap * FLARE_HEAT) + meltWall(w, 1, w.gap * FLARE_HEAT) > 0)
+        for (const y of [w.gapY, w.gapY + w.gap]) spawnSparks(w.x + w.w / 2, y, 5, { vMin: 1, vMax: 4, szMax: 2.2, color: 0xffa040 });
+    }
+    if (w.meltT > 0) { const d = Math.min(w.meltT, 6 * dt, Math.max(0, w.gapY - 6)); w.gapY -= d; w.gap += d; w.meltT = d > 0 ? w.meltT - d : 0; }
+    if (w.meltB > 0) { const d = Math.min(w.meltB, 6 * dt, Math.max(0, VH - 6 - w.gapY - w.gap)); w.gap += d; w.meltB = d > 0 ? w.meltB - d : 0; }
     // Near-miss detection: when wall trailing edge crosses player x
     if (!w.passed && w.x + w.w < P.x) {
       w.passed = true;
@@ -5895,13 +5903,12 @@ function update(dt) {
     }
   }
 
+  if (sunDiveT > 0) for (const w of [...walls])               // SUN DIVE: walls in the way shatter (even while invulnerable)
+    if (P.x+P.r>w.x && P.x-P.r<w.x+w.w && (P.y-P.r<w.gapY || P.y+P.r>w.gapY+w.gap)) sunBreak(w);
   if (P.inv > 0) { P.inv -= dt; return; }
   for (const w of walls)
     if (P.x+P.r>w.x && P.x-P.r<w.x+w.w)
-      if (P.y-P.r<w.gapY || P.y+P.r>w.gapY+w.gap) {
-        if (hasSkill('sun_breaker') && breakCD <= 0) { sunBreak(w); return; }
-        deathCause = 'wall'; die(); return;
-      }
+      if (P.y-P.r<w.gapY || P.y+P.r>w.gapY+w.gap) { deathCause = 'wall'; die(); return; }
   if (bossLaserHits()) { deathCause = 'laser'; die(); return; }
   for (const e of enemies) {
     if (e.reflected) continue;
@@ -6009,6 +6016,12 @@ function syncScene() {
 
   // Shield bubble
   shieldGroup.visible = gstate === 'play' && shieldCharges > 0;
+  sunGlow.visible = sunDiveT > 0 && gstate === 'play';
+  if (sunGlow.visible) {
+    sunGlow.position.copy(W(P.x, P.y + hover, 5));
+    const k = Math.min(1, sunDiveT / 20);
+    sunGlow.material.opacity = k * (0.75 + Math.sin(tick * 0.4) * 0.15); sunGlow.scale.setScalar(100 + Math.sin(tick * 0.3) * 12);
+  }
   if (shieldGroup.visible) {
     shieldGroup.position.copy(W(P.x, P.y + hover, 4));
     shieldRing.rotation.set(Math.sin(tick * 0.05) * 0.9, tick * 0.04, 0);
