@@ -2400,12 +2400,12 @@ import { GLTFLoader }      from 'three/addons/loaders/GLTFLoader.js';
 
 // Single source of truth for the version: shown on the title / portrait
 // screens and passed to the service worker, which names its cache after it.
-const VERSION = '3.6.4';
+const VERSION = '3.6.5';
 
 // ── Access analytics: GoatCounter (no cookies, no personal data). The page view is counted when
 // count.js loads; track() sends game events (run start, boss down, chapter clear, game over).
 // Empty GC_CODE = analytics off. Local / test hosts are never counted.
-const GC_CODE = '';
+const GC_CODE = 'hover-dodge';
 if (GC_CODE && location.protocol === 'https:' && !/^(localhost|127\.|game\.local)/.test(location.hostname)) {
   const s = document.createElement('script');
   s.async = true; s.dataset.goatcounter = `https://${GC_CODE}.goatcounter.com/count`; s.src = 'https://gc.zgo.at/count.js';

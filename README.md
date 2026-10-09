@@ -11,7 +11,7 @@ Three.js + WebGL で描画する、タップひとつで遊べる横スクロー
 - **やり込み**：パイロットレベル（最大 Lv80）、42 スキルのツリー、装備枠、HULL（耐久）、シナジー、スキン、9 つの隠し要素
 - **3D モデル**（glTF）と、プレイに合わせて変化する **手続き合成の BGM**
 
-[![Play](https://img.shields.io/badge/play-online-00e8ff?style=flat-square)](https://junia2009.github.io/hover-dodge/) ![Version](https://img.shields.io/badge/version-3.6.4-aa44ff?style=flat-square)
+[![Play](https://img.shields.io/badge/play-online-00e8ff?style=flat-square)](https://junia2009.github.io/hover-dodge/) ![Version](https://img.shields.io/badge/version-3.6.5-aa44ff?style=flat-square)
 
 ---
 
@@ -484,6 +484,7 @@ hover-dodge/
 
 | Version | 内容 |
 | :---: | --- |
+| **3.6.5**  | アクセス解析を有効化（GoatCounter のサイトコード `hover-dodge`） |
 | **3.6.4**  | アクセス解析の仕組みを追加（GoatCounter・Cookie なし、`GC_CODE` を設定するまでは無効）：ページ表示に加えて、出撃・ボス撃破（初撃破かどうか）・章クリア・撃墜（章とフェーズ）をイベントとして記録 |
 | **3.6.3**  | パウロの **3D モデル**（`models/paulo.glb`）を追加。オレンジの丸いドローンに、シアンの一つ目・アンテナ・小さな腕・耳センサー・記録係の赤い REC ランプ・浮遊スラスター。見送りシーンではレイの肩のあたりに浮かび、自己紹介で手を振り、パラスに会うと跳ねて REC ランプが点滅する |
 | **3.6.2**  | 見送りシーンのレイの制帽をやめて、憧れのパパ（ソル）と**おそろいのフライトゴーグル**に（ソルのモデルから写してレイの頭に合わせている）。赤いネッカチーフはそのまま |
