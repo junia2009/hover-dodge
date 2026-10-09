@@ -11,7 +11,7 @@ Three.js + WebGL で描画する、タップひとつで遊べる横スクロー
 - **やり込み**：パイロットレベル（最大 Lv60）、38 スキルのツリー、装備枠、HULL（耐久）、シナジー、スキン、9 つの隠し要素
 - **3D モデル**（glTF）と、プレイに合わせて変化する **手続き合成の BGM**
 
-[![Play](https://img.shields.io/badge/play-online-00e8ff?style=flat-square)](https://junia2009.github.io/hover-dodge/) ![Version](https://img.shields.io/badge/version-2.7.4-aa44ff?style=flat-square)
+[![Play](https://img.shields.io/badge/play-online-00e8ff?style=flat-square)](https://junia2009.github.io/hover-dodge/) ![Version](https://img.shields.io/badge/version-2.8.0-aa44ff?style=flat-square)
 
 ---
 
@@ -192,7 +192,8 @@ Three.js + WebGL で描画する、タップひとつで遊べる横スクロー
 ─── Lv31 以降の上位スキル ────────────────────────────────────────────
   OVERLOAD → TWIN PULSE ／ LAST STAND → IMMORTAL ／ GOLDEN ORBS → TREASURE HUNTER
 ─── SOL（CHAPTER Ⅲ クリアで解放）──────────────────────────────────────
-  SUNBURST ── ACE INSTINCT
+  SUNBURST ─┬─ ACE INSTINCT
+            └─ SOLAR FLARE ── ★SUN BREAKER
 ```
 
 | スキル | 価格 (ランク) | 効果 |
@@ -235,6 +236,8 @@ Three.js + WebGL で描画する、タップひとつで遊べる横スクロー
 | **TREASURE HUNTER** (Lv44) | 1,800 | XP オーブの出現率 UP（45% → 75%）、金オーブの確率 2 倍 |
 | **SUNBURST** (Ⅲ) | 1,200 | PULSE が太陽の光の輪に。範囲 +35%、眠りの霧を画面ごと晴らす |
 | **ACE INSTINCT** (Ⅲ) | 1,500 | NEAR の判定が広がり、NEAR 5 回ごとに耐久 +1 |
+| **SOLAR FLARE** (Ⅲ) | 1,800 | 壁を焼き切る：弾が壁に当たると壁が溶けて隙間が広がり、PULSE は近くの壁をまとめて溶かす（隙間は最大 +60%） |
+| **SUN BREAKER** ★ (Ⅲ) | 3,000 | 壁に激突しても壁を粉砕して突き抜ける（ノーダメージ・+20 XP、再使用まで 10 秒） |
 
 ### シナジー
 
@@ -431,6 +434,7 @@ hover-dodge/
 
 | Version | 内容 |
 | :---: | --- |
+| **2.8.0**  | SOL 系統スキルを強化：新スキル **SOLAR FLARE**（弾と PULSE で壁を溶かして隙間を広げる）と ★ **SUN BREAKER**（壁に激突しても粉砕して突き抜ける、CD 10 秒）を追加。SOL 系統スキルのアイコンを追加 |
 | **2.7.4**  | LOG のシーン再生ボタンが横に並びきらず画面外にはみ出していたのを修正：章ごと（Ⅰ / Ⅱ / Ⅲ）にまとめ、ラベルを「序章・告白・夢・終章」に短縮、狭い画面では折り返す |
 | **2.7.3**  | 第三部クリア後、縦画面にソルが登場：レイの横をゆったり滑空し、ときどき宙返り。レイとすれ違うと二人でスピン（ハイタッチ）、ミモザも手を振る。タップで宙返り |
 | **2.7.2**  | 横画面（スマホ）で SHOP / LOADOUT のタブがはみ出し、SOL タブが右パネルに隠れて押せなかった問題を修正（タブを縮めて 2 段表示に） |
