@@ -552,9 +552,9 @@ button { font-family: var(--f-ui) }
 #drowse-veil { position: absolute; inset: 0; pointer-events: none; z-index: 2; opacity: 0;
   background: radial-gradient(ellipse at var(--vx, 20%) var(--vy, 50%), rgba(20, 10, 40, 0) 12%, rgba(26, 14, 52, 0.6) 34%, rgba(8, 4, 20, 0.96) 60%); }
 /* CHAPTER 4: the night (a pool of light round the ship) + forgotten skills */
-#night-veil { position: absolute; inset: 0; pointer-events: none; z-index: 2; opacity: 0; transition: opacity .6s;
-  background: radial-gradient(circle at var(--vx, 20%) var(--vy, 50%), rgba(4, 6, 20, 0) 0, rgba(4, 6, 20, 0) calc(var(--nr, 150) * 0.55 * var(--px)),
-    rgba(6, 8, 26, 0.72) calc(var(--nr, 150) * var(--px)), rgba(2, 3, 12, 0.94) calc(var(--nr, 150) * 2.2 * var(--px))); }
+#night-veil { position: absolute; inset: 0; pointer-events: none; z-index: 0; opacity: 0; transition: opacity .6s;
+  background: radial-gradient(circle at var(--vx, 20%) var(--vy, 50%), rgba(4, 6, 20, 0) 0, rgba(4, 6, 20, 0) calc(var(--nr, 150) * 0.7 * var(--px)),
+    rgba(6, 8, 26, 0.6) calc(var(--nr, 150) * 1.25 * var(--px)), rgba(2, 3, 12, 0.9) calc(var(--nr, 150) * 2.6 * var(--px))); }
 .hud-forget { margin-top: calc(6 * var(--px)); font: 700 calc(8 * var(--px))/1.2 var(--f-ui); letter-spacing: calc(1 * var(--px)); color: #9fe8ff; text-shadow: 0 0 6px #5ac8ff; }
 .hud-forget[hidden] { display: none; }
 #ui[data-state="play"] #hud-dom,
@@ -5578,7 +5578,7 @@ function syncNightUI() {
   if (names.length) setText(forgetEl, '忘却: ' + names.join(' / '));
   if (!on) { nightEl.style.opacity = 0; return; }
   const dawn = nightDawn();
-  nightEl.style.opacity = (0.9 * (1 - dawn * 0.85)).toFixed(3);
+  nightEl.style.opacity = (0.92 * (1 - dawn * 0.85)).toFixed(3);
   nightEl.style.setProperty('--vx', (P.x / VW * 100).toFixed(1) + '%'); nightEl.style.setProperty('--vy', (P.y / VH * 100).toFixed(1) + '%');
   nightEl.style.setProperty('--nr', (nightR * (1 + dawn * 2)).toFixed(0));
   nightEl.classList.toggle('eclipse', eclipseT > 0);
@@ -9539,7 +9539,7 @@ const Prologue4 = {
     }
     if (!S.cine) {
       if (m === 'night') { S.camPos.set(-4, S.g0 + 30, 230 - Math.min(t, 6) * 2); S.camTarget.set(-6, S.g0 + 70 + Math.min(t, 4) * 8, -80); }
-      else { S.camPos.set(30 - t * 0.8, S.g0 + 20, 150); S.camTarget.set(18, S.g0 + 18, 12); }
+      else { S.camPos.set(70 - t * 0.8, S.g0 + 30, 205); S.camTarget.set(18, S.g0 + 22, 8); }
       cineEngine(S, false);
     }
     cineTrail(S, s);
