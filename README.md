@@ -11,7 +11,7 @@ Three.js + WebGL で描画する、タップひとつで遊べる横スクロー
 - **やり込み**：パイロットレベル（最大 Lv80）、42 スキルのツリー、装備枠、HULL（耐久）、シナジー、スキン、9 つの隠し要素
 - **3D モデル**（glTF）と、プレイに合わせて変化する **手続き合成の BGM**
 
-[![Play](https://img.shields.io/badge/play-online-00e8ff?style=flat-square)](https://junia2009.github.io/hover-dodge/) ![Version](https://img.shields.io/badge/version-3.3.0-aa44ff?style=flat-square)
+[![Play](https://img.shields.io/badge/play-online-00e8ff?style=flat-square)](https://junia2009.github.io/hover-dodge/) ![Version](https://img.shields.io/badge/version-3.3.1-aa44ff?style=flat-square)
 
 ---
 
@@ -469,6 +469,7 @@ hover-dodge/
 
 | Version | 内容 |
 | :---: | --- |
+| **3.3.1**  | 縦画面で LOADOUT / SHOP の × ボタンが画面外にはみ出して押せなかった問題を修正（XP が 6 桁になると見出しが幅を超えていた）。幅の狭い画面では見出しをコンパクトに |
 | **3.3.0**  | パイロットレベルの上限を Lv80 に：称号 MYTHIC（70）/ ETERNAL（80）、基本耐久 +1（Lv66）、新スキル NIGHT EYE（Lv65・夜の視界 1.5 倍、忘却が半分）と ★MEMORY CORE（Lv75・1 ランに 1 度、撃墜の瞬間に 2 秒前へ巻き戻る）、限定スキン NIGHT（Lv70）/ DAWN（Lv80）。4 段のスキルツリーは短い画面でコンパクト表示 |
 | **3.2.0**  | 章ごとの BGM の違いをはっきり：拍子（第三部はワルツの 3/4、最終章のボスは 7/8）、ドラムキット（和太鼓とタム／ブラシ／大聖堂のゲートリバーブ）、楽器（うなるベースとブラス風のコード打ち／オルゴール／合唱パッドと弓で弾くようなリード）、スウィング・タムのフィル・逆再生風スウェルを追加 |
 | **3.1.0**  | BGM を章ごとに一新：CHAPTER Ⅱ〜Ⅳ に専用のサウンドトラック（タイトル・PHASE 1〜4・ボス・エンディングの全 7 曲ずつ）。キー・テンポ・コード進行・メロディ・音色・ドラムパターンが章ごとに変わる。タイトルの章切替・出撃・カットシーンで章の曲に切り替わる |
