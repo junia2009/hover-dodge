@@ -2368,7 +2368,7 @@ import { GLTFLoader }      from 'three/addons/loaders/GLTFLoader.js';
 
 // Single source of truth for the version: shown on the title / portrait
 // screens and passed to the service worker, which names its cache after it.
-const VERSION = '3.0.0';
+const VERSION = '3.1.0';
 
 // ── 3D models (glTF). The ship, Ray and PALLAS are waited for (briefly) before
 // the scene is built; the flagships stream in the background — they are
@@ -4201,8 +4201,80 @@ const BASS = [
 const KICK  = [[], [0, 8], [0, 4, 8, 12], [0, 4, 8, 12, 14], [0, 3, 4, 8, 11, 12]];
 const SNARE = [[], [], [4, 12], [4, 12], [4, 12, 15]];
 
+// ── One soundtrack per chapter ──
+// Every chapter re-scores all seven sections (title, the four phases, boss, ending) in its own key,
+// tempo, harmony, melodies and instruments. Optional per-section fields the engine understands:
+//   padWave / padLp, leadWave / lead2 / leadOct, arpWave / arpSeq / bell (music-box octave),
+//   kick / snare (step lists), bassStyle (BASS rhythm), hatDiv (2 = 8ths, 4 = quarters)
+const SECTIONS_BY_CH = {
+  1: SECTIONS,
+  // CHAPTER Ⅱ「CERBERUS」— the underworld: D Phrygian menace, gritty low saw leads, pounding drums
+  2: {
+    menu: { bpm: 80, style: 0, chords: [CH(38,0,3,7,10,14), CH(46,0,4,7,11), CH(43,0,3,7,10), CH(45,0,4,7,10,13)],
+            padLp: 700, lv: { pad: .55, bass: .26, kick: 0, snare: 0, hat: .06, lead: 0, arp: .3 } },
+    p1:   { bpm: 104, style: 1, chords: [CH(38,0,3,7), CH(39,0,4,7), CH(38,0,3,7), CH(36,0,4,7)], padLp: 760,
+            lv: { pad: .42, bass: .42, kick: .4, snare: 0, hat: .22, lead: 0, arp: 0 } },
+    p2:   { bpm: 112, style: 2, chords: [CH(38,0,3,7), CH(46,0,4,7), CH(39,0,4,7), CH(45,0,4,7)], bassStyle: 3,
+            lv: { pad: .3, bass: .56, kick: .8, snare: .42, hat: .3, lead: 0, arp: 0 } },
+    p3:   { bpm: 120, style: 3, chords: [CH(38,0,3,7), CH(36,0,4,7), CH(46,0,4,7), CH(45,0,4,7,10)],
+            leadWave: 'sawtooth', lead2: 'square', leadOct: 12, motif: [0,null,0,1,null,0,null,2, 1,null,0,null,4,3,2,null],
+            lv: { pad: .24, bass: .6, kick: .85, snare: .52, hat: .38, lead: .38, arp: 0 } },
+    p4:   { bpm: 130, style: 4, chords: [CH(38,0,3,7), CH(39,0,4,7), CH(43,0,3,7), CH(45,0,4,7,10)], kick: [0, 2, 4, 8, 10, 12], snare: [4, 12, 14],
+            leadWave: 'sawtooth', lead2: 'square', leadOct: 12, motif: [0,1,0,null,3,2,null,1, 0,null,4,null,3,2,1,null],
+            lv: { pad: .2, bass: .64, kick: .92, snare: .6, hat: .46, lead: .44, arp: 0 } },
+    boss: { bpm: 142, style: 4, chords: [CH(38,0,3,7), CH(39,0,4,7), CH(38,0,3,7), CH(45,0,4,7,10,13)], kick: [0, 2, 4, 6, 8, 10, 12, 14], snare: [4, 12, 15],
+            leadWave: 'sawtooth', lead2: 'sawtooth', leadOct: 12, motif: [0,0,1,0,null,3,null,2, 0,0,1,0,null,4,3,1],
+            lv: { pad: .2, bass: .7, kick: .96, snare: .64, hat: .5, lead: .5, arp: .2 } },
+    ending: { bpm: 72, style: 0, chords: [CH(41,0,4,7,11,14), CH(36,0,4,7,14), CH(38,0,3,7,10,14), CH(46,0,4,7,11)],
+            padLp: 800, lv: { pad: .6, bass: .2, kick: 0, snare: 0, hat: 0, lead: 0, arp: .38 } },
+  },
+  // CHAPTER Ⅲ「HYPNOS」— a lullaby: E♭ major / lydian, soft triangles, music-box bells, half-time drums
+  3: {
+    menu: { bpm: 70, style: 0, chords: [CH(39,0,4,7,11,14), CH(44,0,4,7,11,18), CH(48,0,3,7,10,14), CH(46,0,5,7,10)],
+            padWave: 'triangle', padLp: 1400, bell: true, lv: { pad: .6, bass: .18, kick: 0, snare: 0, hat: 0, lead: 0, arp: .4 } },
+    p1:   { bpm: 92, style: 1, chords: [CH(39,0,4,7), CH(44,0,4,7,11), CH(48,0,3,7), CH(46,0,4,7)], padWave: 'triangle', padLp: 1300,
+            hatDiv: 4, bell: true, arpWave: 'sine', arpSeq: [0, 2, 4, 2, 1, 3, 5, 3],
+            lv: { pad: .5, bass: .32, kick: .25, snare: 0, hat: .14, lead: 0, arp: .22 } },
+    p2:   { bpm: 98, style: 2, chords: [CH(39,0,4,7), CH(48,0,3,7), CH(44,0,4,7,11), CH(46,0,4,7)], padWave: 'triangle',
+            kick: [0, 10], snare: [8], bassStyle: 1, bell: true, arpWave: 'sine', arpSeq: [0, 2, 4, 2, 1, 3, 5, 3],
+            lv: { pad: .4, bass: .44, kick: .62, snare: .34, hat: .24, lead: 0, arp: .2 } },
+    p3:   { bpm: 104, style: 3, chords: [CH(44,0,4,7,11), CH(39,0,4,7), CH(41,0,3,7), CH(46,0,4,7)], padWave: 'triangle',
+            kick: [0, 6, 10], snare: [8], leadWave: 'triangle', lead2: 'sine', motif: [4,null,null,3,null,null,2,null, 3,null,null,1,null,null,0,null],
+            lv: { pad: .3, bass: .5, kick: .72, snare: .44, hat: .3, lead: .42, arp: 0 } },
+    p4:   { bpm: 112, style: 4, chords: [CH(44,0,4,7,11), CH(46,0,4,7), CH(39,0,4,7), CH(48,0,3,7)], kick: [0, 6, 8, 14], snare: [4, 12],
+            leadWave: 'triangle', lead2: 'sine', motif: [2,null,4,null,3,2,null,1, 2,null,4,5,null,4,3,null],
+            lv: { pad: .24, bass: .56, kick: .84, snare: .54, hat: .4, lead: .46, arp: .1 } },
+    boss: { bpm: 124, style: 4, chords: [CH(48,0,3,7), CH(44,0,4,7,11), CH(39,0,4,7), CH(46,0,4,7,10)],
+            leadWave: 'square', lead2: 'triangle', motif: [4,null,3,4,null,2,null,1, 2,null,4,null,5,4,3,null],
+            lv: { pad: .22, bass: .62, kick: .92, snare: .6, hat: .46, lead: .48, arp: .25 } },
+    ending: { bpm: 64, style: 0, chords: [CH(44,0,4,7,11,14), CH(43,0,3,7,10), CH(41,0,3,7,10,14), CH(46,0,5,7,10)],
+            padWave: 'triangle', padLp: 1500, bell: true, lv: { pad: .64, bass: .18, kick: 0, snare: 0, hat: 0, lead: 0, arp: .42 } },
+  },
+  // CHAPTER Ⅳ「NYX」— the night and the dawn: F♯ minor, low choir-like pads, music box, a hopeful lead
+  4: {
+    menu: { bpm: 68, style: 0, chords: [CH(42,0,3,7,10,14), CH(38,0,4,7,11,14), CH(45,0,4,7,11), CH(40,0,4,7,9,14)],
+            padLp: 560, bell: true, lv: { pad: .66, bass: .2, kick: 0, snare: 0, hat: 0, lead: 0, arp: .34 } },
+    p1:   { bpm: 96, style: 1, chords: [CH(42,0,3,7), CH(38,0,4,7), CH(45,0,4,7), CH(40,0,4,7)], padLp: 620,
+            hatDiv: 4, bell: true, arpWave: 'sine', arpSeq: [0, 2, 4, 2, 1, 3, 5, 3],
+            lv: { pad: .52, bass: .34, kick: .3, snare: 0, hat: .12, lead: 0, arp: .2 } },
+    p2:   { bpm: 104, style: 2, chords: [CH(42,0,3,7), CH(47,0,3,7), CH(38,0,4,7), CH(40,0,4,7)], padLp: 700, bassStyle: 2,
+            lv: { pad: .4, bass: .5, kick: .76, snare: .38, hat: .28, lead: 0, arp: .1 } },
+    p3:   { bpm: 112, style: 3, chords: [CH(42,0,3,7), CH(38,0,4,7), CH(40,0,4,7), CH(37,0,3,7)],
+            leadWave: 'sawtooth', lead2: 'triangle', motif: [0,null,2,null,4,null,2,3, 4,null,5,null,4,2,null,null],
+            lv: { pad: .3, bass: .55, kick: .8, snare: .5, hat: .36, lead: .4, arp: 0 } },
+    p4:   { bpm: 122, style: 4, chords: [CH(42,0,3,7), CH(38,0,4,7), CH(45,0,4,7), CH(40,0,4,7,10)],
+            leadWave: 'sawtooth', lead2: 'triangle', motif: [4,null,5,4,null,2,null,3, 4,null,6,null,5,4,2,null],
+            lv: { pad: .24, bass: .6, kick: .9, snare: .6, hat: .46, lead: .46, arp: .1 } },
+    boss: { bpm: 132, style: 4, chords: [CH(42,0,3,7), CH(43,0,4,7), CH(38,0,4,7), CH(37,0,4,7,10)], kick: [0, 3, 4, 8, 11, 12, 14],
+            leadWave: 'sawtooth', lead2: 'square', motif: [0,null,2,4,null,5,4,null, 2,null,4,6,null,5,4,2],
+            lv: { pad: .24, bass: .66, kick: .95, snare: .62, hat: .5, lead: .5, arp: .25 } },
+    ending: { bpm: 72, style: 0, chords: [CH(38,0,4,7,11,14), CH(45,0,4,7,14), CH(47,0,3,7,10,14), CH(40,0,5,7,10)],
+            padLp: 900, bell: true, lv: { pad: .64, bass: .22, kick: 0, snare: 0, hat: 0, lead: 0, arp: .42 } },
+  },
+};
+
 const Music = {
-  started: false, section: 'menu', pending: null,
+  started: false, section: 'menu', pending: null, theme: 1,
   bpm: 88, step: 0, bar: 0, nextT: 0, timer: null,
   intensity: 0, intensityTarget: 0, heat: 0,
   muffled: false, dying: false, timeScale: 1, comboNote: 0,
@@ -4210,7 +4282,15 @@ const Music = {
 
   get stepDur() { return 60 / this.bpm / 4; },
   get barDur()  { return 60 / this.bpm * 4; },
-  chord() { const c = SECTIONS[this.section].chords[this.bar % 4]; return c; },
+  sec(name = this.section) { const set = SECTIONS_BY_CH[this.theme] || SECTIONS; return set[name] || SECTIONS[name]; },
+  chord() { const c = this.sec().chords[this.bar % 4]; return c; },
+  // the chapter's soundtrack: a change re-enters the current section (new key / tempo) on the next bar
+  setTheme(ch) {
+    ch = SECTIONS_BY_CH[ch] ? ch : 1;
+    if (ch === this.theme) return;
+    this.theme = ch;
+    if (this.started && !this.dying) { this.pending = this.pending || this.section; this.jumpToBar(); }
+  },
   // Chord tones as MIDI, extending into higher octaves for index ≥ length
   tone(i, base) {
     const c = this.chord(), n = c.q.length;
@@ -4238,7 +4318,7 @@ const Music = {
   },
   applySection(name) {
     this.section = name;
-    this.bpm = SECTIONS[name].bpm;
+    this.bpm = this.sec(name).bpm;
     this.bar = 0;
     AU.dly.delayTime.setTargetAtTime(this.stepDur * 3, audioCtx.currentTime, 0.05);  // dotted 8th
   },
@@ -4271,17 +4351,17 @@ const Music = {
       this.pending = null;
       if (this.section !== 'menu' && from !== this.section) this.impact(t);
     }
-    const sec = SECTIONS[this.section], style = sec.style;
+    const sec = this.sec(), style = sec.style;
     const L = AU.L, on = k => L[k].gain.value > 0.01 || this.levelTarget(k) > 0.01;
     const sd = this.stepDur;
 
     if (st === 0 && on('pad')) {
       for (const m of this.chord().q.map(iv => this.chord().r + 12 + iv)) {
-        for (const dt of [-7, 7]) voice({ type: 'sawtooth', f: mtof(m), t, dur: this.barDur + 0.35, vol: 0.05,
-          a: style === 0 ? 0.9 : 0.35, out: L.pad, lp: 900 + style * 120, q: 0.5, detune: dt, rev: 0.45 });
+        for (const dt of [-7, 7]) voice({ type: sec.padWave || 'sawtooth', f: mtof(m), t, dur: this.barDur + 0.35, vol: sec.padWave === 'triangle' ? 0.075 : 0.05,
+          a: style === 0 ? 0.9 : 0.35, out: L.pad, lp: (sec.padLp || 900) + style * 120, q: 0.5, detune: dt, rev: 0.45 });
       }
     }
-    const b = BASS[style](st);
+    const b = BASS[sec.bassStyle ?? style](st);
     if (b && on('bass')) {
       const f = mtof(this.chord().r - 12 + b[0]);
       const cut = 260 + style * 90 + this.intensity * 1600;
@@ -4289,11 +4369,11 @@ const Music = {
       voice({ type: 'sawtooth', f, t, dur, vol: 0.22, a: 0.006, out: L.bass, lp: cut * 2.2, lp2: cut, q: 4 });
       voice({ type: 'sine', f: f / 2 < 30 ? f : f / 2, t, dur, vol: 0.28, a: 0.006, out: L.bass });
     }
-    if (KICK[style].includes(st) && on('kick')) this.kick(t);
-    if (SNARE[style].includes(st) && on('snare')) this.snare(t, 0.5);
+    if ((sec.kick || KICK[style]).includes(st) && on('kick')) this.kick(t);
+    if ((sec.snare || SNARE[style]).includes(st) && on('snare')) this.snare(t, 0.5);
     if (on('hat')) {
       const dense = style === 4 || this.intensity > 0.35;
-      if (st % 2 === 0 || dense) {
+      if (sec.hatDiv === 4 ? st % 4 === 0 : (st % 2 === 0 || dense)) {
         const open = st % 4 === 2 && style >= 2;
         noiseHit({ t, dur: open ? 0.14 : 0.035, vol: (st % 4 === 2 ? 0.32 : 0.18) * (st % 2 ? 0.6 : 1),
           out: L.hat, type: 'highpass', f: 7500, pan: st % 4 === 2 ? 0.25 : -0.15 });
@@ -4302,19 +4382,21 @@ const Music = {
     if (sec.motif && on('lead')) {
       const deg = sec.motif[st];
       if (deg != null) {
-        const m = this.tone(deg, 24) + (this.heat > 0.8 ? 12 : 0);
-        voice({ type: 'square', f: mtof(m), t, dur: sd * 1.6, vol: 0.07, out: L.lead, lp: 2800, q: 1, dly: 0.3, rev: 0.15 });
-        voice({ type: 'sawtooth', f: mtof(m), t, dur: sd * 1.6, vol: 0.04, out: L.lead, lp: 2400, detune: 9 });
+        const m = this.tone(deg, sec.leadOct ?? 24) + (this.heat > 0.8 ? 12 : 0), soft = sec.leadWave === 'triangle';
+        voice({ type: sec.leadWave || 'square', f: mtof(m), t, dur: sd * (soft ? 2.4 : 1.6), vol: soft ? 0.1 : 0.07, out: L.lead, lp: 2800, q: 1, dly: 0.3, rev: soft ? 0.35 : 0.15 });
+        voice({ type: sec.lead2 || 'sawtooth', f: mtof(m), t, dur: sd * 1.6, vol: 0.04, out: L.lead, lp: 2400, detune: 9 });
       }
     }
     if (on('arp')) {
       if (style === 0) {
         if (st % 2 === 0) voice({ type: 'sine', f: mtof(this.tone([0, 2, 1, 3, 2, 4, 3, 1][(st / 2) | 0], 36)),
           t, dur: 0.6, vol: 0.06, out: L.arp, rev: 0.6, dly: 0.25 });
+        if (sec.bell && st % 4 === 0) voice({ type: 'sine', f: mtof(this.tone([4, 5, 3, 6][(st / 4) | 0], 48)), t, dur: 0.9, vol: 0.022, out: L.arp, rev: 0.6 });
       } else {
-        const seq = [0, 1, 2, 3, 4, 3, 2, 1];
-        voice({ type: 'triangle', f: mtof(this.tone(seq[st % 8] + (st >= 8 ? 1 : 0), 24)),
-          t, dur: 0.16, vol: 0.085, out: L.arp, dly: 0.3, rev: 0.1 });
+        const seq = sec.arpSeq || [0, 1, 2, 3, 4, 3, 2, 1];
+        const m = this.tone(seq[st % 8] + (st >= 8 ? 1 : 0), sec.bell ? 36 : 24);
+        voice({ type: sec.arpWave || 'triangle', f: mtof(m), t, dur: sec.bell ? 0.4 : 0.16, vol: 0.085, out: L.arp, dly: 0.3, rev: sec.bell ? 0.4 : 0.1 });
+        if (sec.bell && st % 4 === 0) voice({ type: 'sine', f: mtof(m + 12), t, dur: 0.5, vol: 0.03, out: L.arp, rev: 0.5 });
       }
     }
     if (this.intensity > 0.05 && style > 0) {
@@ -4356,7 +4438,7 @@ const Music = {
     noiseHit({ t: now, dur, vol: 0.22, out: AU.musicBus, type: 'bandpass', f: 350, f2: 7000, q: 2.5, swell: true, rev: 0.2 });
     voice({ type: 'sawtooth', f: mtof(this.tone(0, 12)), f2: mtof(this.tone(0, 36)), t: now, dur, vol: 0.05,
       out: AU.musicBus, lp: 400, lp2: 5000, a: dur * 0.9 });
-    if (SECTIONS[this.section].style >= 2) {
+    if (this.sec().style >= 2) {
       const sd = this.stepDur, n = 16;
       for (let i = 0; i < n; i++) {
         const t = tb - (n - i) * sd;
@@ -4444,7 +4526,7 @@ const Music = {
   setMute() { applyAudioPrefs(); },
 
   levelTarget(k) {
-    const sec = SECTIONS[this.section];
+    const sec = this.sec();
     let v = sec.lv[k] || 0;
     if (sec.style > 0) {
       if (k === 'arp')  v = Math.max(v, Math.min(1, this.heat) * 0.5);
@@ -5344,6 +5426,7 @@ function startGame(opts = {}) {
   hudBestVal.textContent = hiScore;
   fxFlash(0x00e8ff, 0.35);
   sfx.launch();
+  Music.setTheme(chapter);
   Music.startRun();
   riserFor = -1;
   secretRunStart();
@@ -6311,6 +6394,7 @@ function refreshChapterUI() {
   document.querySelector('#t-chapter [data-ch="4"]').hidden = !open4;
   for (const b of document.querySelectorAll('#t-chapter [data-ch]')) b.classList.toggle('on', +b.dataset.ch === chapter);
   setText(document.querySelector('.t-tag'), CH_TAG[chapter]);
+  if (gstate === 'menu') Music.setTheme(chapter);   // the title plays the chosen chapter's theme
 }
 function setChapter(ch) {
   if (ch === chapter) return;
@@ -7326,6 +7410,7 @@ const Prologue = (() => {
     requestAnimationFrame(() => requestAnimationFrame(() => veil(false, 1.2)));
   }
   function play(cb) {
+    Music.setTheme(1);
     active = true; onDone = cb; pi = 0; li = 0; t = 0; fade = 1;
     cine = false; el.classList.remove('cine'); setIgnition(false); glint.material.opacity = 0;
     oldShip.rotation.set(0.12, 0.35, 0.16);
@@ -8526,6 +8611,7 @@ const Epilogue = (() => {
     requestAnimationFrame(() => requestAnimationFrame(() => veil(false, 1.2)));
   }
   function play(fromLog = false) {
+    Music.setTheme(1);
     ensureAcheron();
     el.querySelector('.story-title').innerHTML = '<b>BIDENT FALLS</b><span>アイギスの空に、朝が来た。</span>';
     active = true; replay = fromLog; pi = 0; li = 0; t = 0; fade = 1; shake = 0;
@@ -8709,7 +8795,7 @@ const Cine = (() => {
     el.classList.remove('on', 'cine', 'titled', 'talk', 'sfx', 'memory', 'dream');
     renderPass.scene = scene; renderPass.camera = camera;
     if (c.flag) localStorage.setItem(c.flag, '1');
-    if (o.fromLog) gstate = 'menu';
+    if (o.fromLog) { gstate = 'menu'; Music.setTheme(chapter); }
     c.end(o);
     requestAnimationFrame(() => requestAnimationFrame(() => veil(false, 1.2)));
   }
@@ -8725,6 +8811,7 @@ const Cine = (() => {
     setPanel(0);
     el.style.setProperty('--fade', '1');
     el.classList.add('on');
+    Music.setTheme(c.ch || chapter);
     if (Music.started) Music.setSection(c.music || 'menu');
     showLine();
   }
@@ -9890,6 +9977,9 @@ const Afterword = {
     commSay([['R', '……よし。飛ぶか。']]);
   },
 };
+for (const c of [Prologue2, Confession, Epilogue2]) c.ch = 2;
+for (const c of [Prologue3, Dream, Epilogue3]) c.ch = 3;
+for (const c of [Prologue4, Shields, Record, Epilogue4, Afterword]) c.ch = 4;
 for (const c of [Prologue4, Shields, Record, Epilogue4, Afterword]) c.play = (o = {}) => loadPart4Models().then(() => Cine.play(c, o));
 
 // ── Secrets ───────────────────────────────────────────────────────────────────
