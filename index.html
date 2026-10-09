@@ -427,6 +427,9 @@ button { font-family: var(--f-ui) }
 .rot-phase-timeline > div.ch2.reached { color: rgba(200, 160, 255, 0.95); }
 .rot-phase-timeline > div.ch2.reached::before { background: #c08aff; box-shadow: 0 0 6px rgba(192, 138, 255, 0.5); }
 .rot-phase-timeline > div.ch2.reached::after { background: #c08aff; border-color: #c08aff; box-shadow: 0 0 8px #c08aff; }
+.rot-phase-timeline > div.ch3.reached { color: rgba(255, 190, 120, 0.95); }
+.rot-phase-timeline > div.ch3.reached::before { background: #ffb066; box-shadow: 0 0 6px rgba(255, 176, 102, 0.5); }
+.rot-phase-timeline > div.ch3.reached::after { background: #ffb066; border-color: #ffb066; box-shadow: 0 0 8px #ffb066; }
 
 /* Phase progression timeline */
 .rot-phase-timeline {
@@ -536,6 +539,15 @@ button { font-family: var(--f-ui) }
 
 /* ── HUD ──────────────────────────────────────────────────────────────── */
 #hud-dom { position: absolute; inset: 0; opacity: 0; transition: opacity .35s ease; }
+/* CHAPTER 3: drowsiness gauge + the sleepy veil */
+.hud-drowse { display: flex; align-items: center; gap: calc(5 * var(--px)); margin-top: calc(6 * var(--px));
+  font: 700 calc(8 * var(--px))/1 var(--f-disp); letter-spacing: calc(2 * var(--px)); color: #b8a0ff; }
+.hud-drowse[hidden] { display: none; }
+.hud-drowse i { display: block; width: calc(64 * var(--px)); height: calc(5 * var(--px)); background: rgba(168, 144, 255, 0.15); border: 1px solid rgba(168, 144, 255, 0.4); }
+.hud-drowse b { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #8a6ad8, #d8c8ff); box-shadow: 0 0 8px #a890ff; }
+.hud-drowse.full { animation: rot-blink .5s steps(2) infinite; }
+#drowse-veil { position: absolute; inset: 0; pointer-events: none; z-index: 2; opacity: 0;
+  background: radial-gradient(ellipse at var(--vx, 20%) var(--vy, 50%), rgba(20, 10, 40, 0) 12%, rgba(26, 14, 52, 0.6) 34%, rgba(8, 4, 20, 0.96) 60%); }
 #ui[data-state="play"] #hud-dom,
 #ui[data-state="paused"] #hud-dom { opacity: 1; }
 
@@ -1098,6 +1110,7 @@ button { font-family: var(--f-ui) }
 .log-replay { display: flex; gap: 6px; padding: 8px 20px; overflow-x: auto; border-bottom: 1px solid rgba(95, 208, 255, 0.12); flex: none; }
 .log-replay .btn-mini { white-space: nowrap; flex: none; }
 .log-replay .btn-mini.ch2 { background: rgba(192, 138, 255, 0.16); color: #e2ccff; }
+.log-replay .btn-mini.ch3 { background: rgba(255, 176, 102, 0.16); color: #ffd8b0; }
 .log-body { display: grid; grid-template-columns: minmax(200px, 34%) 1fr; }
 .log-list { overflow-y: auto; padding: 12px; display: grid; gap: 6px; align-content: start; border-right: 1px solid rgba(160, 200, 255, 0.09); }
 .log-item {
@@ -1150,6 +1163,10 @@ button { font-family: var(--f-ui) }
   -webkit-backdrop-filter: sepia(0.3) saturate(1.05); backdrop-filter: sepia(0.3) saturate(1.05);
   box-shadow: inset 0 0 160px 40px rgba(40, 22, 6, 0.55); }
 #story .story-box, #story .story-skip, #story .story-title { z-index: 2; }
+/* SOL's dream: a cool, slightly over-saturated haze with a soft blue edge */
+#story.dream::after { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  -webkit-backdrop-filter: saturate(1.25) hue-rotate(-12deg) brightness(1.06); backdrop-filter: saturate(1.25) hue-rotate(-12deg) brightness(1.06);
+  box-shadow: inset 0 0 180px 60px rgba(120, 160, 255, 0.35); }
 .story-skip {
   position: absolute; top: max(14px, env(safe-area-inset-top)); right: max(14px, env(safe-area-inset-right));
   border: none; padding: 8px 12px; background: rgba(0, 0, 0, 0.4); color: rgba(220, 235, 255, 0.75);
@@ -1201,6 +1218,8 @@ button { font-family: var(--f-ui) }
 .t-chapter button small { display: block; margin-top: 2px; font: 600 calc(8 * var(--px))/1 var(--f-ui); letter-spacing: calc(3 * var(--px)); opacity: 0.8; }
 .t-chapter button.on { color: #fff; border-color: var(--ch-c, #00e8ff); background: rgba(20, 30, 70, 0.8); box-shadow: 0 0 14px var(--ch-c, #00e8ff); }
 .t-chapter button[data-ch="2"] { --ch-c: #c08aff; }
+.t-chapter button[data-ch="3"] { --ch-c: #ffb066; }
+.t-chapter button[hidden] { display: none; }
 .t-chapter + .t-start { margin-top: calc(12 * var(--px)); }
 .t-modes {
   margin-top: calc(8 * var(--px)); min-height: calc(10 * var(--px));
@@ -2185,6 +2204,7 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
 
 <div id="wrap">
   <canvas id="hud"></canvas>
+  <div id="drowse-veil"></div>
   <div id="ui" data-state="menu">
 
     <!-- In-run HUD -->
@@ -2194,6 +2214,7 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
         <div class="hud-score-val" id="hud-score">0</div>
         <div class="hud-best" id="hud-best">BEST<b id="hud-best-val">0</b></div>
         <div class="hud-hull" id="hud-hull" hidden></div>
+        <div class="hud-drowse" id="hud-drowse" hidden><span>ZZZ</span><i><b id="hud-drowse-fill"></b></i></div>
       </div>
       <div class="hud-phase" id="hud-phase">
         <div class="hud-phase-name" id="hud-phase-name">PHASE 1<span>WALLS</span></div>
@@ -2235,6 +2256,7 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
         <div class="t-chapter" id="t-chapter" hidden>
           <button type="button" data-ch="1">CHAPTER Ⅰ<small>BIDENT</small></button>
           <button type="button" data-ch="2">CHAPTER Ⅱ<small>CERBERUS</small></button>
+          <button type="button" data-ch="3" hidden>CHAPTER Ⅲ<small>HYPNOS</small></button>
         </div>
         <button class="btn-primary t-start" id="start-btn" type="button">START<kbd>SPACE</kbd></button>
         <div class="t-modes" id="t-modes"></div>
@@ -2328,7 +2350,7 @@ import { GLTFLoader }      from 'three/addons/loaders/GLTFLoader.js';
 
 // Single source of truth for the version: shown on the title / portrait
 // screens and passed to the service worker, which names its cache after it.
-const VERSION = '2.6.3';
+const VERSION = '2.7.0';
 
 // ── 3D models (glTF). The ship, Ray and PALLAS are waited for (briefly) before
 // the scene is built; the flagships stream in the background — they are
@@ -2350,6 +2372,13 @@ function loadPart2Models() {
   return part2Models;
 }
 if ((+localStorage.getItem('hd_boss') || 0) >= 2) loadPart2Models();
+// CHAPTER 3 — the twins and the GATE (SOL comes with the chapter-2 set)
+let part3Models = null;
+function loadPart3Models() {
+  if (!part3Models) part3Models = Promise.all([loadPart2Models(), ...['thanatos', 'hypnos', 'gate'].map(k => loadModel(k, `models/${k}.glb`))]);
+  return part3Models;
+}
+if ((+localStorage.getItem('hd_boss2') || 0) >= 3) loadPart3Models();
 await Promise.race([coreModels, new Promise(r => setTimeout(r, 6000))]);
 // deep clone with private materials (so skins / flashes don't leak between copies)
 function cloneModel(src) {
@@ -2685,6 +2714,16 @@ const SHIP_SKINS = [
     engine:  0xffc040,
     flame:   0xffd870,
     light:   0xffb030,
+  },
+  // ── SOL's colours: the sun-orange ace, unlocked by bringing him home (CHAPTER 3) ──
+  {
+    id: 'sol', name: 'SOL', accent: '#ff8a2a', story: 3,
+    hull:    { color: 0xff7a1a, emissive: 0x4a1400, specular: 0xffd0a0 },
+    wing:    { color: 0x8e2c1c, emissive: 0x300804 },
+    cockpit: { color: 0xfff0d8, emissive: 0x301808, specular: 0xffffff },
+    engine:  0xffc060,
+    flame:   0xffb040,
+    light:   0xff8a2a,
   },
   // ── Secret skins (listed only once their secret is found) ──
   {
@@ -3139,7 +3178,7 @@ let   spaceDown = false;
 function flap() {
   if (gstate === 'menu' || gstate === 'story' || gstate === 'cut') return;   // no flapping on title / cutscenes
   if (gstate === 'dead') return;             // require RETRY button on game over
-  P.vy = FLAP_VY;
+  P.vy = FLAP_VY * (sleepT > 0 ? 0.7 : 1);   // drowsy: weaker flaps
   introT = 0;
   if (gstate === 'play') Story.onFlap();
   fireForwardShot();
@@ -3227,13 +3266,15 @@ function firePulse() {
   vibrate(20);
   pulseUsedThisRun = true;
   nopulseStreak = 0;
+  if (mists.length || drowsy > 0) clearMistAround(P.x, P.y, hasSkill('sunburst') ? 9999 : PULSE_MAX_R * 1.6);
   if (hasSynergy('barrier')) P.inv = Math.max(P.inv, 30);
 
   // 発射時バーストスパーク
   spawnSparks(P.x, P.y, 14, { vMin: 3, vMax: 8, szMax: 2.6, color: 0x00e8ff });
   fx.aberr = Math.max(fx.aberr, 0.5);
-  fxFlash(0x00e8ff, 0.12);
-  spawnRing(P.x, P.y, 0x00e8ff, 0xaa44ff);
+  const sun = hasSkill('sunburst');
+  fxFlash(sun ? 0xffb040 : 0x00e8ff, 0.12);
+  spawnRing(P.x, P.y, sun ? 0xffc060 : 0x00e8ff, sun ? 0xff5a1a : 0xaa44ff);
   if (hasSkill('twin_pulse')) setTimeout(() => {
     if (gstate !== 'play') return;
     sfx.pulse(); spawnRing(P.x, P.y, 0xaa44ff, 0x00e8ff); fxFlash(0xaa44ff, 0.1);
@@ -3383,8 +3424,10 @@ const SKILL_ICONS = {
 };
 const LOCK_ICON = '<svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="1"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
 const icon = (id, cls = 'ic') => `<svg class="${cls}" viewBox="0 0 24 24">${SKILL_ICONS[id] || ''}</svg>`;
-const KIND_COLOR = { ATTACK: '#ff5ad9', DEFENSE: '#6dffa8', PASSIVE: '#5cc8ff', VITAL: '#ff8a5c' };
-const KINDS = ['ATTACK', 'DEFENSE', 'PASSIVE', 'VITAL'];
+const KIND_COLOR = { ATTACK: '#ff5ad9', DEFENSE: '#6dffa8', PASSIVE: '#5cc8ff', VITAL: '#ff8a5c', SOL: '#ffb066' };
+const KINDS_BASE = ['ATTACK', 'DEFENSE', 'PASSIVE', 'VITAL'];
+// SOL's own branch opens once he is home (CHAPTER 3 cleared)
+const kindsOpen = () => (typeof bossBest3 === 'number' && bossBest3 >= 3) ? [...KINDS_BASE, 'SOL'] : KINDS_BASE;
 const skillById = id => skillDef(id);   // skillDef is defined further down (progression section)
 
 // Tree layout for one kind: the root sits in column 0, each of its children
@@ -3454,7 +3497,7 @@ function renderShopUI() {
 
   // Tabs
   shopTabsEl.innerHTML = '';
-  for (const kind of KINDS) {
+  for (const kind of kindsOpen()) {
     const all = SKILL_DEFS.filter(s => s.kind === kind);
     const own = all.filter(s => ownedSkills.includes(s.id)).length;
     const b = document.createElement('button');
@@ -3525,7 +3568,7 @@ function renderLoadoutUI() {
   setText(document.getElementById('lo-slots'), `${equippedSkills.length}/${equipSlots}`);
   // tabs: ALL + kinds that have owned skills
   loTabsEl.innerHTML = '';
-  for (const kind of ['ALL', ...KINDS]) {
+  for (const kind of ['ALL', ...kindsOpen()]) {
     const n = SKILL_DEFS.filter(s => (kind === 'ALL' || s.kind === kind) && ownedSkills.includes(s.id)).length;
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'tab' + (kind === loTab ? ' on' : '');
@@ -3774,13 +3817,16 @@ function refreshRotStats() {
   bestEl.innerHTML = hi > 0 ? `${hi}<span class="unit">SEC</span>` : '<span class="nodata">— NO DATA —</span>';
   const lv = pilotLevel();
   document.getElementById('rot-pilot').innerHTML = `<b>Lv ${lv}</b> · <span class="rank">${rankName(lv)}</span>`;
-  const b1 = +localStorage.getItem('hd_boss') || 0, b2 = +localStorage.getItem('hd_boss2') || 0, open2 = b1 >= 2;
-  const nodes = [['STYX', 'Ⅰ', b1 >= 1], ['ACHERON', 'Ⅰ', b1 >= 2],
-    [open2 ? 'ORTHROS' : '???', 'Ⅱ', b2 >= 1], [open2 ? 'CHARON' : '???', 'Ⅱ', b2 >= 2], [open2 ? 'CERBERUS' : '???', 'Ⅱ', b2 >= 3]];
+  const b1 = +localStorage.getItem('hd_boss') || 0, b2 = +localStorage.getItem('hd_boss2') || 0, b3 = +localStorage.getItem('hd_boss3') || 0, open2 = b1 >= 2;
+  // chapters Ⅰ–Ⅱ boss by boss; once Ⅱ is done, Ⅰ and Ⅱ fold into one node each and Ⅲ's bosses follow
+  const nodes = b2 < 3
+    ? [['STYX', 'Ⅰ', b1 >= 1], ['ACHERON', 'Ⅰ', b1 >= 2],
+       [open2 ? 'ORTHROS' : '???', 'Ⅱ', b2 >= 1], [open2 ? 'CHARON' : '???', 'Ⅱ', b2 >= 2], [open2 ? 'CERBERUS' : '???', 'Ⅱ', b2 >= 3]]
+    : [['BIDENT', 'Ⅰ', true], ['CERBERUS', 'Ⅱ', true], ['THANATOS', 'Ⅲ', b3 >= 1], ['HYPNOS', 'Ⅲ', b3 >= 2], ['THE GATE', 'Ⅲ', b3 >= 3]];
   const cur = nodes.findIndex(n => !n[2]);
   tl.innerHTML = nodes.map(([name, ch, done], i) =>
-    `<div class="${ch === 'Ⅱ' ? 'ch2' : ''}${done ? ' reached' : ''}${i === cur ? ' current' : ''}">${name}<span class="sub">CHAPTER ${ch}</span></div>`).join('');
-  setText(document.querySelector('.rot-tagline'), chapter === 2 ? '冥王ハデスの影を追え' : '宇宙海賊団バイデントを追え');
+    `<div class="${ch === 'Ⅱ' ? 'ch2' : ch === 'Ⅲ' ? 'ch3' : ''}${done ? ' reached' : ''}${i === cur ? ' current' : ''}">${name}<span class="sub">CHAPTER ${ch}</span></div>`).join('');
+  setText(document.querySelector('.rot-tagline'), CH_TAG[chapter] || CH_TAG[1]);
 }
 _shopMQ.addEventListener ? _shopMQ.addEventListener('change', () => refreshRotStats()) : _shopMQ.addListener(() => refreshRotStats());
 if (_shopMQ.addEventListener) _shopMQ.addEventListener('change', _refreshRotXp);
@@ -3818,14 +3864,14 @@ function renderSkinUI() {
   paintSkinStage(cur);
   skinGrid.innerHTML = '';
   // level skins not reached yet are shown locked, as goals
-  for (const s of SHIP_SKINS.filter(x => x.lv && !skinUnlocked(x) && (!x.secret || hasSecret(x.secret)))) {
+  for (const s of SHIP_SKINS.filter(x => !skinUnlocked(x) && ((x.lv && (!x.secret || hasSecret(x.secret))) || (x.story && bossBest2 >= BOSS_DEFS2.length)))) {
     const card = document.createElement('button');
     card.type = 'button'; card.disabled = true;
     card.className = 'skin-card locked';
     card.style.setProperty('--c1', hexCss(s.wing.color));
     card.style.setProperty('--c2', s.accent);
     card.style.setProperty('--c3', hexCss(s.flame));
-    card.innerHTML = `<span class="bar"></span><span class="nm">${s.name}</span><span class="lvq">PILOT Lv ${s.lv}</span>`;
+    card.innerHTML = `<span class="bar"></span><span class="nm">${s.name}</span><span class="lvq">${s.story ? 'CHAPTER Ⅲ クリア' : 'PILOT Lv ' + s.lv}</span>`;
     skinGrid.appendChild(card);
   }
   for (const s of SHIP_SKINS.filter(skinUnlocked)) {
@@ -4547,6 +4593,11 @@ const sfx = {
       voice({ type: 'triangle', f: mtof(m), f2: mtof(m + 1), t, dur: 0.09, vol: 0.05, out: AU.sfxBus, rev: 0.2 });
     } else if (sp === 'H') {   // HADES: very low, cavernous
       voice({ type: 'sawtooth', f: mtof(38 + [0, 3][(r * 2) | 0]), t, dur: 0.12, vol: 0.05, out: AU.sfxBus, lp: 600, rev: 0.45 });
+    } else if (sp === 'T') {   // THANATOS: a cold, hollow knell
+      voice({ type: 'square', f: mtof(45 + [0, 1][(r * 2) | 0]), t, dur: 0.1, vol: 0.04, out: AU.sfxBus, lp: 700, rev: 0.5 });
+    } else if (sp === 'Y') {   // HYPNOS: soft, drowsy, gliding down
+      const m = 76 + [0, 3, 7][(r * 3) | 0];
+      voice({ type: 'sine', f: mtof(m), f2: mtof(m - 5), t, dur: 0.14, vol: 0.045, out: AU.sfxBus, rev: 0.5 });
     } else if (sp === 'F') {   // SOL: big, warm, a bit rough
       const m = 60 + [0, 4, 7][(r * 3) | 0];
       voice({ type: 'triangle', f: mtof(m), f2: mtof(m - 3), t, dur: 0.08, vol: 0.06, out: AU.sfxBus, lp: 2200 });
@@ -4561,7 +4612,7 @@ const sfx = {
     // radio channel opening: static burst + two-tone chirp
     noiseHit({ t, dur: 0.09, vol: 0.06, out: AU.sfxBus, type: 'bandpass', f: 2200, q: 1.5 });
     if (sp === 'P') { voice({ type: 'sine', f: 1320, t, dur: 0.05, vol: 0.05, out: AU.sfxBus }); voice({ type: 'sine', f: 1760, t: t + 0.06, dur: 0.06, vol: 0.045, out: AU.sfxBus }); }
-    else if ('SAOCH'.includes(sp)) { voice({ type: 'square', f: 440, t, dur: 0.06, vol: 0.04, out: AU.sfxBus, lp: 1800 }); voice({ type: 'square', f: 330, t: t + 0.07, dur: 0.08, vol: 0.04, out: AU.sfxBus, lp: 1800 }); }
+    else if ('SAOCHTY'.includes(sp)) { voice({ type: 'square', f: 440, t, dur: 0.06, vol: 0.04, out: AU.sfxBus, lp: 1800 }); voice({ type: 'square', f: 330, t: t + 0.07, dur: 0.08, vol: 0.04, out: AU.sfxBus, lp: 1800 }); }
     else voice({ type: 'triangle', f: 900, f2: 1500, t, dur: 0.09, vol: 0.06, out: AU.sfxBus });
   },
   // ── boss SFX ──
@@ -4824,6 +4875,11 @@ const SKILL_DEFS = [
     desc: '復活が2回に。復活するたびに LAST STAND（10秒間スコア・XP 2倍）' },
   { id: 'treasure_hunter', name: 'TREASURE HUNTER', kind: 'PASSIVE', price: 1800, requires: ['golden_orbs'], lvReq: 44,
     desc: 'XPオーブの出現率UP（45%→75%）、金オーブの確率2倍' },
+  // ── SOL (CHAPTER 3 cleared) ──
+  { id: 'sunburst', name: 'SUNBURST', kind: 'SOL', price: 1200,
+    desc: 'ソル直伝。PULSE が太陽の光の輪になり、範囲 +35%。眠りの霧を画面ごと晴らす' },
+  { id: 'ace_instinct', name: 'ACE INSTINCT', kind: 'SOL', price: 1500, requires: ['sunburst'],
+    desc: 'エースの勘。NEAR の判定が広がり、NEAR 5 回ごとに耐久が 1 回復' },
 ];
 
 // Two specific skills equipped together unlock a bonus effect.
@@ -5167,9 +5223,12 @@ function clearWorld() {
   pulseRings = []; pulseCooldown = 0;
   shakeX = 0; shakeY = 0;
   cleanupBoss();
+  for (const m of mists) removeMist(m);
+  mists = []; drowsy = 0; sleepT = 0; mistSpawnT = 600; runSaid = {};
 }
 
 let introT = 0;                 // frames of the post-prologue fly-in (gravity held)
+let aceNears = 0;               // ACE INSTINCT: NEARs counted toward the next repair
 function startGame(opts = {}) {
   loadProgression();           // refresh equipped skills from shop
   hardcoreRun = !!secOpts.hardcore;
@@ -5196,7 +5255,8 @@ function startGame(opts = {}) {
   P.ghost = 0; P.ghostCD = 0;
   // Apply PULSE skill modifiers (rank-scaled)
   PULSE_COOLDOWN = Math.round(PULSE_COOLDOWN_BASE * [1, 0.7, 0.55][rank('rapid_pulse')]);
-  PULSE_MAX_R    = Math.round(PULSE_MAX_R_BASE    * [1, 1.3, 1.6][rank('mega_pulse')]);
+  PULSE_MAX_R    = Math.round(PULSE_MAX_R_BASE    * [1, 1.3, 1.6][rank('mega_pulse')] * (hasSkill('sunburst') ? 1.35 : 1));
+  aceNears = 0;
   bonusPopups = [];
   clearWorld();
   lastGapCentre = VH / 2;
@@ -5346,6 +5406,57 @@ function die() {
 
 
 // ── Update (game logic) ───────────────────────────────────────────────────────
+// ── CHAPTER 3: HYPNOS's sleep mist ──
+// Clouds drift toward the pilot; flying inside one fills the ZZZ gauge. When it is full the pilot
+// nods off for 3 s: heavier gravity response, weaker flaps and a closing dark veil. PULSE blows the
+// mist away and shakes off some of the drowsiness.
+let mists = [], drowsy = 0, sleepT = 0, mistSpawnT = 600;
+const drowseEl = document.getElementById('hud-drowse'), drowseFill = document.getElementById('hud-drowse-fill'), veilEl = document.getElementById('drowse-veil');
+function spawnMist(x, y, size = 1.6) {
+  const r = 46 * size, g = new THREE.Group();
+  const outer = glowSprite(0x7a5ad8, r * 3.2, 0.55), inner = glowSprite(0xd8c8ff, r * 1.6, 0.35);
+  g.add(outer, inner); scene.add(g);
+  mists.push({ x, y, r, vx: -(0.6 + Math.random() * 0.4), t: Math.random() * 6, g, outer, inner, life: 1 });
+}
+function removeMist(m) { scene.remove(m.g); }
+function clearMistAround(x, y, R) {
+  for (const m of mists) if (Math.hypot(m.x - x, m.y - y) < R + m.r) { m.fade = true; spawnSparks(m.x, m.y, 8, { color: 0xb8a0ff }); }
+  drowsy = Math.max(0, drowsy - 45);
+}
+function mistTick(dt) {
+  if (chapter !== 3) return;
+  // ambient mist between the boss fights (never during the opening seconds)
+  if (!boss && frame > 1200) { mistSpawnT -= dt; if (mistSpawnT <= 0) { mistSpawnT = 520 + Math.random() * 380; spawnMist(VW + 90, 70 + Math.random() * (VH - 140), 1.3 + Math.random() * 0.7); } }
+  let inside = false;
+  for (const m of mists) {
+    m.x += (m.vx - spd * 0.45) * dt; m.t += dt * 0.03;
+    if (m.fade) m.life -= dt * 0.05;
+    const k = Math.max(0, m.life) * (0.85 + Math.sin(m.t * 2) * 0.15);
+    m.outer.material.opacity = 0.5 * k; m.inner.material.opacity = 0.3 * k;
+    m.g.position.copy(W(m.x, m.y + Math.sin(m.t) * 6, -2));
+    if (!m.fade && Math.hypot(m.x - P.x, m.y - P.y) < m.r * 0.9) inside = true;
+  }
+  mists = mists.filter(m => { if (m.x < -200 || m.life <= 0) { removeMist(m); return false; } return true; });
+  if (sleepT > 0) { sleepT -= dt; if (sleepT <= 0) { drowsy = 0; commSay([['R', '……はっ！ 寝てない！'], ['P', '寝ていました。三秒間。']]); } }
+  else if (inside) {
+    drowsy = Math.min(100, drowsy + 0.6 * dt);
+    if (drowsy >= 100) { sleepT = 180; sfx.reflect(); commSay([['P', 'レイ！ 起きてください！']]); }
+    else if (drowsy > 40) sayOnceRun('drowse', [['R', 'ふぁ……なんか、眠く……'], ['P', '霧のせいです！ PULSE で払って！']]);
+  } else drowsy = Math.max(0, drowsy - 0.22 * dt);
+}
+let runSaid = {};
+const sayOnceRun = (k, lines) => { if (!runSaid[k]) { runSaid[k] = true; commSay(lines); } };
+function syncMistUI() {
+  const on = chapter === 3 && (gstate === 'play' || gstate === 'paused');
+  drowseEl.hidden = !on;
+  if (!on) { veilEl.style.opacity = 0; return; }
+  drowseFill.style.width = (sleepT > 0 ? 100 : drowsy) + '%';
+  drowseEl.classList.toggle('full', sleepT > 0);
+  const k = sleepT > 0 ? Math.min(1, (180 - sleepT) / 25, sleepT / 25) : Math.max(0, (drowsy - 55) / 45) * 0.45;
+  veilEl.style.opacity = k.toFixed(3);
+  veilEl.style.setProperty('--vx', (P.x / VW * 100).toFixed(1) + '%'); veilEl.style.setProperty('--vy', (P.y / VH * 100).toFixed(1) + '%');
+}
+
 function update(dt) {
   tick += dt;
   // Exponential decay approximated linearly for small dt
@@ -5488,12 +5599,13 @@ function update(dt) {
     introT -= dt;
     P.vy = 0; P.y += (VH / 2 - P.y) * Math.min(1, 0.05 * dt);
   }
-  else P.vy += GRAVITY * dt;
+  else P.vy += GRAVITY * dt * (sleepT > 0 ? 1.25 : 1);     // drowsy: heavier
   if (P.vy > 14) P.vy = 14;
   P.y = Math.max(P.r, Math.min(VH - P.r, P.y + P.vy * dt));
   secretTick(dt);
   if (!boss) Story.tick(dt);
   bossTick(dt);
+  mistTick(dt);
 
   // Bullets (FORWARD SHOT skill).
   // Swept collision: the bullet moves up to 11*dt px/frame which can exceed
@@ -5546,11 +5658,12 @@ function update(dt) {
       const distFromCenter = Math.abs(P.y - cy);
       const halfGap = w.gap / 2;
       const margin = halfGap - distFromCenter; // distance from nearest edge
-      const [nearThresh, tightThresh] = [[0.30, 0.15], [0.45, 0.225], [0.54, 0.27]][rank('magnet')];
+      const [nearThresh, tightThresh] = [[0.30, 0.15], [0.45, 0.225], [0.54, 0.27], [0.62, 0.31]][rank('magnet') + (hasSkill('ace_instinct') ? 1 : 0)];
       if (margin < halfGap * nearThresh) {
         // Tight pass! +bonus
         const tight = margin < halfGap * tightThresh;
         nearMissCount++;
+        if (hasSkill('ace_instinct') && ++aceNears % 5 === 0) healHull(1, 'ACE');
         // Streak (always tracked; COMBO MULTIPLIER turns it into XP, OVERDRIVE into score)
         comboCount++;
         comboTimer = 300;                      // 5s decay window
@@ -5616,6 +5729,7 @@ function update(dt) {
       const a = Math.atan2(boss.y - e.y, boss.x - 80 - e.x);
       e.vx = Math.cos(a) * 9; e.vy = Math.sin(a) * 9;
     }
+    if (e.wave) { e.wt = (e.wt || 0) + dt; e.vy = Math.cos(e.wt * 0.06 + e.wp) * e.wave; }   // HYPNOS's lullaby: slow swaying shots
     e.x += e.vx * dt;
     e.y += e.vy * dt;
   }
@@ -6032,11 +6146,23 @@ function refreshTitleInfo() {
   refreshRotStats();
 }
 // CHAPTER select: appears once ACHERON has fallen
+const CH_TAG = { 1: '宇宙海賊団バイデントを追え', 2: '冥王ハデスの影を追え', 3: '眠りの門の向こうへ' };
 function refreshChapterUI() {
-  const open = bossBest >= BOSS_DEFS.length;
-  if (!open) chapter = 1;
-  document.getElementById('t-chapter').hidden = !open;
+  const open2 = bossBest >= BOSS_DEFS.length, open3 = bossBest2 >= BOSS_DEFS2.length;
+  if (!open2 || (chapter === 3 && !open3)) chapter = 1;
+  document.getElementById('t-chapter').hidden = !open2;
+  document.querySelector('#t-chapter [data-ch="3"]').hidden = !open3;
   for (const b of document.querySelectorAll('#t-chapter [data-ch]')) b.classList.toggle('on', +b.dataset.ch === chapter);
+  setText(document.querySelector('.t-tag'), CH_TAG[chapter]);
+}
+function setChapter(ch) {
+  if (ch === chapter) return;
+  chapter = ch; localStorage.setItem('hd_chapter', String(ch));
+  if (ch === 2) loadPart2Models();
+  if (ch === 3) loadPart3Models();
+  ui.select(); refreshChapterUI(); refreshRotStats();
+}
+for (const b of document.querySelectorAll('#t-chapter [data-ch]')) b.classList.toggle('on', +b.dataset.ch === chapter);
   setText(document.querySelector('.t-tag'), chapter === 2 ? '冥王ハデスの影を追え' : '宇宙海賊団バイデントを追え');
 }
 function setChapter(ch) {
@@ -6368,6 +6494,7 @@ const isLate = () => { const h = hourNow(); return h >= 23 || h < 5; };
 const isMorning = () => { const h = hourNow(); return h >= 5 && h < 10; };
 const bossDone = () => (typeof bossBest === 'number' ? bossBest : 0);
 const bossDone2 = () => (typeof bossBest2 === 'number' ? bossBest2 : 0);
+const bossDone3 = () => (typeof bossBest3 === 'number' ? bossBest3 : 0);
 const secCount = () => (typeof secretsFound !== 'undefined' ? secretsFound.length : 0);
 
 const CHAT = {
@@ -6418,6 +6545,13 @@ const CHAT = {
     { ch: 2, w: () => bossDone2() >= 2, l: [['R', 'ばあちゃん、元気かな。'], ['P', 'ひまわりの世話をしているそうです。'], ['R', '……そっか。']] },
     { ch: 2, w: () => bossDone2() >= 2, l: [['P', '……レイ。今まで、黙っていてすみませんでした。'], ['R', 'もういいって。相棒だろ。']] },
     { ch: 2, w: () => bossDone2() >= 3, l: [['P', 'ビーコンの解析、続けています。'], ['R', '……父さん。'], ['P', '必ず、見つけます。']] },
+    // CHAPTER 3
+    { ch: 3, p: 3, l: [['R', '待ってろ、父さん。'], ['P', '門まで、あと少しです。']] },
+    { ch: 3, w: () => bossDone3() === 0, p: 6, l: [['P', '門の番人の反応は90秒地点。'], ['R', '番人だろうが通してもらう。']] },
+    { ch: 3, w: () => bossDone3() === 1, p: 6, l: [['P', 'ヒュプノスは180秒地点。眠りの霧に気をつけて。'], ['R', '寝てる場合じゃないからな。']] },
+    { ch: 3, w: () => bossDone3() === 2, p: 6, l: [['P', '門は270秒地点です。'], ['R', '……今度こそ、連れて帰る。']] },
+    { ch: 3, w: () => bossDone3() >= 3, l: [['R', '父さん、今ごろ何してるかな。'], ['P', 'ミモザさんに怒られているそうです。'], ['R', '……だろうな。']] },
+    { ch: 3, w: () => bossDone3() >= 3, l: [['P', 'ソルから伝言です。「次は俺も飛ぶ」'], ['R', '……負けないぞ。']] },
   ],
   zone1: [
     [['P', 'バイデントの前線に入ります。砲撃に注意。'], ['R', '見えてる。……たぶん。']],
@@ -6529,10 +6663,12 @@ const CHAT = {
   m30:  [[['P', '30秒経過。'], ['R', 'まだまだ。']], [['R', '体が温まってきた。'], ['P', '機体もです。']]],
   m60:  [[['P', '1分経過。悪くないペースです。'], ['R', '悪くない、じゃなくて最高、だろ。']], [['R', '1分か。腹が減ってきた。'], ['P', '早すぎます。']]],
   m90:  [{ ch: 2, l: [['P', '猟犬の反応、接近。'], ['R', '来い、ワンコロ。']] },
+         { ch: 3, l: [['P', '前方に冷たい反応。……門の番人です。'], ['R', '……来るか。']] },
          { ch: 1, w: () => bossDone() === 0, l: [['P', '大型艦の反応が近づいています。'], ['R', '……来るなら来い。']] },
          [['P', '90秒。集中力、維持してください。'], ['R', '維持どころか上がってる。']]],
   m180: [[['R', '3分……翼がしびれてきた。'], ['P', 'あと少しです。たぶん。']], { ch: 1, w: () => bossNext === 1, l: [['P', '3分経過。'], ['R', 'アケロンまで、あと1分か。']] },
-         { ch: 2, w: () => bossNext === 2, l: [['P', '3分経過。カロンの反応、消失。'], ['R', 'みんな……無事でいてくれ。']] }],
+         { ch: 2, w: () => bossNext === 2, l: [['P', '3分経過。カロンの反応、消失。'], ['R', 'みんな……無事でいてくれ。']] },
+         { ch: 3, w: () => bossNext === 2, l: [['P', '3分経過。……門が、見えてきました。'], ['R', 'あの向こうに、父さんが。']] }],
   m300: [[['P', '5分経過。驚異的です。'], ['R', '知ってた。']]],
   m420: [[['P', '7分。もはや伝説です。'], ['R', '伝説の鳥、レイ。いい響きだ。']]],
   m600: [[['P', '10分。……あなたは本当に、パイロットです。'], ['R', '……知ってるよ。']]],
@@ -6566,6 +6702,9 @@ const CHAT = {
     { ch: 2, l: [['R', '俺の葉っぱ、狙われてるんだよな。'], ['P', 'はい。'], ['R', '……ちょっと誇らしい。'], ['P', '危機感を持ってください。']] },
     { ch: 2, w: () => bossDone2() >= 2, l: [['R', 'ばあちゃんのひまわりの種、うまかったな。'], ['P', '非常食に加えておきました。'], ['R', 'さすが。']] },
     { ch: 2, w: () => bossDone2() >= 2, l: [['R', '父さんも、この機体で飛んでたんだよな。'], ['P', 'はい。……あなたの方が、少しだけ丁寧です。']] },
+    { ch: 3, l: [['R', '……ちょっと眠い。'], ['P', '霧のせいです。寝たら起こします。全力で。'], ['R', 'お手柔らかに。']] },
+    { ch: 3, l: [['P', 'ソルは、どんな夢を見ているのでしょう。'], ['R', '……飛んでる夢だろ。きっと。']] },
+    { ch: 3, l: [['R', '父さんに会ったら、なんて言おう。'], ['P', '「ただいま」ではなく「おかえり」ですね。']] },
   ],
 };
 
@@ -6759,6 +6898,14 @@ const LOGS = [
     text: 'この機体は、父さんのだった。パラスは、父さんが残した相棒だった。\n「次にこいつで飛ぶ奴を、守ってくれ」——それが父さんの最後の命令だって。\n……ずるいよな。そんなの、守られるに決まってる。だから今度は、俺が守る番だ。' },
   { id: 'gate', title: '門', hint: 'CHAPTER Ⅱ：ケルベロスを撃破', ok: () => bossBest2 >= 3,
     text: '丘に、盾の樹の種を植えた。ばあちゃんがひまわりの隣で水をやってる。\nケルベロスの残骸から、父さんのビーコンが届いた。発信源は銀河の果て、「門」の向こう。\n何度だって飛ぶって決めたんだ。待ってろよ、父さん。' },
+  { id: 'twins', title: '番人', hint: 'CHAPTER Ⅲ：タナトスを撃破', ok: () => bossBest3 >= 1,
+    text: '門の番人は、何も言わずに鎌を振るった。「死者は通さぬ」。\n父さんは死者じゃない。だから通る。それだけだ。\nパラスが「理屈になっていません」と言った。理屈じゃないんだよ、こういうのは。' },
+  { id: 'dream', title: '夢', hint: 'CHAPTER Ⅲ：ヒュプノスを撃破', ok: () => bossBest3 >= 2,
+    text: '父さんの夢の中は、緑の丘だった。俺がいつも星を見ていた、あの丘。\n若い父さんは、俺に気づかなかった。「俺にもお前くらいのヒナがいてさ」だって。\n……言えなかった。言ったら、夢が壊れる気がした。' },
+  { id: 'sol', title: 'おかえり', hint: 'CHAPTER Ⅲ：門を開く', ok: () => bossBest3 >= 3,
+    text: '目を覚ました父さんの最初の言葉は「でかくなったな」だった。ばあちゃんと同じこと言うな。\nその夜、父さんはばあちゃんにこってり怒られていた。パラスは記録していた。\n家族写真が一枚増えた。……門の奥で、何かが光った気がしたけど、今夜はいい。' },
+  { id: 'sun', title: '太陽', hint: 'CHAPTER Ⅲ をクリアして、ソルの機体を見る', ok: () => bossBest3 >= 3,
+    text: '父さんの機体は、オレンジの太陽みたいな色をしている。\n「次は俺も飛ぶ」って言ってた。望むところだ。\n何度だって立ち上がる。——今度は、親子で。' },
   { id: 'secrets', title: '隠し機能', hint: 'SECRETS を5つ発見', ok: () => secretsFound.length >= 5,
     text: 'この機体、隠し機能が多すぎる。ロゴを叩くと画面が緑になるし、逆さに回すと世界が反転する。\nパラスに聞いたら「設計者の趣味です」とだけ返ってきた。\nアイギスの技術者、たぶん俺と気が合う。' },
 ];
@@ -6803,10 +6950,13 @@ const REPLAYS = [
   { k: 'Ⅱ PROLOGUE', ch2: true, ok: () => !!localStorage.getItem('hd_prologue2'), go: () => Prologue2.play({ fromLog: true }) },
   { k: 'Ⅱ 告白', ch2: true, ok: () => bossBest2 >= 2, go: () => Confession.play({ fromLog: true }) },
   { k: 'Ⅱ EPILOGUE', ch2: true, ok: () => bossBest2 >= BOSS_DEFS2.length, go: () => Epilogue2.play({ fromLog: true }) },
+  { k: 'Ⅲ PROLOGUE', ch3: true, ok: () => !!localStorage.getItem('hd_prologue3'), go: () => Prologue3.play({ fromLog: true }) },
+  { k: 'Ⅲ 夢', ch3: true, ok: () => bossBest3 >= 2, go: () => Dream.play({ fromLog: true }) },
+  { k: 'Ⅲ EPILOGUE', ch3: true, ok: () => bossBest3 >= BOSS_DEFS3.length, go: () => Epilogue3.play({ fromLog: true }) },
 ];
 function renderReplays() {
   const row = document.getElementById('log-replay');
-  row.innerHTML = REPLAYS.map((r, i) => r.ok() ? `<button class="btn-mini${r.ch2 ? ' ch2' : ''}" type="button" data-rp="${i}">${r.k} ▶</button>` : '').join('');
+  row.innerHTML = REPLAYS.map((r, i) => r.ok() ? `<button class="btn-mini${r.ch2 ? ' ch2' : ''}${r.ch3 ? ' ch3' : ''}" type="button" data-rp="${i}">${r.k} ▶</button>` : '').join('');
   for (const b of row.querySelectorAll('[data-rp]')) onTap(b, () => { closeLog(); REPLAYS[+b.dataset.rp].go(); });
 }
 function openLog()  { ui.open(); renderLogUI(); renderReplays(); logModal.classList.add('open'); }
@@ -7138,6 +7288,11 @@ const Prologue = (() => {
 })();
 // START from the title: the first time, the prologue plays before the run
 function requestStart() {
+  if (chapter === 3) {                       // CHAPTER 3: its own prologue the first time
+    if (!localStorage.getItem('hd_prologue3')) Prologue3.play({ onDone: () => startGame({ intro: true }) });
+    else startGame();
+    return;
+  }
   if (chapter === 2) {                       // CHAPTER 2: its own prologue the first time
     if (!localStorage.getItem('hd_prologue2')) Prologue2.play({ onDone: () => startGame({ intro: true }) });
     else startGame();
@@ -7179,11 +7334,29 @@ const BOSS_DEFS2 = [
       { head: 'C', label: '闇の首', color: 0xb070ff, cycle: ['cores', 'dark', 'plasma', 'jaws', 'cores', 'dark', 'gates', 'laser', 'plasma'] },
     ] },
 ];
-let chapter = localStorage.getItem('hd_chapter') === '2' ? 2 : 1;   // chapter played by the current / next run
+// CHAPTER 3 (unlocked by beating CERBERUS): the twins of the underworld gate — THANATOS (death) and
+// HYPNOS (sleep, whose mist makes the pilot drowsy) — then THE GATE itself, which they guard together.
+const BOSS_AT3 = [90, 180, 270];
+const BOSS_DEFS3 = [
+  { id: 'thanatos', name: 'THANATOS', title: '死の番人', color: 0xbfe0ff, css: '#cfe8ff', hull: 0x14141a,
+    cannon: 18, reflect: 8, bullet: 0.55, rail: 3, xp: 800,
+    cycle: ['cores', 'reap', 'plasma', 'deathshot', 'cores', 'fan', 'reap', 'plasma'], every: 90, rageEvery: 68 },
+  { id: 'hypnos', name: 'HYPNOS', title: '眠りの神', color: 0xa890ff, css: '#b8a0ff', hull: 0x2a2450,
+    cannon: 14, reflect: 7, bullet: 0.45, rail: 2.5, xp: 1000,
+    cycle: ['cores', 'mist', 'lullaby', 'plasma', 'cores', 'lullaby', 'ring', 'mist', 'plasma'], every: 98, rageEvery: 76 },
+  { id: 'gate', name: 'THE GATE', title: '冥界の門', color: 0xd8c8ff, css: '#d8c8ff', hull: 0x18161e,
+    cannon: 11, reflect: 6, bullet: 0.35, rail: 2, xp: 1600, every: 94, rageEvery: 72,
+    stages: [
+      { label: '閉ざされた扉', color: 0xcfe8ff, cycle: ['cores', 'twin', 'reap', 'plasma', 'cores', 'lullaby', 'deathshot', 'plasma'] },
+      { open: true, label: '開かれた扉', color: 0xa890ff, cycle: ['cores', 'spiral', 'mist', 'plasma', 'cores', 'dark', 'jaws', 'spiral', 'plasma'] },
+    ] },
+];
+let chapter = [2, 3].includes(+localStorage.getItem('hd_chapter')) ? +localStorage.getItem('hd_chapter') : 1;   // chapter of the current / next run
 let bossBest2 = +localStorage.getItem('hd_boss2') || 0;            // CHAPTER 2 bosses ever defeated
-const chBossDefs = () => chapter === 2 ? BOSS_DEFS2 : BOSS_DEFS;
-const chBossAt   = () => chapter === 2 ? BOSS_AT2 : BOSS_AT;
-const chBossBest = () => chapter === 2 ? bossBest2 : bossBest;
+let bossBest3 = +localStorage.getItem('hd_boss3') || 0;            // CHAPTER 3 bosses ever defeated
+const chBossDefs = () => chapter === 3 ? BOSS_DEFS3 : chapter === 2 ? BOSS_DEFS2 : BOSS_DEFS;
+const chBossAt   = () => chapter === 3 ? BOSS_AT3 : chapter === 2 ? BOSS_AT2 : BOSS_AT;
+const chBossBest = () => chapter === 3 ? bossBest3 : chapter === 2 ? bossBest2 : bossBest;
 let boss = null;                 // active fight
 let bossNext = 0;                // next boss index this run
 let bossLasers = [];
@@ -7217,6 +7390,15 @@ SPEAKERS.O = { name: 'ORTHROS', face: ORTHROS_FACE, cls: 'orthros' };
 SPEAKERS.C = { name: 'CHARON', face: CHARON_FACE, cls: 'charon' };
 SPEAKERS.H = { name: 'HADES', face: HADES_FACE, cls: 'hades' };
 SPEAKERS.M = { name: 'MIMOSA', face: MIMOSA_FACE, cls: 'mimosa' };
+const THANATOS_FACE = `<svg viewBox="0 0 64 64" aria-hidden="true"><rect x="6" y="6" width="52" height="52" rx="6" fill="#0a0a10" stroke="#cfe8ff" stroke-width="2"/>
+  <path d="M12 54c2-22 9-36 20-36s18 14 20 36z" fill="#1c1c26"/><path d="M14 28l-6-14 14 8M50 28l6-14-14 8" fill="#343846"/>
+  <ellipse cx="32" cy="38" rx="9" ry="11" fill="#d9d4c8"/><path d="M27 37h3M34 37h3" stroke="#0a0a10" stroke-width="2.5"/><path d="M42 12q14 4 10 20" stroke="#b8c4d0" stroke-width="2.5" fill="none"/></svg>`;
+const HYPNOS_FACE = `<svg viewBox="0 0 64 64" aria-hidden="true"><rect x="6" y="6" width="52" height="52" rx="6" fill="#120e24" stroke="#b8a0ff" stroke-width="2"/>
+  <path d="M10 30q8-18 20-8M54 30q-8-18-20-8" fill="#3a3270" stroke="#d8b86a" stroke-width="1"/><circle cx="32" cy="38" r="14" fill="#2a2450"/>
+  <path d="M25 37q3 2 6 0M33 37q3 2 6 0" stroke="#d8c8ff" stroke-width="2" fill="none"/><circle cx="26" cy="20" r="3" fill="#d83a4a"/><circle cx="38" cy="20" r="3" fill="#d83a4a"/>
+  <path d="M28 46q4 2 8 0" stroke="#a890ff" stroke-width="1.5" fill="none"/></svg>`;
+SPEAKERS.T = { name: 'THANATOS', face: THANATOS_FACE, cls: 'thanatos' };
+SPEAKERS.Y = { name: 'HYPNOS', face: HYPNOS_FACE, cls: 'hypnos' };
 
 const BOSS_LINES = {
   styx: {
@@ -7295,13 +7477,39 @@ Object.assign(BOSS_LINES, {
     ],
   },
 });
+Object.assign(BOSS_LINES, {
+  thanatos: {
+    intro:  [['T', '……通さぬ。'], ['R', '門の番人か。この先に父さんがいるんだ！'], ['T', 'この先は死者の国。生者は通さぬ。'], ['P', '高速の斬撃が来ます。予告の線を見て。']],
+    rage:   [['T', '……しぶとい。'], ['R', 'それが取り柄なんでね。']],
+    defeat: [['T', '……ソルは、死者ではなかった……か。'], ['R', '当たり前だ！'], ['P', '門への道が開きました。']],
+    again: [ [['T', 'また来たか。'], ['R', '何度でもな。']], [['T', '通さぬ。'], ['R', '知ってる。'], ['P', '会話が成立していません。']] ],
+    defeatAgain: [ [['T', '……行け。'], ['P', '……通してくれるようです。']], [['T', '……見事だ。'], ['R', 'どうも。']] ],
+  },
+  hypnos: {
+    intro:  [['Y', 'やあ。きみが、ソルの子だね。'], ['R', '父さんを返せ！'], ['Y', 'どうして？ 彼はいま、とても幸せな夢を見ているよ。'], ['Y', 'きみも、少し眠るといい。'],
+             ['P', '眠りの霧です！ 霧の中にいると眠気がたまります。PULSE で払って！']],
+    rage:   [['Y', '……どうして起きていられるの？'], ['R', '相棒がうるさいんでな。'], ['P', '光栄です。']],
+    defeat: [['Y', '……あったかい光だね……ソルと、同じだ……'], ['P', '霧が晴れていきます。'], ['R', '……あとは、門だけだ。']],
+    again: [ [['Y', 'おかえり。また眠りにきたの？'], ['R', '起こしにきたんだ。']], [['Y', 'ふわあ……きみ、しつこいね。'], ['P', 'そこは同意します。']] ],
+    defeatAgain: [ [['Y', 'おやすみ……'], ['R', 'お前が寝てろ。']] ],
+  },
+  gate: {
+    intro:  [['T', '……門を開くなら。'], ['Y', 'ぼくたち二人を、越えていって。'], ['R', '行くぞ、パラス！'], ['P', '双子の像から攻撃が来ます。扉が開くまで削って！']],
+    stage1: [['Y', '扉が……開いちゃう。'], ['T', '……眠りが、解ける。'], ['P', '扉の奥に強い反応——ソルです！']],
+    rage:   [['T', '……越えてみせろ。']],
+    defeat: [['T', '……見事だ。'], ['Y', '……いってらっしゃい。'], ['R', '父さん！']],
+    again: [ [['Y', 'また来たんだね。'], ['T', '……通さぬ。'], ['R', '何度でも開けてやる。']] ],
+    defeatAgain: [ [['Y', 'またね。'], ['R', 'もう来ないかもな。'], ['P', '来ますよ、きっと。']] ],
+  },
+});
 const sayOnce = (b, key, lines) => { if (!b.said[key]) { b.said[key] = true; commSay(lines); } };
 
 // ── Flagship model ──
 // flagship models: where the prongs fire from (relative to the boss centre) and
 // where the ship parks — the models are ~2× the old procedural ones
 const BOSS_MODEL = { styx: { tipDX: 324, tipDY: 80, bossX: VW + 10 }, acheron: { tipDX: 324, tipDY: 80, bossX: VW - 20 },
-  orthros: { scale: 0.9, bossX: VW - 10 }, charon: { scale: 0.85, bossX: VW + 30 }, cerberus: { scale: 0.7, bossX: VW + 50, heads: true } };
+  orthros: { scale: 0.9, bossX: VW - 10 }, charon: { scale: 0.85, bossX: VW + 30 }, cerberus: { scale: 0.7, bossX: VW + 50, heads: true },
+  thanatos: { scale: 0.6, bossX: VW + 70 }, hypnos: { scale: 0.55, bossX: VW + 30 }, gate: { scale: 0.5, bossX: VW + 40 } };
 function buildBossShip(def, second) {
   const g = new THREE.Group();
   if (MODELS[def.id]) {
@@ -7398,12 +7606,15 @@ function bossHit(dmg, x, y) {
   boss.hp = Math.max(0, boss.hp - dmg);
   boss.flash = 1;
   spawnSparks(x ?? boss.x - 60, y ?? boss.y, Math.min(24, 4 + dmg * 1.5), { vMin: 2, vMax: 8, color: [0, 15, 40] });
-  if (boss.def.stages) {                     // CERBERUS: a head breaks at each third of the bar
-    const st = boss.hp > 66.7 ? 0 : boss.hp > 33.4 ? 1 : 2;
+  if (boss.def.stages) {                     // CERBERUS: a head breaks at each third; THE GATE: its doors open at half
+    const n = boss.def.stages.length, st = Math.min(n - 1, Math.floor((100 - boss.hp) / (100 / n)));
     if (st > boss.stage && boss.hp > 0) {
-      breakHead(boss.def.stages[boss.stage].head);
-      boss.stage = st; boss.cycle = boss.def.stages[st].cycle; boss.pi = 0; boss.patT = 80;
-      if (st === 2) boss.rage = true;
+      const prev = boss.def.stages[boss.stage], next = boss.def.stages[st];
+      if (prev.head) breakHead(prev.head);
+      if (next.open) { boss.opening = true; for (const L of bossLasers) removeLaserMesh(L); bossLasers = []; boss.queue = [];
+        shakeX = 12; shakeY = 8; fxFlash(next.color, 0.45); sfx.bossDown(); pushBonus(boss.x - 160, boss.y - 40, 'THE GATE OPENS', '#ffffff'); }
+      boss.stage = st; boss.cycle = next.cycle; boss.pi = 0; boss.patT = 80;
+      if (st === n - 1) boss.rage = true;
       commSay(BOSS_LINES[boss.def.id]['stage' + st]);
     }
   } else if (!boss.rage && boss.hp <= 50) {
@@ -7556,6 +7767,41 @@ const PATTERNS = {
     });
     sayOnce(boss, 'curtain', [['P', '氷の壁です。隙間を通って。']]);
   },
+  // ── CHAPTER 3 ──
+  reap() {                                   // THANATOS's scythe: thin bands sweep across in quick succession
+    const dir = Math.random() < 0.5 ? 1 : -1, n = boss.rage ? 6 : 5, h = 34;
+    for (let i = 0; i < n; i++) addLaser(dir > 0 ? 34 + i * 80 : VH - 34 - i * 80, h, boss.rage ? 34 : 42, i * (boss.rage ? 12 : 15));
+    sayOnce(boss, 'reap', [['P', '鎌の斬撃です。光る線が走ったら、その列から逃げて。']]);
+  },
+  deathshot() {                              // black orbs that no PULSE can send back
+    const s = Math.random() < 0.5 ? 1 : -1, x = TIP_X(s), y = tipY(s), n = boss.rage ? 3 : 2;
+    for (let i = 0; i < n; i++) bossLater(i * 20, () => {
+      const a = Math.atan2(P.y - y, P.x - x) + (i - (n - 1) / 2) * 0.22;
+      enemies.push({ x, y, vx: Math.cos(a) * 2.9, vy: Math.sin(a) * 2.9, r: 11, type: 'p', dark: true, spin: 0, life: 700, boss: true });
+      sfx.bossFire(true);
+    });
+    sayOnce(boss, 'death', [['P', '黒い弾は跳ね返せません。PULSE で消すか、避けて。']]);
+  },
+  mist() {                                   // HYPNOS's sleep mist drifts toward the pilot
+    const n = boss.rage ? 3 : 2;
+    for (let i = 0; i < n; i++) spawnMist(boss.x - 200 - i * 90, 60 + Math.random() * (VH - 120), 1.5 + Math.random() * 0.6);
+  },
+  lullaby() {                                // slow, swaying shots like a lullaby
+    const n = boss.rage ? 9 : 7;
+    for (let i = 0; i < n; i++) bossLater(i * 9, () => {
+      const s = i % 2 ? 1 : -1, x = TIP_X(s), y = tipY(s);
+      enemies.push({ x, y, vx: -2.4, vy: 0, r: 5, type: 'b', spin: 0, life: 700, boss: true, wave: 1.8, wp: i * 0.9 });
+    });
+    sfx.bossFire(true);
+  },
+  spiral() {                                 // the opened GATE: a turning spiral out of the vortex
+    const n = boss.rage ? 30 : 24;
+    for (let i = 0; i < n; i++) bossLater(i * 4, () => {
+      const a = Math.PI + Math.sin(i * 0.5) * 1.1, x = boss.x - 20, y = boss.y;
+      bossShot(x, y, a, 3.0);
+    });
+    sfx.bossFire(true);
+  },
   dark() {                                   // darkness head: plasma that cannot be reflected
     const [x, y] = bossHeadXY('C'), n = boss.rage ? 3 : 2;
     for (let i = 0; i < n; i++) bossLater(i * 22, () => {
@@ -7646,14 +7892,17 @@ function finishBoss() {
   pushBonus(P.x, P.y - 30, `+${def.xp} XP`, '#ffd84a');
   pushBonus(P.x, P.y - 50, `${def.name} DEFEATED`, def.css);
   timeScale = 1;
-  if (chapter === 2) { if (idx + 1 > bossBest2) { bossBest2 = idx + 1; localStorage.setItem('hd_boss2', String(bossBest2)); } }
+  if (chapter === 3) { if (idx + 1 > bossBest3) { bossBest3 = idx + 1; localStorage.setItem('hd_boss3', String(bossBest3)); } }
+  else if (chapter === 2) { if (idx + 1 > bossBest2) { bossBest2 = idx + 1; localStorage.setItem('hd_boss2', String(bossBest2)); } }
   else if (idx + 1 > bossBest) { bossBest = idx + 1; localStorage.setItem('hd_boss', String(bossBest)); }
   cleanupBoss();
   if (hasSkill('nano_frame')) healHull(hullMax, 'NANO');
   Music.setSection('p' + (curPhase + 1));
   if (chapter === 1 && idx === BOSS_DEFS.length - 1) { loadPart2Models(); Epilogue.play(); }
   if (chapter === 2 && idx === 1) Confession.play({ live: true });
-  if (chapter === 2 && idx === BOSS_DEFS2.length - 1) Epilogue2.play({ live: true });
+  if (chapter === 2 && idx === BOSS_DEFS2.length - 1) { loadPart3Models(); Epilogue2.play({ live: true }); }
+  if (chapter === 3 && idx === 1) Dream.play({ live: true });
+  if (chapter === 3 && idx === BOSS_DEFS3.length - 1) Epilogue3.play({ live: true });
 }
 // laser hit test (called from the collision section)
 function bossLaserHits() {
@@ -7682,6 +7931,11 @@ function syncBoss(sk) {
   m.userData.hullMat.emissive.setRGB(boss.flash * 0.9 + (boss.rage ? pulse * 0.18 : 0), boss.flash * 0.9, boss.flash * 0.9);
   const glow = m.getObjectByName('coreGlow'); if (glow) glow.material.opacity = 0.4 + pulse * 0.4;
   const ring = m.getObjectByName('ring'); if (ring) ring.rotation.set(boss.t * 0.02, boss.t * 0.03, 0);
+  if (boss.def.id === 'gate') {                       // doors slide apart once opened, the vortex behind them turns
+    boss.openK = Math.min(1, (boss.openK || 0) + (boss.opening ? 0.012 : 0));
+    for (const [n, sy] of [['doorL', 1], ['doorR', -1]]) { const d = m.getObjectByName(n); if (d) d.position.y = sy * boss.openK * 104; }
+    m.traverse(o => { if (o.name && o.name.startsWith('vortex')) o.rotation.z = -boss.t * 0.02; });
+  }
   const ring2 = m.getObjectByName('ring2'); if (ring2) ring2.rotation.set(Math.PI / 2.6 + boss.t * 0.025, 0, boss.t * 0.02);
   for (const L of bossLasers) {
     if (!L.mesh) {
@@ -8114,7 +8368,7 @@ const Cine = (() => {
     if (!cfg) return;
     if (!xfade.classList.contains('on')) veil(true, 0);
     const c = cfg, o = opts; cfg = null; cine = false;
-    el.classList.remove('on', 'cine', 'titled', 'talk', 'sfx', 'memory');
+    el.classList.remove('on', 'cine', 'titled', 'talk', 'sfx', 'memory', 'dream');
     renderPass.scene = scene; renderPass.camera = camera;
     if (c.flag) localStorage.setItem(c.flag, '1');
     if (o.fromLog) gstate = 'menu';
@@ -8631,6 +8885,242 @@ const Epilogue2 = {
 };
 for (const c of [Prologue2, Confession, Epilogue2]) c.play = (o = {}) => loadPart2Models().then(() => Cine.play(c, o));
 
+// ══ CHAPTER 3 cutscenes ═══════════════════════════════════════════════════════
+// a young sapling of the shield tree (grows over the chapters)
+function cineSapling(S, h = 1) {
+  const g = new THREE.Group();
+  const bark = new THREE.MeshStandardMaterial({ color: 0x6a4a2a, roughness: 0.8 });
+  const leafM = new THREE.MeshStandardMaterial({ color: 0x3cb054, emissive: 0x1a6a2a, emissiveIntensity: 0.7, roughness: 0.6 });
+  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.8 * h, 1.4 * h, 24 * h, 8), bark); trunk.position.y = 12 * h; g.add(trunk);
+  for (let i = 0; i < 9; i++) {
+    const a = i / 9 * Math.PI * 2, y = (16 + (i % 3) * 5) * h, lf = new THREE.Mesh(new THREE.SphereGeometry(3.4 * h, 10, 8), leafM);
+    lf.scale.set(1.7, 0.4, 0.9); lf.position.set(Math.cos(a) * 5 * h, y, Math.sin(a) * 5 * h); lf.rotation.y = -a; lf.rotation.z = 0.4; g.add(lf);
+  }
+  const glow = glowSprite(0x8dff9a, 50 * h, 0.35); glow.position.y = 18 * h; g.add(glow);
+  g.userData.glow = glow;
+  S.E.add(g); return g;
+}
+
+// ── CHAPTER 3 prologue: a month later, the sapling, MIMOSA sends Ray after his father ──
+const Prologue3 = {
+  flag: 'hd_prologue3', music: 'ending',
+  panels: [
+    { mood: 'hill', lines: ['CERBERUS FALLS から、ひと月。', '丘に植えた盾の樹は、小さな若木になっていた。', 'M:レイ。ソルを、連れて帰っておいで。', 'R:……うん。必ず。',
+      'M:それと、これ。お弁当。ひまわりの種だけどね。', 'R:……いつものやつだ。', 'P:ビーコンの発信源まで、航路の計算が終わりました。', 'P:銀河の果て——「門」までです。', 'R:行くぞ、パラス。父さんを起こしに。'] },
+  ],
+  build(S) {
+    Object.assign(S, cineStage(0x2a3a6a)); cineHill(S); cineShip(S);
+    S.paintSky([[0, 0x2c5aa8], [0.45, 0x6a8ad0], [0.66, 0xf0b890], [0.8, 0xffd8a8], [1, 0x8a6a5a]]);
+    S.E.background = S.skyTex; S.E.fog = new THREE.Fog(0x9a7a80, 500, 2000);
+    S.hemi.intensity = 1.2; S.key.color.setHex(0xffd8b0); S.key.intensity = 1.6; S.stars.material.opacity = 0;
+    S.ray = cineRay(S); S.pallas = cinePallas(S); S.mimosa = cineBird(S, 'mimosa'); S.tree = cineSapling(S, 1);
+  },
+  reset(S) {
+    S.cine = false; S.lifted = S.veiled = false; S.vel.set(0, 0, 0);
+    S.hero.position.set(-62, S.groundY(-62, -36) + 6, -36); S.hero.rotation.set(0, 0.5, 0.03);
+    S.ray.visible = true; if (S.pallas) { S.pallas.visible = true; S.pallas.scale.setScalar(5.5); }
+    for (const p of S.trail) { p.life = 0; p.g.visible = false; }
+  },
+  mood(S, m) {},
+  update(S, m, t, s, li) {
+    const G = S.groundY;
+    S.tree.position.set(4, G(4, 50), 50); S.tree.userData.glow.material.opacity = 0.3 + Math.sin(t * 2) * 0.1;
+    const rx = 20, rz = 30, mx = -14, mz = 30;
+    S.ray.position.set(rx, G(rx, rz) + 11 + Math.sin(t * 2) * 0.4, rz); S.ray.rotation.y = li >= 6 ? -2.4 : -1.4;
+    cineLeaf(S.ray, t);
+    if (S.mimosa) {
+      S.mimosa.position.set(mx, G(mx, mz) + (li === 4 ? Math.abs(Math.sin(t * 6)) * 2 : 0), mz); S.mimosa.rotation.y = 1.4;
+      const w = S.mimosa.getObjectByName('wingR'); if (w) w.rotation.z = S.cine ? -0.9 + Math.sin(t * 10) * 0.4 : 0;
+    }
+    if (S.pallas) {
+      if (S.cine) { const ck = S.hero.position.clone(); ck.y += 8; S.pallas.position.lerp(ck, Math.min(1, s * 5)); S.pallas.scale.multiplyScalar(Math.max(0.8, 1 - s * 3)); if (S.pallas.scale.x < 0.8) S.pallas.visible = false; }
+      else S.pallas.position.set(rx + 24, G(rx, rz) + 30 + Math.sin(t * 2.2) * 1.5, rz - 10);
+      cinePallasTick(S.pallas, t, S.ray.position);
+    }
+    if (!S.cine) { cineEngine(S, false); S.camPos.set(30 - t * 1.2, S.g0 + 16, 140); S.camTarget.set(-8, S.g0 + 14, 20); }
+    cineTrail(S, s);
+  },
+  cineStart(S) { S.cine = true; S.ray.visible = false; sfx.ignite(); if (Music.started) Music.riser(1.6); },
+  cine(S, ct, s) { S.camPos.set(60, S.g0 + 20, 180); return cineTakeoff(S, ct, s); },
+  end(o) { this.S.cine = false; if (o.onDone) o.onDone(); else if (Music.started) Music.setSection('menu'); },
+};
+
+// ── after HYPNOS: the mist clears; inside SOL's dream, Ray meets his young father ──
+const Dream = {
+  music: 'ending',
+  panels: [
+    { mood: 'mist', lines: ['ヒュプノスの霧が、ゆっくりと晴れていく。', 'Y:……ソルは、夢の中……きみなら、入れるかも……', 'P:夢の信号を捉えました。……つなぎます。'] },
+    { mood: 'dream', lines: ['——夢の中。まだ緑だった、アイギスの丘。', 'F:よう。見ない顔だな。お前もパイロットか？', 'R:……えっと。……見習い、みたいなもんだ。',
+      'F:そうか！ いい翼してるな。', 'F:俺にも、お前くらいのヒナがいてさ。いつか一緒に飛ぶのが夢なんだ。', 'R:…………', 'R:……その子、きっと飛べるよ。',
+      'F:ははっ。だといいな。', 'P:レイ。夢が揺らいでいます。戻って。', 'F:——なあ。どこかで、会ったことあるか？', 'R:……門の向こうで、また会おう。'],
+      on: { 1: S => { S.turn = true; } } },
+  ],
+  build(S) {
+    Object.assign(S, cineStage(0x07041a)); cineHill(S); cineShip(S);
+    S.wreck = cineWreck(S, BOSS_DEFS3[1]);
+    S.ray = cineRay(S); S.sol = cineBird(S, 'sol');
+    S.motes = [];                                      // dream motes drifting upward
+    for (let i = 0; i < 26; i++) { const g = glowSprite(i % 2 ? 0xd8c8ff : 0x9ff0ff, 6 + Math.random() * 6, 0); S.E.add(g); S.motes.push({ g, x: (Math.random() - 0.5) * 300, z: -80 + Math.random() * 200, y: Math.random() * 80, v: 4 + Math.random() * 6 }); }
+    S.hillMat = S.hillSet[0].material; S.stumpMat = S.hillSet[1] && S.hillSet[1].material;
+  },
+  reset(S) { S.turn = false; S.cine = false; S.ray.visible = true; },
+  mood(S, m) {
+    const dream = m === 'dream';
+    document.getElementById('story').classList.toggle('dream', dream);
+    for (const o of S.hillSet) { o.visible = dream; if (o !== S.hillSet[0]) o.scale.y = dream ? 2.2 : 1; }
+    S.hillMat.color.setHex(dream ? 0x2c5a3a : 0x1a1416); if (S.stumpMat) S.stumpMat.color.setHex(dream ? 0x1f5a34 : 0x120c0e);
+    S.wreck.w.visible = !dream; S.hero.visible = !dream; S.ray.visible = dream; if (S.sol) S.sol.visible = dream;
+    for (const mo of S.motes) mo.g.visible = dream;
+    if (dream) {   // the starry night of the prologue's first panel — the hill where Ray used to watch the sky
+      S.paintSky([[0, 0x050a2a], [0.5, 0x162a5a], [0.72, 0x2a3a7a], [1, 0x0a1020]]);
+      S.E.background = S.skyTex; S.E.fog = new THREE.Fog(0x1a2a5a, 500, 1800); S.stars.material.opacity = 1;
+      S.hemi.intensity = 1.2; S.key.color.setHex(0xb0c8ff); S.key.intensity = 1.2;
+    } else { S.E.background = new THREE.Color(0x0c0820); S.E.fog = null; S.stars.material.opacity = 0.7; S.hemi.intensity = 1; }
+  },
+  update(S, m, t, s, li) {
+    const G = S.groundY;
+    if (m === 'mist') {
+      S.wreck.w.position.set(60, -t * 5, -420); S.wreck.w.rotation.set(0.05, -0.5, -0.06 - t * 0.02);
+      cinePops(S, S.wreck.g, s * 0.3);
+      cineEngine(S, true); S.hero.position.set(-260 + Math.min(1, t / 3) * 120, 40, 200); S.hero.rotation.set(0, 0.45, 0);
+      S.camPos.set(-420, 150, 560); S.camTarget.set(0, -20, -380);
+      return;
+    }
+    // the dream: young SOL watching the stars on the hilltop, Ray walks up to him
+    const sx = -6, sz = 10, rx = 26 - Math.min(1, t / 2.5) * 10, rz = 30;
+    if (S.sol) {
+      S.sol.position.set(sx, G(sx, sz), sz);
+      const face = S.turn ? Math.atan2(rx - sx, rz - sz) : Math.PI + 0.3;   // first gazing at the sky, then turning to the visitor
+      S.sol.rotation.y += (face - S.sol.rotation.y) * Math.min(1, s * 3);
+      S.sol.rotation.x = S.turn ? 0 : -0.25;
+      const sc = S.sol.getObjectByName('scarf'); if (sc) sc.rotation.y = Math.sin(t * 2.4) * 0.2;
+    }
+    S.ray.position.set(rx, G(rx, rz) + 11 + Math.abs(Math.sin(t * (t < 2.5 ? 8 : 2))) * (t < 2.5 ? 2 : 0.4), rz);
+    S.ray.rotation.y = Math.atan2(sx - rx, sz - rz);
+    cineLeaf(S.ray, t);
+    for (const mo of S.motes) { mo.y += mo.v * s; if (mo.y > 120) mo.y = 0; mo.g.position.set(mo.x, G(mo.x, mo.z) + mo.y, mo.z); mo.g.material.opacity = 0.5 * Math.sin(mo.y / 120 * Math.PI); }
+    S.camPos.set(60 - t * 1.5, S.g0 + 16, 120); S.camTarget.set(4, S.g0 + 16, 10);
+  },
+  cineStart(S) { S.cine = true; S.wake = 0; },
+  cine(S, ct, s) {            // the dream fades into light
+    if (!S.veiled && ct > 0.6) { S.veiled = true; return 'veil'; }
+    if (ct > 1.6) { S.veiled = false; return 'done'; }
+    S.camPos.y += s * 20;
+    return null;
+  },
+  end(o) {
+    this.S.cine = false;
+    if (o.fromLog) { if (Music.started) Music.setSection('menu'); return; }
+    gstate = 'play'; P.inv = Math.max(P.inv, 150);
+    if (Music.started) Music.setSection('p' + (curPhase + 1));
+    commSay([['P', '門の反応、270秒地点。'], ['R', '……待ってろ、父さん。']]);
+  },
+};
+
+// ── after THE GATE: SOL wakes; home to the hill; something stirs behind the gate ──
+const Epilogue3 = {
+  music: 'ending', title: ['SOL RETURNS', 'おかえりなさい。——そして、門の奥で何かが目を覚ます。'],
+  panels: [
+    { mood: 'gate', lines: ['扉の奥。光の中で、ひとりのパイロットが眠り続けていた。', 'R:父さん……！', 'P:生体反応、安定。……眠りの鎖が、ほどけていきます。'],
+      on: { 2: S => { S.thaw = true; fxFlash(0xffd8a0, 0.35); sfx.shield(); } } },
+    { mood: 'wake', lines: ['F:……ん……', 'F:……でかくなったな。', 'R:……！ 父さん……！', 'P:おかえりなさい、ソル。',
+      'F:……パラス。お前、まだ俺の言いつけを守ってたのか。', 'P:はい。命令ですから。……それに、守りたかったので。', 'F:……そうか。ありがとな。',
+      'R:帰ろう。ばあちゃんが待ってる。', 'F:げっ。……怒られるな、こりゃ。'], on: { 1: S => { S.awake = true; } } },
+    { mood: 'home', lines: ['M:……おかえり、ソル。', 'F:ただいま、母さん。', 'M:まったく。いつまでたっても手のかかる子だねえ。', 'R:……ふふ。', 'P:……記録しました。家族写真です。'] },
+  ],
+  build(S) {
+    Object.assign(S, cineStage(0x0a0618)); cineHill(S); cineShip(S);
+    // the gate stands facing us (its face is its top), doors drawn apart
+    S.gate = new THREE.Group(); const gg = buildBossShip(BOSS_DEFS3[2], true); scene.remove(gg);
+    if (MODELS.gate && gg.children[0]) gg.children[0].scale.z = gg.children[0].scale.x;
+    S.gate.add(gg); S.E.add(S.gate); S.gateInner = gg;
+    for (const [n, sy] of [['doorL', 1], ['doorR', -1]]) { const d = gg.getObjectByName(n); if (d) d.position.y = sy * 104; }
+    S.sol = cineBird(S, 'sol');
+    S.crystal = new THREE.Mesh(new THREE.IcosahedronGeometry(30, 1), new THREE.MeshStandardMaterial({ color: 0xd8c8ff, transparent: true, opacity: 0.35, roughness: 0.05, metalness: 0.2, emissive: 0x6a4ac0, emissiveIntensity: 0.4 }));
+    S.E.add(S.crystal);
+    S.ray = cineRay(S); S.pallas = cinePallas(S); S.mimosa = cineBird(S, 'mimosa'); S.tree = cineSapling(S, 1.4);
+    S.sun = glowSprite(0xffb060, 420, 0); S.E.add(S.sun);
+    S.eye = glowSprite(0xff2a3c, 60, 0); S.E.add(S.eye);           // what wakes behind the gate
+  },
+  reset(S) { S.thaw = S.awake = false; S.cine = false; S.k = 0; S.crystal.material.opacity = 0.35; S.crystal.visible = true; },
+  mood(S, m) {
+    const home = m === 'home';
+    for (const o of S.hillSet) o.visible = home;
+    S.gate.visible = !home; S.crystal.visible = m === 'gate' && !S.thaw || m === 'gate';
+    S.ray.visible = home; if (S.mimosa) S.mimosa.visible = home; S.tree.visible = home; S.sun.visible = home; S.eye.visible = home;
+    if (S.pallas) S.pallas.visible = true;
+    if (home) {
+      S.dawn = [[0, 0x060a24, 0x2c5aa8], [0.45, 0x1c1846, 0x5a70b8], [0.62, 0x6a2a5a, 0xe88a6a], [0.75, 0xb0485a, 0xffc890], [1, 0x2a1420, 0x9a5a50]];
+      S.paintSky(S.dawn, 0.35); S.E.background = S.skyTex; S.E.fog = new THREE.Fog(0x4a2a38, 500, 1800);
+      S.hemi.intensity = 1; S.key.color.setHex(0xffb080); S.key.intensity = 1.0; S.key.position.set(-0.1, 0.2, -1); S.stars.material.opacity = 0.6;
+      S.hero.position.set(-62, S.groundY(-62, -36) + 6, -36); S.hero.rotation.set(0, 0.5, 0.03);
+    } else {
+      S.E.background = new THREE.Color(0x0a0618); S.E.fog = null; S.stars.material.opacity = 1;
+      S.hemi.intensity = 1.1; S.key.color.setHex(0xd8c8ff); S.key.intensity = 1.4; S.key.position.set(-1, 1.4, 1.2);
+    }
+  },
+  update(S, m, t, s, li) {
+    const G = S.groundY;
+    if (m !== 'home') {
+      // the open gate, SOL asleep in a crystal of light at its heart
+      S.gate.position.set(0, 0, -260); S.gate.rotation.set(0, 0, Math.sin(t * 0.2) * 0.02);
+      S.gateInner.traverse(o => { if (o.name && o.name.startsWith('vortex')) o.rotation.z = -t * 0.3; });
+      const wake = m === 'wake';
+      if (S.thaw) S.crystal.material.opacity = Math.max(0, S.crystal.material.opacity - s * 0.4);
+      S.crystal.visible = S.crystal.material.opacity > 0.01;
+      S.crystal.position.set(0, 10, -200); S.crystal.rotation.y = t * 0.3;
+      if (S.sol) {
+        S.sol.visible = true;
+        const up = S.awake ? 0 : 1;            // lying asleep, then upright
+        S.sol.position.set(0, wake ? -12 + Math.sin(t * 1.5) * 2 : -4, wake ? -150 : -200);
+        S.sol.rotation.set(-up * 1.2, wake ? 0.2 : 0, 0);
+      }
+      cineEngine(S, true);
+      S.hero.position.set(wake ? 70 : 120, wake ? -6 : 30, wake ? -110 : 120); S.hero.rotation.set(0, wake ? 2.6 : 2.2, 0);
+      if (S.pallas) { S.pallas.position.set(wake ? 38 : 90, wake ? 18 : 60, wake ? -130 : 110); cinePallasTick(S.pallas, t, S.sol ? S.sol.position : null); }
+      if (wake) { S.camPos.set(30, 14, -40); S.camTarget.set(10, 0, -160); }
+      else { S.camPos.set(140 - t * 4, 60, 260); S.camTarget.set(0, 0, -240); }
+      return;
+    }
+    // home: the family on the hill at dawn
+    cineEngine(S, false);
+    S.tree.position.set(4, G(4, 54), 54); S.tree.userData.glow.material.opacity = 0.35 + Math.sin(t * 2) * 0.1;
+    const fx = -6, fz = 26, mx = -30, mz = 34, rx = 18, rz = 34;
+    if (S.sol) { S.sol.visible = true; S.sol.position.set(fx, G(fx, fz), fz); S.sol.rotation.set(0, li >= 1 ? -1.3 : -0.6, 0); const sc = S.sol.getObjectByName('scarf'); if (sc) sc.rotation.y = Math.sin(t * 2.4) * 0.2; }
+    if (S.mimosa) { S.mimosa.position.set(mx, G(mx, mz) + (li === 2 ? Math.abs(Math.sin(t * 7)) * 2 : 0), mz); S.mimosa.rotation.y = 1.2; }
+    S.ray.position.set(rx, G(rx, rz) + 11 + Math.sin(t * 2) * 0.4, rz); S.ray.rotation.y = -1.4; cineLeaf(S.ray, t);
+    if (S.pallas) { S.pallas.position.set(30, G(30, 20) + 32 + Math.sin(t * 2.2) * 1.5, 20); cinePallasTick(S.pallas, t, S.camPos); }
+    if (!S.cine) { S.camPos.set(-4, S.g0 + 14, 140 - Math.min(t, 6)); S.camTarget.set(-6, S.g0 + 14, 30); }
+  },
+  cineStart(S) { S.cine = true; if (Music.started) Music.riser(2.4); },
+  cine(S, ct, s) {
+    // sunrise over the family — then, for a breath, the light falters and something red opens far away
+    const k = Math.min(1, ct / 3.4), e = k * k * (3 - 2 * k);
+    S.paintSky(S.dawn, 0.35 + e * 0.65);
+    S.sun.position.set(-170, S.g0 - 120 + e * 230, -1500); S.sun.material.opacity = Math.min(1, ct / 1.2);
+    S.stars.material.opacity = 0.6 * (1 - e); S.key.intensity = 1 + e;
+    S.camPos.set(-4 + e * 60, S.g0 + 14 + e * 40, 140 + e * 100); S.camTarget.set(-20, S.g0 + 14 + e * 30, -200);
+    const dim = ct > 4.2 && ct < 5.6 ? Math.sin((ct - 4.2) / 1.4 * Math.PI) : 0;
+    S.hemi.intensity = 1 + e * 0.3 - dim * 0.8; S.sun.material.opacity *= 1 - dim * 0.7;
+    S.eye.position.set(260, S.g0 + 260, -1700); S.eye.material.opacity = dim; S.eye.scale.set(90, 20 + dim * 40, 1);
+    if (dim > 0.5 && !S.rumbled) { S.rumbled = true; sfx.warning(); }
+    if (ct > 6.0 && !S.titled) { S.titled = true; return 'title'; }
+    if (ct > 10.2 && !S.veiled) { S.veiled = true; return 'veil'; }
+    if (ct > 11.2) return 'done';
+    return null;
+  },
+  end(o) {
+    const S = this.S; S.cine = false; S.titled = S.veiled = S.rumbled = false;
+    showCredits('story3', () => {
+      if (o.fromLog) { if (Music.started) Music.setSection('menu'); return; }
+      gstate = 'play'; P.inv = Math.max(P.inv, 150);
+      if (Music.started) Music.setSection('p' + (curPhase + 1));
+      commSay([['F', 'よし、レイ。次は一緒に飛ぶぞ。'], ['R', '……おう！'], ['P', '……騒がしくなりそうです。']]);
+    });
+  },
+};
+for (const c of [Prologue3, Dream, Epilogue3]) c.play = (o = {}) => loadPart3Models().then(() => Cine.play(c, o));
+
 // ── Secrets ───────────────────────────────────────────────────────────────────
 // Hidden touch gestures / play feats that unlock cosmetic modes, skins and
 // titles. Only the *count* is ever shown to players (SECRETS n/9); the
@@ -8653,6 +9143,7 @@ const SECRET_TITLES = [
   { id: 'complete', title: 'SECRET MASTER' },
   { id: 'story',    title: 'AEGIS PILOT' },
   { id: 'story2',   title: 'SHIELD BEARER' },
+  { id: 'story3',   title: 'SON OF THE SUN' },
 ];
 const SHIP_SIZES = { normal: 1, mini: 0.6, big: 1.45 };
 
@@ -8662,13 +9153,13 @@ catch (e) { secretsFound = []; }
 let secOpts = { retro: false, mirror: false, size: 'normal', midnight: false, hardcore: false, title: '' };
 try { Object.assign(secOpts, JSON.parse(localStorage.getItem('hd_sec_opts') || '{}') || {}); } catch (e) {}
 
-const hasSecret = id => id === 'complete' ? secretsComplete() : id === 'story' ? bossBest >= 2 : id === 'story2' ? bossBest2 >= 3 : secretsFound.includes(id);
+const hasSecret = id => id === 'complete' ? secretsComplete() : id === 'story' ? bossBest >= 2 : id === 'story2' ? bossBest2 >= 3 : id === 'story3' ? bossBest3 >= 3 : secretsFound.includes(id);
 function secretsComplete() { return SECRET_DEFS.every(d => secretsFound.includes(d.id)); }
 function saveSecrets() {
   localStorage.setItem('hd_secrets', JSON.stringify(secretsFound));
   localStorage.setItem('hd_sec_opts', JSON.stringify(secOpts));
 }
-const skinUnlocked = s => (!s.secret || hasSecret(s.secret)) && (!s.lv || pilotLevel() >= s.lv);
+const skinUnlocked = s => (!s.secret || hasSecret(s.secret)) && (!s.lv || pilotLevel() >= s.lv) && (!s.story || bossBest3 >= 3);
 
 // ── Applying the rewards ──
 const PHASE_TINT_NIGHT = [0xa8b8ff, 0xb4a8ff, 0xc8a0ff, 0xe0a0ff];
@@ -8941,6 +9432,12 @@ function creditsCast() {
       'ひまわり畑の主。レイを今でもヒナ扱いする。') : '') +
     (bossBest2 >= 3 || (met.cerberus || 0) > 0 ? C(HADES_FACE, '#c08aff', 'HADES', 'ハデス', '冥王 ／ 旗艦ケルベロス',
       '槍を握る者。銀河じゅうの伝説の盾を求める。') : '') +
+    (bossBest3 >= 1 || (met.thanatos || 0) > 0 ? C(THANATOS_FACE, '#cfe8ff', 'THANATOS', 'タナトス', '死 ／ 門の番人',
+      '双子の兄。無口で、容赦がない。') : '') +
+    (bossBest3 >= 2 || (met.hypnos || 0) > 0 ? C(HYPNOS_FACE, '#b8a0ff', 'HYPNOS', 'ヒュプノス', '眠り ／ 門の番人',
+      '双子の弟。「眠っていれば痛くない」と信じている。') : '') +
+    (bossBest3 >= 3 ? C(SPEAKERS.F.face, '#ff8a2a', 'SOL', 'ソル', 'アイギス防衛隊 エース ／ レイの父',
+      '豪快で、少し抜けている。レイの決め台詞は、だいたいこの人の真似。') : '') +
     `</div>` +
     `<div class="cr-k">SETTING</div><div class="cr-v">PLANET AEGIS<br><small>最強の盾の名を冠した、美しい星</small></div>`;
 }
@@ -8948,11 +9445,12 @@ function showCredits(ending, onClose = null) {
   if (creditsOpen) return;
   creditsOpen = true;
   creditsOnClose = onClose;
-  const story = ending === 'story', story2 = ending === 'story2';
+  const story = ending === 'story', story2 = ending === 'story2', story3 = ending === 'story3';
   const roll = document.getElementById('cr-roll');
   const L = (k, v) => `<div class="cr-k">${k}</div><div class="cr-v">${v}</div>`;
   roll.innerHTML =
-    (story2 ? `<div class="cr-end">CERBERUS FALLS</div><div class="cr-thanks">そして、門の向こうへ——</div>`
+    (story3 ? `<div class="cr-end">SOL RETURNS</div><div class="cr-thanks">そして、最後の章へ——</div>`
+     : story2 ? `<div class="cr-end">CERBERUS FALLS</div><div class="cr-thanks">そして、門の向こうへ——</div>`
      : story ? `<div class="cr-end">BIDENT FALLS</div><div class="cr-thanks">そして、レイの旅は続く。</div>`
      : ending ? `<div class="cr-end">ALL SECRETS FOUND</div><div class="cr-thanks">すべての秘密を見つけてくれて、ありがとう。</div>` : '') +
     `<div class="cr-logo">HOVER<br>DODGE</div>` +
@@ -8965,7 +9463,8 @@ function showCredits(ending, onClose = null) {
     L('VISUALS', 'Three.js · WebGL · Bloom<br><small>3D models: glTF</small>') +
     L('TYPEFACES', 'Orbitron · Rajdhani') +
     L('SPECIAL THANKS', 'YOU') +
-    (story2 ? `<div class="cr-reward">◆ TITLE: SHIELD BEARER</div><div class="cr-fin">TO BE CONTINUED</div>`
+    (story3 ? `<div class="cr-reward">◆ SOL の機体を解放（SKIN・SKILL）<br>◆ TITLE: SON OF THE SUN</div><div class="cr-fin">TO BE CONTINUED</div>`
+     : story2 ? `<div class="cr-reward">◆ TITLE: SHIELD BEARER</div><div class="cr-fin">TO BE CONTINUED</div>`
      : story ? `<div class="cr-reward">◆ TITLE: AEGIS PILOT</div>`
      : ending ? `<div class="cr-reward">◆ PRISM SKIN UNLOCKED<br>◆ TITLE: SECRET MASTER</div>` : '') +
     `<div class="cr-fin">THANK YOU FOR PLAYING</div>`;
@@ -9024,6 +9523,7 @@ function loop(now) {
   Epilogue.update(realDt);
   Cine.update(realDt);
   syncBossHUD();
+  syncMistUI();
   commTick(realDt);
   fx.aberr *= Math.pow(0.9, realDt);
   fx.flash *= Math.pow(0.86, realDt);

@@ -6,12 +6,12 @@ Three.js + WebGL で描画する、タップひとつで遊べる横スクロー
 
 **▶ 遊ぶ：<https://junia2009.github.io/hover-dodge/>**（スマホは横向きで。ホーム画面に追加するとアプリのように起動します）
 
-- **2 章のストーリー**：小さな鳥のパイロット **レイ** と相棒 AI **パラス** の物語。プロローグ・エピローグ・回想は 3D カットシーンで、あとから LOG で見返せる
-- **ボス戦 5 体**：第一部 STYX / ACHERON、第二部 ORTHROS / CHARON / 三つ首の CERBERUS
-- **やり込み**：パイロットレベル（最大 Lv60）、36 スキルのツリー、装備枠、HULL（耐久）、シナジー、スキン、9 つの隠し要素
+- **3 章のストーリー**：小さな鳥のパイロット **レイ** と相棒 AI **パラス** の物語。プロローグ・エピローグ・回想は 3D カットシーンで、あとから LOG で見返せる
+- **ボス戦 8 体**：第一部 STYX / ACHERON、第二部 ORTHROS / CHARON / 三つ首の CERBERUS、第三部 THANATOS / HYPNOS / THE GATE
+- **やり込み**：パイロットレベル（最大 Lv60）、38 スキルのツリー、装備枠、HULL（耐久）、シナジー、スキン、9 つの隠し要素
 - **3D モデル**（glTF）と、プレイに合わせて変化する **手続き合成の BGM**
 
-[![Play](https://img.shields.io/badge/play-online-00e8ff?style=flat-square)](https://junia2009.github.io/hover-dodge/) ![Version](https://img.shields.io/badge/version-2.6.3-aa44ff?style=flat-square)
+[![Play](https://img.shields.io/badge/play-online-00e8ff?style=flat-square)](https://junia2009.github.io/hover-dodge/) ![Version](https://img.shields.io/badge/version-2.7.0-aa44ff?style=flat-square)
 
 ---
 
@@ -26,9 +26,10 @@ Three.js + WebGL で描画する、タップひとつで遊べる横スクロー
 | 🐦 | **レイ** | 主人公。パイロット志望の鳥。頭の葉っぱはアイギス最後の緑 |
 | 🛡 | **パラス** | 機体に眠っていた戦術 AI。冷静で口が悪く、たまに優しい |
 | 🌻 | **ミモザ** | レイの祖母。ひまわり畑の主（第二部） |
-| ☀️ | **ソル** | レイの父。アイギス防衛隊のエースパイロット。消息不明 |
+| ☀️ | **ソル** | レイの父。アイギス防衛隊のエースパイロット。消息不明——だった |
 | 🔱 | **ステュクス / アケロン** | バイデントの二本の穂先（第一部のボス） |
 | 💀 | **オルトロス / カロン / ハデス** | 猟犬・渡し守・冥王（第二部のボス） |
+| 🌙 | **タナトス / ヒュプノス** | 冥界の門を守る双子の神。死と眠り（第三部のボス） |
 
 設定の詳細（世界観、各キャラの過去、今後の構想）は [`docs/LORE.md`](docs/LORE.md) にまとめています。
 
@@ -42,6 +43,12 @@ Three.js + WebGL で描画する、タップひとつで遊べる横スクロー
 - 飛行 **90 秒で ORTHROS**（双頭の猟犬）、**180 秒で CHARON**（捕虜を運ぶ渡し守の輸送要塞）、**270 秒で CERBERUS**（ハデス旗艦・3 段階）
 - 第二部プロローグ、カロン撃破後の再会と告白（回想シーンつき）、エピローグ（「CERBERUS FALLS」）→ 称号 **SHIELD BEARER**
 
+### CHAPTER Ⅲ「HYPNOS」（CERBERUS 撃破で解放）
+- ソルのビーコンを追って、銀河の果ての「門」へ
+- 飛行 **90 秒で THANATOS**（死の番人・鎌の斬撃と跳ね返せない黒い弾）、**180 秒で HYPNOS**（眠りの神・眠りの霧と揺れる子守唄の弾）、**270 秒で THE GATE**（双子が守る門。HP 半分で扉が開き、渦から螺旋弾）
+- 新要素 **眠気ゲージ（ZZZ）**：霧の中を飛ぶとたまり、満タンで 3 秒間うとうと（羽ばたきが弱く、重く、視界が暗くなる）。**PULSE で霧を払える**
+- 第三部プロローグ、ヒュプノス撃破後の「夢」、エピローグ（「SOL RETURNS」）→ 称号 **SON OF THE SUN**、**ソルの機体**（SOL スキン＋SOL 系統スキル）を解放
+
 <details>
 <summary>⚠️ 第二部のネタバレ</summary>
 
@@ -51,10 +58,19 @@ Three.js + WebGL で描画する、タップひとつで遊べる横スクロー
 
 </details>
 
+<details>
+<summary>⚠️ 第三部のネタバレ</summary>
+
+- ソルは死んでいなかった。ヒュプノスに「永遠の眠り」に閉じ込められていた
+- ヒュプノスを倒すと、レイはソルの夢の中へ。まだ緑だったアイギスの丘で、若いソルはレイが息子だと気づかないまま「俺にもお前くらいのヒナがいてさ」と話す。レイは名乗れない
+- 門が開き、ソルが目を覚ます。最初の言葉は「……でかくなったな」。丘でミモザに怒られ、家族写真が一枚増える——その空で、門の奥の何かが目を開く → 最終章へ
+
+</details>
+
 ### 物語の見せ方
-- **3D カットシーン**：タップ / SPACE で進行、SKIP / ESC で飛ばせる。**LOG** から全 5 シーン（Ⅰ PROLOGUE / Ⅰ EPILOGUE / Ⅱ PROLOGUE / Ⅱ 告白 / Ⅱ EPILOGUE）を見返せる
+- **3D カットシーン**：タップ / SPACE で進行、SKIP / ESC で飛ばせる。**LOG** から全 8 シーン（Ⅰ PROLOGUE / Ⅰ EPILOGUE / Ⅱ PROLOGUE / Ⅱ 告白 / Ⅱ EPILOGUE / Ⅲ PROLOGUE / Ⅲ 夢 / Ⅲ EPILOGUE）を見返せる
 - **無線**：プレイ中、レイとパラス（ボス戦では敵も）の掛け合いが画面下に流れる。前回の死因・時間帯・章・進行状況に応じて変わり、出撃をまたいで進む連作ネタもある
-- **航海日誌（LOG）**：記録・フェーズ到達・ボス撃破などで全 16 ページが解放される
+- **航海日誌（LOG）**：記録・フェーズ到達・ボス撃破などで全 20 ページが解放される
 - **リザルト**：レイの一言（クールに決めようとして決まらない）
 - **区間**：PHASE 1〜4 = アイギス上空 / バイデント前線 / 監視宙域 / バイデント本拠
 
@@ -78,7 +94,7 @@ Three.js + WebGL で描画する、タップひとつで遊べる横スクロー
 ゴールはひたすら長く生き残ること。死んだら `RETRY` ですぐやり直せます。記録・XP・進行はすべて端末に保存されます。
 
 ### タイトル画面
-- **CHAPTER Ⅰ / Ⅱ** — 章の選択（第二部の解放後）
+- **CHAPTER Ⅰ / Ⅱ / Ⅲ** — 章の選択（第二部・第三部の解放後）
 - **LOADOUT** — 所持スキルの装備・ランクアップ
 - **SHOP** — XP でスキルを解放
 - **SKIN** — 自機の色
@@ -115,6 +131,8 @@ Three.js + WebGL で描画する、タップひとつで遊べる横スクロー
 | `styx.glb` / `acheron.glb` | バイデント旗艦 | 船首 -X・上面 +Z。`prongTip_L/R`（発射口）/ `core` / `engine_L/R` |
 | `orthros.glb` / `charon.glb` | 第二部のボス | 同上。オルトロスは双頭（`head_L/R`）、カロンは `core` がランタン |
 | `cerberus.glb` | ハデス旗艦 | 同上＋三つ首 `head_L/C/R` と `prongTip_L/C/R`（首ごとに破壊して非表示にできる） |
+| `thanatos.glb` / `hypnos.glb` | 第三部のボス（双子） | 同上。タナトスは鎌の先と船首、ヒュプノスは 2 本の触角の先が発射口 |
+| `gate.glb` | 冥界の門 | 上面 +Z が門の正面。扉 `doorL` / `doorR` を左右に開ける、奥に渦 `vortex*`、双子像の手が発射口 |
 | `mimosa.glb` / `sol.glb` | ミモザ（祖母）／ソル（父） | レイと同じ規格（正面 +Z・足元が原点・`wingL/R`）。ミモザは `flower`、ソルは `scarf` / `crest` |
 
 - モデルは Service Worker の専用キャッシュ（`hoverdodge-models-v1`）に長く保存されます。モデルを差し替えたときは `index.html` の `MODEL_REV`（URL に `?v=` を付ける）を上げると、端末のキャッシュを飛ばして新しいモデルが届きます
@@ -173,6 +191,8 @@ Three.js + WebGL で描画する、タップひとつで遊べる横スクロー
                 └─ REPAIR KIT ────── SECOND WIND
 ─── Lv31 以降の上位スキル ────────────────────────────────────────────
   OVERLOAD → TWIN PULSE ／ LAST STAND → IMMORTAL ／ GOLDEN ORBS → TREASURE HUNTER
+─── SOL（CHAPTER Ⅲ クリアで解放）──────────────────────────────────────
+  SUNBURST ── ACE INSTINCT
 ```
 
 | スキル | 価格 (ランク) | 効果 |
@@ -213,6 +233,8 @@ Three.js + WebGL で描画する、タップひとつで遊べる横スクロー
 | **TWIN PULSE** (Lv33) | 1,800 | PULSE の直後にもう一度衝撃波（二重 PULSE） |
 | **IMMORTAL** (Lv40) | 2,200 | 復活が 2 回に。復活のたびに LAST STAND（10 秒間スコア・XP 2 倍） |
 | **TREASURE HUNTER** (Lv44) | 1,800 | XP オーブの出現率 UP（45% → 75%）、金オーブの確率 2 倍 |
+| **SUNBURST** (Ⅲ) | 1,200 | PULSE が太陽の光の輪に。範囲 +35%、眠りの霧を画面ごと晴らす |
+| **ACE INSTINCT** (Ⅲ) | 1,500 | NEAR の判定が広がり、NEAR 5 回ごとに耐久 +1 |
 
 ### シナジー
 
@@ -226,7 +248,7 @@ Three.js + WebGL で描画する、タップひとつで遊べる横スクロー
 | **BULLET TIME** | TIME WARP + FORWARD SHOT | スローモー中は射撃 CD なし |
 | **BULWARK** | HULL PLATING + SHIELD | 耐久が減ると PULSE が即チャージ |
 
-全解放 + 全ランクで合計 **38,850 XP**。新スキルは `SKILL_DEFS` に `requires` 付きで 1 行追加すればツリーに自動配置されます（効果は `hasSkill()` / `rank()` で実装）。
+全解放 + 全ランクで合計 **41,550 XP**。新スキルは `SKILL_DEFS` に `requires` 付きで 1 行追加すればツリーに自動配置されます（効果は `hasSkill()` / `rank()` で実装）。
 
 ## 🔮 SECRETS（隠し要素）
 
@@ -267,6 +289,7 @@ Three.js + WebGL で描画する、タップひとつで遊べる横スクロー
 | **NEBULA** | `#c46bff` | パイロット Lv40 |
 | **AEGIS** | `#ffe28a` | パイロット Lv50 |
 | **LEGEND** | `#ffb000`（アニメーション） | パイロット Lv60 |
+| **SOL** | `#ff8a2a` | CHAPTER Ⅲ クリア（ソルの機体） |
 | **GLITCH** | `#ff2bd6`（アニメーション） | SECRET |
 | **PACIFIST** | `#f4f6ff` | SECRET |
 | **PRISM** | `#b98cff`（アニメーション） | SECRET を全部発見 |
@@ -331,8 +354,8 @@ Three.js + WebGL で描画する、タップひとつで遊べる横スクロー
   - `hd_owned` / `hd_equip` / `hd_ranks` / `hd_slots` — 所持スキル / 装備 / ランク / 装備枠
   - `hd_skin` — 機体スキン
   - `hd_bgm` / `hd_se` / `hd_mute` — 音の設定
-  - `hd_boss` / `hd_boss2` / `hd_boss_met` — 撃破数（第一部 / 第二部）/ ボス遭遇回数
-  - `hd_chapter` / `hd_prologue` / `hd_prologue2` — 選択中の章 / プロローグ視聴済み
+  - `hd_boss` / `hd_boss2` / `hd_boss3` / `hd_boss_met` — 撃破数（第一部 / 第二部 / 第三部）/ ボス遭遇回数
+  - `hd_chapter` / `hd_prologue` / `hd_prologue2` / `hd_prologue3` — 選択中の章 / プロローグ視聴済み
   - `hd_runs` / `hd_maxphase` / `hd_logs_read` / `hd_comm` / `hd_lastrun` / `hd_short` / `hd_gag` — 出撃回数・最高到達フェーズ・既読日誌・会話履歴・前回の結果・連続短時間ミス・連作ネタの進行
   - `hd_secrets` / `hd_sec_opts` — 隠し要素
 
@@ -408,6 +431,7 @@ hover-dodge/
 
 | Version | 内容 |
 | :---: | --- |
+| **2.7.0**  | CHAPTER Ⅲ「HYPNOS」：章選択に Ⅲ、新ボス 3 体（THANATOS / HYPNOS / 扉が開く 2 段階の THE GATE）と新攻撃 5 種（鎌の斬撃・黒い弾・眠りの霧・子守唄の弾・螺旋弾）、新要素「眠気ゲージ」、3D カットシーン 3 本（プロローグ・夢・エピローグ）、ソルの機体（SOL スキン＋SOL 系統スキル SUNBURST / ACE INSTINCT）、日誌 4 ページ、称号 SON OF THE SUN、縦画面のストーリー進行を第三部に対応 |
 | **2.6.3**  | ミモザの目が見えていなかったのを修正（閉じた笑い目が顔に埋もれていた）：メガネの奥にやさしい黒目＋ハイライト＋笑いじわ。モデル更新がキャッシュに阻まれないよう `?v=` を付与 |
 | **2.6.2**  | 縦画面のミモザが動くように：画面下のひまわり畑（3本）をよちよち歩き、立ち止まって花の手入れ、レイが近くを飛ぶと手を振る（レイは一回転して返す）。タップするとぴょんと跳ねる |
 | **2.6.1**  | 告白シーンの離陸でパラスが丘に取り残されていたのを修正（コックピットに飛び込んでから離陸） |
