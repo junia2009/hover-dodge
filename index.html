@@ -2400,7 +2400,7 @@ import { GLTFLoader }      from 'three/addons/loaders/GLTFLoader.js';
 
 // Single source of truth for the version: shown on the title / portrait
 // screens and passed to the service worker, which names its cache after it.
-const VERSION = '3.6.1';
+const VERSION = '3.6.2';
 
 // ── 3D models (glTF). The ship, Ray and PALLAS are waited for (briefly) before
 // the scene is built; the flagships stream in the background — they are
@@ -9297,28 +9297,36 @@ function cineTrail(S, s) {
 }
 // cast
 function cineRay(S) { const r = buildRay(); S.E.add(r); return r; }
-// PILOT MODE: the defence-force pilot uniform (peaked cap with the wing crest, red neckerchief) worn by Ray
-// (sized for the GLB Ray: head ≈ r10.5, y -7..8.5, the leaf on top; body y -11..-0.5)
+// PILOT MODE: Ray's pilot outfit — the same flight goggles as his hero, dad (copied from SOL's model and
+// fitted to Ray's head), and the red neckerchief of the defence force
 function dressPilot(r) {
   const g = new THREE.Group(); g.name = 'uniform';
-  const navy = new THREE.MeshPhongMaterial({ color: 0x1a2a5a, shininess: 50 });
-  const gold = new THREE.MeshPhongMaterial({ color: 0xffd25a, emissive: 0x6a4a00, shininess: 120, specular: 0xfff0b0 });
-  const white = new THREE.MeshPhongMaterial({ color: 0xf4f8ff, shininess: 40 });
-  const red = new THREE.MeshPhongMaterial({ color: 0xe04848, shininess: 30 });
-  const cap = new THREE.Group(); cap.position.set(0, 6.4, -0.4); cap.rotation.x = -0.12;
-  const crown = new THREE.Mesh(new THREE.CylinderGeometry(8.2, 7.3, 2.6, 32), navy);
-  crown.position.y = 1.3; cap.add(crown);
-  const top = new THREE.Mesh(new THREE.SphereGeometry(8.2, 32, 6, 0, Math.PI * 2, 0, 0.5), navy);
-  top.scale.y = 0.4; top.position.y = 2.6 - 8.2 * 0.4 * Math.cos(0.5); cap.add(top);
-  const band = new THREE.Mesh(new THREE.CylinderGeometry(7.75, 7.5, 1.1, 32, 1, true), white);
-  band.position.y = 0.9; cap.add(band);
-  const brim = new THREE.Mesh(new THREE.CylinderGeometry(6, 6, 0.45, 24, 1, false, -Math.PI / 2, Math.PI), new THREE.MeshPhongMaterial({ color: 0x0c1430, shininess: 140 }));
-  brim.scale.set(1.05, 1, 0.8); brim.position.set(0, 0.1, 4.6); brim.rotation.x = 0.16; cap.add(brim);
-  const crest = new THREE.Group(); crest.position.set(0, 1.6, 7.9); crest.rotation.x = 0.17;
-  const hub = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.1, 0.4, 6), gold); hub.rotation.x = Math.PI / 2; crest.add(hub);
-  for (const sx of [-1, 1]) { const w = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.6, 0.3), gold); w.position.set(sx * 2, 0.3, 0); w.rotation.z = sx * 0.3; crest.add(w); }
-  cap.add(crest); g.add(cap);
+  r.updateMatrixWorld(true);
+  const headBox = (root, names) => {
+    const b = new THREE.Box3(), inv = new THREE.Matrix4().copy(root.matrixWorld).invert();
+    root.traverse(c => { if (c.isMesh && names.includes(c.name)) { c.geometry.computeBoundingBox(); b.union(c.geometry.boundingBox.clone().applyMatrix4(c.matrixWorld).applyMatrix4(inv)); } });
+    return b;
+  };
+  if (MODELS.sol) {
+    const sol = new THREE.Group(), sm = cloneModel(MODELS.sol); sm.scale.setScalar(7.5); sol.add(sm); sol.updateMatrixWorld(true);
+    const sb = headBox(sol, ['head_L', 'head_R']), rb = headBox(r, ['head_navy', 'head_blue']);
+    if (!sb.isEmpty() && !rb.isEmpty()) {
+      const ss = sb.getSize(new THREE.Vector3()), rs = rb.getSize(new THREE.Vector3());
+      const k = rs.x / ss.x, sc = sb.getCenter(new THREE.Vector3()), rc = rb.getCenter(new THREE.Vector3());
+      // line the tops of the heads up, so the goggles sit on Ray's forehead the way they sit on SOL's
+      const fit = new THREE.Matrix4().makeTranslation(rc.x, rb.max.y, rc.z)
+        .multiply(new THREE.Matrix4().makeScale(k, k, k))
+        .multiply(new THREE.Matrix4().makeTranslation(-sc.x, -sb.max.y, -sc.z));
+      sm.traverse(c => {
+        if (!c.isMesh || !c.name.startsWith('goggle')) return;
+        const m = c.clone(); m.matrixAutoUpdate = true;
+        new THREE.Matrix4().multiplyMatrices(fit, c.matrixWorld).decompose(m.position, m.quaternion, m.scale);
+        g.add(m);
+      });
+    }
+  }
   // red neckerchief knotted under the beak
+  const red = new THREE.MeshPhongMaterial({ color: 0xe04848, shininess: 30 });
   const knot = new THREE.Mesh(new THREE.SphereGeometry(1.4, 12, 10), red);
   knot.position.set(0, -4.6, 8.9); g.add(knot);
   const tie = new THREE.Mesh(new THREE.ConeGeometry(2.1, 4.2, 3), red);
