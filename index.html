@@ -899,6 +899,7 @@ button { font-family: var(--f-ui) }
   text-shadow: 0 0 calc(16 * var(--px)) rgba(255, 40, 80, 0.85);
   position: relative;
 }
+.r-head.clear { color: #ffd84a; text-shadow: 0 0 calc(16 * var(--px)) rgba(255, 200, 60, 0.85); }
 .r-head::before, .r-head::after {
   content: attr(data-text); position: absolute; inset: 0;
   mix-blend-mode: screen; opacity: 0;
@@ -1125,6 +1126,7 @@ button { font-family: var(--f-ui) }
 .log-replay .btn-mini { white-space: nowrap; flex: none; padding: 8px 10px; letter-spacing: 1px; font-family: var(--f-ui) !important; }
 .rp-grp.ch2 .btn-mini { background: rgba(192, 138, 255, 0.16); color: #e2ccff; }
 .rp-grp.ch3 .btn-mini { background: rgba(255, 176, 102, 0.16); color: #ffd8b0; }
+.rp-grp.ch5 em { color: #ffd25a; } .rp-grp.ch5 .btn-mini { background: rgba(255, 210, 90, 0.16); color: #fff0c0; }
 .rp-grp.ch4 em { color: #9fb8ff; } .rp-grp.ch4 .btn-mini { background: rgba(159, 184, 255, 0.16); color: #dfe6ff; }
 .log-body { display: grid; grid-template-columns: minmax(200px, 34%) 1fr; }
 .log-list { overflow-y: auto; padding: 12px; display: grid; gap: 6px; align-content: start; border-right: 1px solid rgba(160, 200, 255, 0.09); }
@@ -1235,6 +1237,7 @@ button { font-family: var(--f-ui) }
 .t-chapter button[data-ch="2"] { --ch-c: #c08aff; }
 .t-chapter button[data-ch="3"] { --ch-c: #ffb066; }
 .t-chapter button[data-ch="4"] { --ch-c: #9fb8ff; }
+.t-chapter button[data-ch="5"] { --ch-c: #ffd25a; }
 .t-chapter button[hidden] { display: none; }
 .t-chapter + .t-start { margin-top: calc(12 * var(--px)); }
 .t-modes {
@@ -2294,6 +2297,7 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
           <button type="button" data-ch="2">CHAPTER Ⅱ<small>CERBERUS</small></button>
           <button type="button" data-ch="3" hidden>CHAPTER Ⅲ<small>HYPNOS</small></button>
           <button type="button" data-ch="4" hidden>CHAPTER Ⅳ<small>NYX</small></button>
+          <button type="button" data-ch="5" hidden>✈ PILOT<small>FREE FLIGHT</small></button>
         </div>
         <button class="btn-primary t-start" id="start-btn" type="button">START<kbd>SPACE</kbd></button>
         <div class="t-modes" id="t-modes"></div>
@@ -2387,7 +2391,7 @@ import { GLTFLoader }      from 'three/addons/loaders/GLTFLoader.js';
 
 // Single source of truth for the version: shown on the title / portrait
 // screens and passed to the service worker, which names its cache after it.
-const VERSION = '3.4.1';
+const VERSION = '3.5.0';
 
 // ── 3D models (glTF). The ship, Ray and PALLAS are waited for (briefly) before
 // the scene is built; the flagships stream in the background — they are
@@ -4331,6 +4335,29 @@ const SECTIONS_BY_CH = {
             padWave: 'triangle', padLp: 1500, padVib: 8, bell: true, leadBell: true, leadOct: 36, motif: [4,null,null,null,5,null,4,null,null,null,2,null],
             lv: { pad: .6, bass: .16, kick: 0, snare: 0, hat: 0, lead: .28, arp: .34 } },
   },
+  // PILOT MODE — a sunny road trip: C Lydian, bright and bouncy, a little swing, bells and a singing lead
+  5: {
+    menu: { bpm: 96, style: 0, chords: [CH(48,0,4,7,11,14), CH(50,0,4,7,9,14), CH(45,0,3,7,10,14), CH(43,0,4,7,9,14)],
+            padWave: 'triangle', padLp: 1700, bell: true, leadBell: true, leadOct: 36, motif: [0,null,2,null,4,null,null,null, 5,null,4,null,2,null,null,null],
+            lv: { pad: .5, bass: .24, kick: 0, snare: 0, hat: .1, lead: .26, arp: .3 } },
+    p1:   { bpm: 112, style: 1, swing: 0.12, chords: [CH(48,0,4,7), CH(50,0,4,7), CH(45,0,3,7), CH(43,0,4,7)], kit: 'soft',
+            bell: true, arpWave: 'sine', arpSeq: [0, 2, 4, 6, 4, 2, 1, 3], padWave: 'triangle', padLp: 1600,
+            lv: { pad: .44, bass: .4, kick: .45, snare: .2, hat: .22, lead: 0, arp: .26 } },
+    p2:   { bpm: 118, style: 2, swing: 0.12, chords: [CH(48,0,4,7), CH(45,0,3,7), CH(41,0,4,7), CH(43,0,4,7)], kick: [0, 6, 8, 14], snare: [4, 12],
+            bell: true, arpWave: 'triangle', arpSeq: [0, 2, 4, 6, 4, 2, 1, 3], padWave: 'triangle',
+            lv: { pad: .34, bass: .5, kick: .76, snare: .42, hat: .32, lead: 0, arp: .24 } },
+    p3:   { bpm: 124, style: 3, swing: 0.1, chords: [CH(41,0,4,7,11), CH(43,0,4,7), CH(48,0,4,7), CH(45,0,3,7)],
+            leadWave: 'triangle', lead2: 'square', leadVib: 10, motif: [4,null,4,5,null,4,2,null, 4,null,6,null,5,4,2,null],
+            lv: { pad: .28, bass: .55, kick: .82, snare: .5, hat: .38, lead: .42, arp: .12 } },
+    p4:   { bpm: 132, style: 4, swing: 0.08, chords: [CH(41,0,4,7,11), CH(43,0,4,7), CH(45,0,3,7), CH(48,0,4,7,14)],
+            leadWave: 'square', lead2: 'triangle', leadVib: 10, motif: [0,2,4,null,5,4,2,null, 4,null,7,6,null,5,4,2],
+            lv: { pad: .24, bass: .6, kick: .9, snare: .58, hat: .44, lead: .46, arp: .18 } },
+    boss: { bpm: 132, style: 4, chords: [CH(41,0,4,7,11), CH(43,0,4,7), CH(45,0,3,7), CH(48,0,4,7,14)],
+            leadWave: 'square', lead2: 'triangle', motif: [0,2,4,null,5,4,2,null, 4,null,7,6,null,5,4,2],
+            lv: { pad: .24, bass: .6, kick: .9, snare: .58, hat: .44, lead: .46, arp: .18 } },
+    ending: { bpm: 80, style: 0, chords: [CH(48,0,4,7,11,14), CH(41,0,4,7,11), CH(45,0,3,7,10), CH(43,0,5,7,10)],
+            padWave: 'triangle', padLp: 1700, bell: true, lv: { pad: .6, bass: .2, kick: 0, snare: 0, hat: 0, lead: 0, arp: .4 } },
+  },
   // CHAPTER Ⅳ「NYX」— a night hymn that turns into the dawn: F♯ minor, a choir of pads, bowed strings,
   // gated-reverb drums, reverse swells, and a boss in 7/8
   4: {
@@ -5535,6 +5562,7 @@ function startGame(opts = {}) {
   loadProgression();           // refresh equipped skills from shop
   hardcoreRun = !!secOpts.hardcore;
   gstate = 'play'; score = frame = 0; spd = 3;
+  applyWorldLook();
   P.x = 150; P.y = VH/2; P.vx = P.vy = 0; P.bankAngle = 0; P.inv = 90;
   P.r = hasSkill('smaller_hitbox') ? 4 : 6;
   enemySpawnTimer = 120;   // grace period before first enemy
@@ -5551,7 +5579,7 @@ function startGame(opts = {}) {
   runLevel = pilotLevel(); lifeBefore = lifeXP;
   hullMax = calcHullMax(); P.hp = hullMax; repairT = 0;
   comboCount = 0; comboTimer = 0;
-  phoenixUsed = false; secondWindUsed = false; memoryUsed = false; P.hist = [];
+  phoenixUsed = false; secondWindUsed = false; memoryUsed = false; P.hist = []; runClear = 0;
   revivesLeft = hasSkill('immortal') ? 2 : (hasSkill('phoenix') || hasSkill('last_stand')) ? 1 : 0;
   warpCD = 0; lastStandT = 0; xpMult = 1; shotCount = 0; overdriveOn = false;
   P.ghost = 0; P.ghostCD = 0;
@@ -5719,6 +5747,23 @@ function die() {
   fillResult();
 }
 
+// A chapter's ending closes the run as a clear: no flying on after the credits — straight to the
+// result screen with the run banked (XP, record), headed CHAPTER n CLEAR.
+let runClear = 0;
+function clearRun(ch) {
+  if (gstate === 'menu') return;
+  runClear = ch; deathCause = 'clear';
+  gstate = 'dead'; deadCooldown = 1; timeScale = 1;
+  comboCount = 0; comboTimer = 0;
+  commClear();
+  Music.toMenu();
+  const s = Math.floor(score);
+  wasRecord = s > prevHiScore && s > 0;
+  if (s > hiScore) { hiScore = s; localStorage.setItem('hd_hi', s); }
+  if (runXP > 0) { totalXP += Math.floor(runXP); lifeXP += Math.floor(runXP); saveProgression(); }
+  Story.onDeath();
+  fillResult();
+}
 
 // ── Update (game logic) ───────────────────────────────────────────────────────
 // ── CHAPTER 3: HYPNOS's sleep mist ──
@@ -5869,6 +5914,7 @@ function update(dt) {
     const n = nebulae[i];
     n.position.x = ((n.userData.baseX - worldScroll * 0.06 * (1 + i * 0.15)) % 1400 + 2100) % 1400 - 700;
   }
+  if (planets.length) planetsTick(ws, dt);
 
   // Pulse cooldown + button visual (always)
   if (pulseCooldown > 0) pulseCooldown -= dt * (adrenalOn() ? 2 : 1);
@@ -6501,6 +6547,14 @@ const PHASE_META = [
   { sub: 'BIDENT HOLD',  banner: 'バイデント本拠', color: '#ff3b6b', from: 100, to: null },
 ];
 
+// PILOT MODE: the same four stretches, renamed for a journey through a peaceful galaxy
+const PHASE_META_PILOT = [
+  { sub: 'AEGIS BLUE',     banner: 'アイギスの青空',   color: '#7ff6ff', from: 0,   to: 20   },
+  { sub: 'SUNFLOWER BELT', banner: 'ひまわり星雲',     color: '#ffd25a', from: 20,  to: 50   },
+  { sub: 'STAR ROAD',      banner: '星の街道',         color: '#9fffc4', from: 50,  to: 100  },
+  { sub: 'FAR HORIZON',    banner: '銀河の果てへ',     color: '#ffb0e0', from: 100, to: null },
+];
+const phaseMeta = () => chapter === PILOT ? PHASE_META_PILOT : PHASE_META;
 function setText(el, v) {
   v = String(v);
   if (el._v !== v) { el._v = v; el.textContent = v; }
@@ -6513,7 +6567,7 @@ function restartAnim(el, cls) {
 function bumpScore() { restartAnim(hudScore, 'bump'); }
 
 function showPhaseBanner(p) {
-  const m = PHASE_META[p];
+  const m = phaseMeta()[p];
   hudBanner.style.setProperty('--phase-c', m.color);
   setText(document.getElementById('banner-title'), `PHASE ${p + 1}`);
   setText(document.getElementById('banner-sub'), m.banner);
@@ -6547,10 +6601,11 @@ function refreshTitleInfo() {
   refreshRotStats();
 }
 // CHAPTER select: appears once ACHERON has fallen
-const CH_TAG = { 1: '宇宙海賊団バイデントを追え', 2: '冥王ハデスの影を追え', 3: '眠りの門の向こうへ', 4: '夜を越えて、夜明けへ' };
+const CH_TAG = { 1: '宇宙海賊団バイデントを追え', 2: '冥王ハデスの影を追え', 3: '眠りの門の向こうへ', 4: '夜を越えて、夜明けへ', 5: 'パイロット・レイの旅' };
 function refreshChapterUI() {
-  const open2 = bossBest >= BOSS_DEFS.length, open3 = bossBest2 >= BOSS_DEFS2.length, open4 = bossBest3 >= BOSS_DEFS3.length;
-  if (!open2 || (chapter === 3 && !open3) || (chapter === 4 && !open4)) chapter = 1;
+  const open2 = bossBest >= BOSS_DEFS.length, open3 = bossBest2 >= BOSS_DEFS2.length, open4 = bossBest3 >= BOSS_DEFS3.length, open5 = bossBest4 >= BOSS_DEFS4.length;
+  if (!open2 || (chapter === 3 && !open3) || (chapter === 4 && !open4) || (chapter === PILOT && !open5)) chapter = 1;
+  document.querySelector('#t-chapter [data-ch="5"]').hidden = !open5;
   document.getElementById('t-chapter').hidden = !open2;
   document.querySelector('#t-chapter [data-ch="3"]').hidden = !open3;
   document.querySelector('#t-chapter [data-ch="4"]').hidden = !open4;
@@ -6563,7 +6618,8 @@ function setChapter(ch) {
   chapter = ch; localStorage.setItem('hd_chapter', String(ch));
   if (ch === 2) loadPart2Models();
   if (ch === 3) loadPart3Models();
-  if (ch === 4) loadPart4Models();
+  if (ch === 4 || ch === PILOT) loadPart4Models();
+  applyWorldLook();
   ui.select(); refreshChapterUI(); refreshRotStats();
 }
 for (const b of document.querySelectorAll('#t-chapter [data-ch]')) onTap(b, () => setChapter(+b.dataset.ch));
@@ -6571,8 +6627,11 @@ for (const b of document.querySelectorAll('#t-chapter [data-ch]')) onTap(b, () =
 // Result screen values are written once at death; the score counts up when
 // the screen appears.
 let resultAnim = null;
+const CLEAR_LINES = { 1: 'アイギスの分は、返したぞ。', 2: 'ばあちゃん、ただいま。', 3: '父さん。……帰ろう。', 4: '……ちゃんと、記録してくれたか？' };
 function fillResult() {
   const s = Math.floor(score);
+  const head = document.querySelector('#result-screen .r-head'), ht = runClear ? `CHAPTER ${['', 'Ⅰ', 'Ⅱ', 'Ⅲ', 'Ⅳ'][runClear]} CLEAR` : 'GAME OVER';
+  setText(head, ht); head.dataset.text = ht; head.classList.toggle('clear', !!runClear);
   setText(document.getElementById('r-score'), 0);
   setText(document.getElementById('r-best'), hiScore);
   setText(document.getElementById('r-phase'), runBestPhase + 1);
@@ -6592,7 +6651,7 @@ function fillResult() {
   document.getElementById('r-newrec').classList.toggle('on', wasRecord);
   resultAnim = { target: s, t0: 0 };
   document.getElementById('r-ray-face').innerHTML = RAY_FACE;
-  setText(document.getElementById('r-ray-text'), `「${rayResultLine()}」`);
+  setText(document.getElementById('r-ray-text'), `「${runClear ? CLEAR_LINES[runClear] : rayResultLine()}」`);
   document.getElementById('r-newlog').hidden = !logUnlocked().some(id => !logsBeforeRun.includes(id));
 }
 
@@ -6699,11 +6758,11 @@ function syncUI(now) {
     }
     if (curPhase !== lastPhaseUI) {
       lastPhaseUI = curPhase;
-      const m = PHASE_META[curPhase];
+      const m = phaseMeta()[curPhase];
       hudPhaseEl.style.setProperty('--phase-c', m.color);
       hudPhaseName.innerHTML = `PHASE ${curPhase + 1}<span>${m.sub}</span>`;
     }
-    const m = PHASE_META[curPhase];
+    const m = phaseMeta()[curPhase];
     const prog = m.to ? Math.max(0, Math.min(1, (score - m.from) / (m.to - m.from))) : 1;
     hudPhaseFill.style.width = (prog * 100).toFixed(1) + '%';
     setText(hudKill, killCount);
@@ -6949,7 +7008,12 @@ const CHAT = {
     { ch: 3, w: () => bossDone3() === 2, p: 6, l: [['P', '門は270秒地点です。'], ['R', '……今度こそ、連れて帰る。']] },
     { ch: 3, w: () => bossDone3() >= 3, l: [['R', '父さん、今ごろ何してるかな。'], ['P', 'ミモザさんに怒られているそうです。'], ['R', '……だろうな。']] },
     { ch: 3, w: () => bossDone3() >= 3, l: [['P', 'ソルから伝言です。「次は俺も飛ぶ」'], ['R', '……負けないぞ。']] },
-    // CHAPTER 4
+    // PILOT MODE — PALLAS speaks through the shield network now; family and old enemies check in
+    { ch: 5, p: 4, l: [['R', 'パイロット・レイ、出る。'], ['P', '……記録しています。いってらっしゃい。']] },
+    { ch: 5, p: 3, l: [['F', 'よう、新人パイロット。今日はどこまで行く？'], ['R', '行けるところまで。']] },
+    { ch: 5, p: 3, l: [['M', 'お弁当、持ったかい？'], ['R', 'ひまわりの種、三袋。'], ['M', 'よしよし。']] },
+    { ch: 5, p: 2, l: [['H', '……残党が騒いでいる。片付けておけ。'], ['R', '命令すんなよ。……行くけど。']] },
+    { ch: 5, p: 2, l: [['Y', 'いい天気だね。お昼寝日和だ。'], ['R', '寝ないぞ。'], ['T', '……飛べ。']] },
     { ch: 4, p: 3, l: [['R', '……暗いな。'], ['P', '夜です。機体のまわりしか見えません。PULSE で照らせます。']] },
     { ch: 4, w: () => bossDone4() === 0, p: 6, l: [['P', '忘却の河の反応、90秒地点。'], ['R', '忘れてたまるか。']] },
     { ch: 4, w: () => bossDone4() === 1, p: 6, l: [['P', 'エレボスは180秒地点。光を吸い込む盾です。'], ['R', 'お前が照らしてくれるだろ。'], ['P', '……はい。']] },
@@ -7110,6 +7174,12 @@ const CHAT = {
     { ch: 3, l: [['R', '……ちょっと眠い。'], ['P', '霧のせいです。寝たら起こします。全力で。'], ['R', 'お手柔らかに。']] },
     { ch: 3, l: [['P', 'ソルは、どんな夢を見ているのでしょう。'], ['R', '……飛んでる夢だろ。きっと。']] },
     { ch: 3, l: [['R', '父さんに会ったら、なんて言おう。'], ['P', '「ただいま」ではなく「おかえり」ですね。']] },
+    { ch: 5, l: [['R', '見ろよ、あの星。輪っかがある。'], ['P', '観光案内を始めますか？'], ['R', '……頼む。']] },
+    { ch: 5, l: [['P', 'この星系の盾も、元気に光っています。'], ['R', 'ハデスが返したやつか。'], ['P', 'はい。']] },
+    { ch: 5, l: [['R', 'パラス、今の飛行、何点？'], ['P', '記録しました。……つまり、良い飛行です。'], ['R', 'へへ。']] },
+    { ch: 5, l: [['F', 'お前の飛び方、俺より丁寧だな。'], ['R', 'パラスにしつけられたから。'], ['P', '光栄です。']] },
+    { ch: 5, l: [['R', '平和になっても、残党はいるんだな。'], ['P', '掃除も、パイロットの仕事です。']] },
+    { ch: 5, l: [['M', 'ヒナや、ちゃんと帰っておいでよ。'], ['R', '……うん。ちゃんと帰る。']] },
     { ch: 4, l: [['R', 'なあパラス、夜って怖いか？'], ['P', '……いいえ。あなたが光っていますから。'], ['R', '葉っぱのことか？'], ['P', 'そういうことにしておきます。']] },
     { ch: 4, l: [['P', 'レイ。……いえ、なんでもありません。'], ['R', 'なんだよ、気になるな。']] },
     { ch: 4, l: [['R', 'ハデスのやつ、意外といいとこあるよな。'], ['P', '父親同士で張り合っているそうです。'], ['R', '……なんでだよ。']] },
@@ -7374,12 +7444,13 @@ const REPLAYS = [
   { ch: 4, k: '盾', ok: () => bossBest4 >= 1, go: () => Shields.play({ fromLog: true }) },
   { ch: 4, k: '記録', ok: () => bossBest4 >= 2, go: () => Record.play({ fromLog: true }) },
   { ch: 4, k: '終章', ok: () => bossBest4 >= BOSS_DEFS4.length, go: () => Epilogue4.play({ fromLog: true }) },
+  { ch: 5, k: '出発', ok: () => !!localStorage.getItem('hd_prologue5'), go: () => Prologue5.play({ fromLog: true }) },
 ];
 function renderReplays() {
   const row = document.getElementById('log-replay');
-  row.innerHTML = [1, 2, 3, 4].map(ch => {
+  row.innerHTML = [1, 2, 3, 4, 5].map(ch => {
     const bs = REPLAYS.map((r, i) => r.ch === ch && r.ok() ? `<button class="btn-mini" type="button" data-rp="${i}">${r.k} ▶</button>` : '').join('');
-    return bs ? `<span class="rp-grp ch${ch}"><em>${['Ⅰ', 'Ⅱ', 'Ⅲ', 'Ⅳ'][ch - 1]}</em>${bs}</span>` : '';
+    return bs ? `<span class="rp-grp ch${ch}"><em>${['Ⅰ', 'Ⅱ', 'Ⅲ', 'Ⅳ', '✈'][ch - 1]}</em>${bs}</span>` : '';
   }).join('');
   for (const b of row.querySelectorAll('[data-rp]')) onTap(b, () => { closeLog(); REPLAYS[+b.dataset.rp].go(); });
 }
@@ -7713,6 +7784,11 @@ const Prologue = (() => {
 })();
 // START from the title: the first time, the prologue plays before the run
 function requestStart() {
+  if (chapter === PILOT) {                   // PILOT MODE: the send-off the first time
+    if (!localStorage.getItem('hd_prologue5')) Prologue5.play({ onDone: () => startGame({ intro: true }) });
+    else startGame();
+    return;
+  }
   if (chapter === 4) {                       // CHAPTER 4: its own prologue the first time
     if (!localStorage.getItem('hd_prologue4')) Prologue4.play({ onDone: () => startGame({ intro: true }) });
     else startGame();
@@ -7800,13 +7876,15 @@ const BOSS_DEFS4 = [
       { allies: true, label: '永遠の夜', color: 0xffd890, cycle: ['cores', 'starfall', 'eclipse', 'plasma', 'cores', 'spiral', 'moonring', 'forget', 'plasma'] },
     ] },
 ];
-let chapter = [2, 3, 4].includes(+localStorage.getItem('hd_chapter')) ? +localStorage.getItem('hd_chapter') : 1;   // chapter of the current / next run
+// chapter 5 = PILOT MODE (after the final chapter): endless flight through a peaceful galaxy, remnants but no flagships
+const PILOT = 5;
+let chapter = [2, 3, 4, 5].includes(+localStorage.getItem('hd_chapter')) ? +localStorage.getItem('hd_chapter') : 1;   // chapter of the current / next run
 let bossBest2 = +localStorage.getItem('hd_boss2') || 0;            // CHAPTER 2 bosses ever defeated
 let bossBest3 = +localStorage.getItem('hd_boss3') || 0;            // CHAPTER 3 bosses ever defeated
 let bossBest4 = +localStorage.getItem('hd_boss4') || 0;            // CHAPTER 4 bosses ever defeated
-const chBossDefs = () => chapter === 4 ? BOSS_DEFS4 : chapter === 3 ? BOSS_DEFS3 : chapter === 2 ? BOSS_DEFS2 : BOSS_DEFS;
-const chBossAt   = () => chapter === 4 ? BOSS_AT4 : chapter === 3 ? BOSS_AT3 : chapter === 2 ? BOSS_AT2 : BOSS_AT;
-const chBossBest = () => chapter === 4 ? bossBest4 : chapter === 3 ? bossBest3 : chapter === 2 ? bossBest2 : bossBest;
+const chBossDefs = () => chapter === PILOT ? [] : chapter === 4 ? BOSS_DEFS4 : chapter === 3 ? BOSS_DEFS3 : chapter === 2 ? BOSS_DEFS2 : BOSS_DEFS;
+const chBossAt   = () => chapter === PILOT ? [] : chapter === 4 ? BOSS_AT4 : chapter === 3 ? BOSS_AT3 : chapter === 2 ? BOSS_AT2 : BOSS_AT;
+const chBossBest = () => chapter === PILOT ? 0 : chapter === 4 ? bossBest4 : chapter === 3 ? bossBest3 : chapter === 2 ? bossBest2 : bossBest;
 let boss = null;                 // active fight
 let bossNext = 0;                // next boss index this run
 let bossLasers = [];
@@ -8811,13 +8889,7 @@ const Epilogue = (() => {
       gstate = 'menu';
       showCredits('story', () => { if (Music.started) Music.setSection('menu'); });
     } else {
-      showCredits('story', () => {
-        // …and the run goes on
-        gstate = 'play';
-        P.inv = Math.max(P.inv, 150);
-        if (Music.started) Music.setSection('p' + (curPhase + 1));
-        commSay([['P', 'まだ飛べますか？'], ['R', '当たり前だ。何度だって飛ぶ。']]);
-      });
+      showCredits('story', () => clearRun(1));   // the chapter is over: to the result screen
     }
     requestAnimationFrame(() => requestAnimationFrame(() => veil(false, 1.2)));
   }
@@ -9513,9 +9585,7 @@ const Epilogue2 = {
     const S = this.S; S.cine = false; S.titled = S.veiled = S.domeSaid = false;
     showCredits('story2', () => {
       if (o.fromLog) { if (Music.started) Music.setSection('menu'); return; }
-      gstate = 'play'; P.inv = Math.max(P.inv, 150);
-      if (Music.started) Music.setSection('p' + (curPhase + 1));
-      commSay([['P', 'ビーコンの解析を始めます。'], ['R', '……待ってろよ、父さん。何度だって飛んでいく。']]);
+      clearRun(2);
     });
   },
 };
@@ -9750,9 +9820,7 @@ const Epilogue3 = {
     const S = this.S; S.cine = false; S.titled = S.veiled = S.rumbled = false;
     showCredits('story3', () => {
       if (o.fromLog) { if (Music.started) Music.setSection('menu'); return; }
-      gstate = 'play'; P.inv = Math.max(P.inv, 150);
-      if (Music.started) Music.setSection('p' + (curPhase + 1));
-      commSay([['F', 'よし、レイ。次は一緒に飛ぶぞ。'], ['R', '……おう！'], ['P', '……騒がしくなりそうです。']]);
+      clearRun(3);
     });
   },
 };
@@ -10183,11 +10251,55 @@ const Afterword = {
   end(o) {
     this.S.cine = false;
     if (o.fromLog) { if (Music.started) Music.setSection('menu'); return; }
-    gstate = 'play'; P.inv = Math.max(P.inv, 150);
-    if (Music.started) Music.setSection('p' + (curPhase + 1));
-    commSay([['R', '……よし。飛ぶか。']]);
+    clearRun(4);
   },
 };
+// ── PILOT MODE send-off: Ray, a pilot at last, leaves the hill for a peaceful galaxy ──
+const Prologue5 = {
+  flag: 'hd_prologue5', music: 'menu',
+  panels: [
+    { mood: 'morning', lines: ['パイロット学校の制服を着たレイが、丘に立っている。', 'F:……似合ってるじゃないか。パイロット・レイ。', 'M:お弁当、三袋入れといたよ。',
+      'H:……せいぜい落ちるな。', 'R:落ちても、立ち上がるさ。', '樹の奥で、六角形の光がまたたいた。', 'P:……記録しています。いってらっしゃい、パイロット・レイ。', 'R:……行ってきます！'],
+      on: { 5: S => { S.blink = 0; sfx.comm('P'); } } },
+  ],
+  build(S) {
+    Object.assign(S, cineStage(0x2a3a6a)); cineHill(S); cineShip(S);
+    S.paintSky([[0, 0x1c4a98], [0.45, 0x4a7ac0], [0.7, 0x8ab8e8], [1, 0x6a8090]]);
+    S.E.background = S.skyTex; S.E.fog = new THREE.Fog(0x6a88b0, 900, 2800); S.stars.material.opacity = 0;
+    S.hemi.intensity = 1.0; S.key.color.setHex(0xfff0d8); S.key.intensity = 1.4;
+    S.hillSet[0].material = new THREE.MeshLambertMaterial({ color: 0x3a7a4a });
+    S.ray = cineRay(S); S.sol = cineBird(S, 'sol'); S.mimosa = cineBird(S, 'mimosa'); S.hades = cineBird(S, 'hades');
+    S.tree = cineSapling(S, 1.4); S.tree.scale.setScalar(4.2); S.tree.userData.glow.scale.multiplyScalar(0.4);
+    S.hex = cineHex(S, 0x7ff6ff, 2.2);
+  },
+  reset(S) {
+    S.cine = false; S.lifted = S.veiled = false; S.vel.set(0, 0, 0); S.blink = -1;
+    S.hero.position.set(-62, S.groundY(-62, -36) + 6, -36); S.hero.rotation.set(0, 0.5, 0.03);
+    S.ray.visible = true;
+    for (const p of S.trail) { p.life = 0; p.g.visible = false; }
+  },
+  mood(S, m) {},
+  update(S, m, t, s, li) {
+    const G = S.groundY, tx = -30, tz = -40;
+    S.tree.position.set(tx, G(tx, tz), tz);
+    S.hex.position.set(tx + 6, G(tx, tz) + 70, tz + 14); S.hex.rotation.y = t * 0.6;
+    if (S.blink >= 0) S.blink += s;
+    const on = S.blink >= 0 ? (Math.floor(S.blink * 2.5) % 2 === 0 ? 1 : 0.3) : 0.25;
+    S.hex.userData.glow.material.opacity = on * 0.8; S.hex.userData.m.material.emissiveIntensity = on * 1.4;
+    const rx = 22, rz = 34;
+    S.ray.position.set(rx, G(rx, rz) + 11 + (li === 7 ? Math.abs(Math.sin(t * 7)) * 3 : Math.sin(t * 2) * 0.4), rz); S.ray.rotation.y = li >= 5 && li <= 6 ? Math.PI + 0.4 : -0.5; cineLeaf(S.ray, t);
+    if (S.sol) { S.sol.position.set(-6, G(-6, 30), 30); S.sol.rotation.y = li === 1 ? 0.9 : 0.35; const sc = S.sol.getObjectByName('scarf'); if (sc) sc.rotation.y = Math.sin(t * 2.4) * 0.2; }
+    if (S.mimosa) { S.mimosa.position.set(-28, G(-28, 38), 38); S.mimosa.rotation.y = li === 2 ? 1.0 : 0.45; const w = S.mimosa.getObjectByName('wingR'); if (w) w.rotation.z = S.cine ? -0.9 + Math.sin(t * 10) * 0.4 : 0; }
+    if (S.hades) { S.hades.position.set(52, G(52, 14), 14); S.hades.rotation.y = li === 3 ? -1.0 : -0.3; cineHadesTick(S.hades, t); }
+    if (!S.cine) { cineEngine(S, false); S.camPos.set(40 - t * 0.8, S.g0 + 26, 190); S.camTarget.set(0, S.g0 + 24, 0); }
+    cineTrail(S, s);
+  },
+  cineStart(S) { S.cine = true; S.ray.visible = false; sfx.ignite(); if (Music.started) Music.riser(1.6); },
+  cine(S, ct, s) { S.camPos.set(60, S.g0 + 20, 180); return cineTakeoff(S, ct, s); },
+  end(o) { this.S.cine = false; if (o.onDone) o.onDone(); else if (Music.started) Music.setSection('menu'); },
+};
+Prologue5.ch = PILOT;
+Prologue5.play = (o = {}) => loadPart4Models().then(() => Cine.play(Prologue5, o));
 for (const c of [Prologue2, Confession, Epilogue2]) c.ch = 2;
 for (const c of [Prologue3, Dream, Epilogue3]) c.ch = 3;
 for (const c of [Prologue4, Shields, Record, Epilogue4, Afterword]) c.ch = 4;
@@ -10253,7 +10365,57 @@ function applySecretOpts() {
     neb.material.opacity = neb.userData.op * (n ? 0.45 : 1);
   }
   Music.lofi = n;
+  applyWorldLook();
   refreshTitleInfo();
+}
+
+// ── PILOT MODE look: a bright, peaceful galaxy with planets drifting by ──
+const WORLD_DARK = { bg: 0x03020c, floor: 0xb02cff, ceil: 0x1a8cff, horizon: 0x7a2cff, top: 0x0a5cff };
+const PILOT_NEB = [0xff9fd0, 0xffe08a, 0x9fffd8, 0xa8c8ff];
+const planets = [];
+function makePlanet(p) {
+  const r = 30 + Math.random() * 70, hue = Math.random();
+  const col = new THREE.Color().setHSL(hue, 0.55 + Math.random() * 0.3, 0.55);
+  if (!p) {
+    p = { g: new THREE.Group() };
+    p.ball = new THREE.Mesh(new THREE.SphereGeometry(1, 40, 24), new THREE.MeshStandardMaterial({ roughness: 0.8, metalness: 0 }));
+    p.band = new THREE.Mesh(new THREE.TorusGeometry(1.0, 0.03, 4, 48), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.5 }));
+    p.ring = new THREE.Mesh(new THREE.RingGeometry(1.35, 1.9, 64), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.45, side: THREE.DoubleSide, depthWrite: false }));
+    p.atmo = glowSprite(0xffffff, 1, 0.35);
+    p.g.add(p.ball, p.band, p.ring, p.atmo); scene.add(p.g); planets.push(p);
+  }
+  p.ball.material.color.copy(col); p.ball.material.emissive = col.clone().multiplyScalar(0.25);
+  p.band.material.color.copy(col.clone().offsetHSL(0.08, 0, 0.15)); p.band.rotation.x = Math.PI / 2 + (Math.random() - 0.5) * 0.4;
+  p.ring.visible = Math.random() < 0.45; p.ring.material.color.copy(col.clone().offsetHSL(-0.1, -0.2, 0.2)); p.ring.rotation.set(1.2 + Math.random() * 0.3, 0.3, Math.random());
+  p.atmo.material.color.copy(col.clone().offsetHSL(0, 0, 0.2)); p.atmo.scale.setScalar(3.1);
+  p.g.scale.setScalar(r); p.z = -520 - Math.random() * 420; p.k = 0.05 + Math.random() * 0.06;
+  p.y = Math.random() < 0.5 ? 40 + Math.random() * 120 : VH - 40 - Math.random() * 120;
+  return p;
+}
+for (let i = 0; i < 5; i++) { const p = makePlanet(); p.x = Math.random() * (VW + 600); p.g.visible = false; }
+function planetsTick(ws, dt) {
+  const on = chapter === PILOT;
+  for (const p of planets) {
+    p.g.visible = on;
+    if (!on) continue;
+    p.x -= ws * p.k * dt * 3;
+    if (p.x < -400) { makePlanet(p); p.x = VW + 300 + Math.random() * 500; }
+    p.g.position.copy(W(p.x, p.y, p.z)); p.ball.rotation.y += 0.002 * dt;
+  }
+}
+function applyWorldLook() {
+  const pilot = chapter === PILOT, n = !!secOpts.midnight && !pilot;
+  floorGrid.material.color.setHex(pilot ? 0x7ff6ff : n ? 0x2a4cff : WORLD_DARK.floor);
+  ceilGrid.material.color.setHex(pilot ? 0xffffff : n ? 0x6a3cff : WORLD_DARK.ceil);
+  horizonGlow.material.color.setHex(pilot ? 0xffb070 : n ? 0x1a2cff : WORLD_DARK.horizon);
+  horizonGlowTop.material.color.setHex(pilot ? 0x9fd8ff : WORLD_DARK.top);
+  const bg = pilot ? 0x24488e : n ? 0x010106 : WORLD_DARK.bg;
+  scene.background.setHex(bg); scene.fog.color.setHex(bg);
+  nebulae.forEach((neb, i) => {
+    if (neb.userData.op == null) { neb.userData.op = neb.material.opacity; neb.userData.col = neb.material.color.getHex(); }
+    neb.material.color.setHex(pilot ? PILOT_NEB[i % PILOT_NEB.length] : neb.userData.col);
+    neb.material.opacity = neb.userData.op * (pilot ? 1.8 : n ? 0.45 : 1);
+  });
 }
 
 // ── Unlock + toast ──
