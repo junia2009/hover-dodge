@@ -1472,7 +1472,7 @@ body.retro #ui { filter: grayscale(1) sepia(1) hue-rotate(70deg) saturate(2.6) b
 
 .tabs { flex: none; display: flex; gap: 6px; }
 .tab {
-  flex: 1;
+  flex: 1; min-width: 0;
   display: flex; align-items: center; justify-content: space-between; gap: 8px;
   padding: 10px 12px;
   border: none;
@@ -1857,7 +1857,8 @@ body.skin-open #title-screen { opacity: 0; visibility: hidden; }
   .m-title { font-size: 17px; }
   .m-sub { display: none; }
   .shop-main { padding: 8px 12px 8px 20px; }
-  .tab { padding: 8px 10px; }
+  .tab { padding: 7px 6px; letter-spacing: 1px; flex-direction: column; align-items: flex-start; gap: 3px; font-size: 10px !important; }
+  .tabs { gap: 4px; }
   .tree { margin-top: 8px; min-height: 0; }
   .node { width: 92px; transform: translate(-50%, -21px); gap: 4px; }
   @keyframes node-in { from { opacity: 0; transform: translate(-50%, -21px) scale(.7); } }
@@ -2350,7 +2351,7 @@ import { GLTFLoader }      from 'three/addons/loaders/GLTFLoader.js';
 
 // Single source of truth for the version: shown on the title / portrait
 // screens and passed to the service worker, which names its cache after it.
-const VERSION = '2.7.1';
+const VERSION = '2.7.2';
 
 // ── 3D models (glTF). The ship, Ray and PALLAS are waited for (briefly) before
 // the scene is built; the flagships stream in the background — they are

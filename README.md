@@ -11,7 +11,7 @@ Three.js + WebGL で描画する、タップひとつで遊べる横スクロー
 - **やり込み**：パイロットレベル（最大 Lv60）、38 スキルのツリー、装備枠、HULL（耐久）、シナジー、スキン、9 つの隠し要素
 - **3D モデル**（glTF）と、プレイに合わせて変化する **手続き合成の BGM**
 
-[![Play](https://img.shields.io/badge/play-online-00e8ff?style=flat-square)](https://junia2009.github.io/hover-dodge/) ![Version](https://img.shields.io/badge/version-2.7.1-aa44ff?style=flat-square)
+[![Play](https://img.shields.io/badge/play-online-00e8ff?style=flat-square)](https://junia2009.github.io/hover-dodge/) ![Version](https://img.shields.io/badge/version-2.7.2-aa44ff?style=flat-square)
 
 ---
 
@@ -431,6 +431,7 @@ hover-dodge/
 
 | Version | 内容 |
 | :---: | --- |
+| **2.7.2**  | 横画面（スマホ）で SHOP / LOADOUT のタブがはみ出し、SOL タブが右パネルに隠れて押せなかった問題を修正（タブを縮めて 2 段表示に） |
 | **2.7.1**  | ストーリーの整合性：ミモザ救出（告白）と夢のシーンは CHARON / HYPNOS の初撃破時だけ流れるように（以降は LOG から再生）。2 回目以降の撃破では物語セリフではなく軽い掛け合いに |
 | **2.7.0**  | CHAPTER Ⅲ「HYPNOS」：章選択に Ⅲ、新ボス 3 体（THANATOS / HYPNOS / 扉が開く 2 段階の THE GATE）と新攻撃 5 種（鎌の斬撃・黒い弾・眠りの霧・子守唄の弾・螺旋弾）、新要素「眠気ゲージ」、3D カットシーン 3 本（プロローグ・夢・エピローグ）、ソルの機体（SOL スキン＋SOL 系統スキル SUNBURST / ACE INSTINCT）、日誌 4 ページ、称号 SON OF THE SUN、縦画面のストーリー進行を第三部に対応 |
 | **2.6.3**  | ミモザの目が見えていなかったのを修正（閉じた笑い目が顔に埋もれていた）：メガネの奥にやさしい黒目＋ハイライト＋笑いじわ。モデル更新がキャッシュに阻まれないよう `?v=` を付与 |
