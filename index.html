@@ -2400,7 +2400,7 @@ import { GLTFLoader }      from 'three/addons/loaders/GLTFLoader.js';
 
 // Single source of truth for the version: shown on the title / portrait
 // screens and passed to the service worker, which names its cache after it.
-const VERSION = '3.6.2';
+const VERSION = '3.6.3';
 
 // ── 3D models (glTF). The ship, Ray and PALLAS are waited for (briefly) before
 // the scene is built; the flagships stream in the background — they are
@@ -2432,7 +2432,7 @@ if ((+localStorage.getItem('hd_boss2') || 0) >= 3) loadPart3Models();
 // CHAPTER 4 — the night: LETHE, EREBUS, NYX, and the cast for the final cutscenes
 let part4Models = null;
 function loadPart4Models() {
-  if (!part4Models) part4Models = Promise.all([loadPart3Models(), ...['lethe', 'erebus', 'nyx', 'hades', 'nyxbird', 'lethebird'].map(k => loadModel(k, `models/${k}.glb`))]);
+  if (!part4Models) part4Models = Promise.all([loadPart3Models(), ...['lethe', 'erebus', 'nyx', 'hades', 'nyxbird', 'lethebird', 'paulo'].map(k => loadModel(k, `models/${k}.glb`))]);
   return part4Models;
 }
 if ((+localStorage.getItem('hd_boss3') || 0) >= 3) loadPart4Models();
@@ -10394,7 +10394,9 @@ const Prologue5 = {
     S.ray = cineRay(S); dressPilot(S.ray); S.sol = cineBird(S, 'sol'); S.mimosa = cineBird(S, 'mimosa'); S.hades = cineBird(S, 'hades');
     S.tree = cineSapling(S, 1.4); S.tree.scale.setScalar(4.2); S.tree.userData.glow.scale.multiplyScalar(0.4);
     S.hex = cineHex(S, 0x7ff6ff, 2.2);
-    S.pauloD = cineHex(S, 0xffa040, 2.6);
+    // PAULO: the GLB drone (falls back to an orange hex light if the model is missing)
+    S.pauloD = MODELS.paulo ? cineBird(S, 'paulo', 7.5) : cineHex(S, 0xffa040, 2.6);
+    S.pauloD.userData.p = MODELS.paulo ? ['armL', 'armR', 'antenna', 'eye', 'rec', 'jet'].reduce((o, n) => (o[n] = S.pauloD.getObjectByName(n), o), {}) : null;
   },
   reset(S) {
     S.cine = false; S.lifted = S.veiled = false; S.vel.set(0, 0, 0); S.blink = -1; S.paulo = false;
@@ -10413,7 +10415,22 @@ const Prologue5 = {
     const rx = 22, rz = 34;
     S.ray.position.set(rx, G(rx, rz) + 11 + (li === 12 ? Math.abs(Math.sin(t * 7)) * 3 : Math.sin(t * 2) * 0.4), rz); S.ray.rotation.y = li >= 8 && li <= 11 ? Math.PI + 0.4 : li === 6 ? 0.6 : -0.5; cineLeaf(S.ray, t);
     S.pauloD.visible = !!S.paulo && !S.cine;
-    if (S.pauloD.visible) { const ex = li === 10 ? Math.sin(t * 9) * 1.5 : 0; S.pauloD.position.set(rx + 13 + ex, G(rx, rz) + 40 + Math.sin(t * 4) * 1.6 + (li === 7 || li === 10 ? Math.abs(Math.sin(t * 8)) * 3 : 0), rz + 70); S.pauloD.rotation.y = Math.sin(t * 1.6) * 0.6; }
+    if (S.pauloD.visible) {
+      const pp = S.pauloD.userData.p, hop = li === 7 || li === 10 ? Math.abs(Math.sin(t * 8)) * 3 : 0;
+      if (!pp) { S.pauloD.position.set(rx + 13, G(rx, rz) + 40 + Math.sin(t * 4) * 1.6 + hop, rz + 70); S.pauloD.rotation.y = Math.sin(t * 1.6) * 0.6; }
+      else {
+        // floats at Ray's shoulder; turns to the tree with him, hops when excited, waves while introducing himself
+        S.pauloD.position.set(rx + 11, G(rx, rz) + 27 + Math.sin(t * 3) * 1.2 + hop, rz + 28);
+        S.pauloD.rotation.set(Math.sin(t * 2.2) * 0.06, li >= 8 && li <= 11 ? Math.PI + 0.6 : li === 6 ? -1.0 : -0.25, Math.sin(t * 1.7) * 0.08);
+        const wave = li === 5 || li === 7 || li === 10;
+        if (pp.armR) pp.armR.rotation.z = wave ? -1.6 - Math.sin(t * 12) * 0.5 : -Math.sin(t * 2) * 0.12;
+        if (pp.armL) pp.armL.rotation.z = li === 10 ? 1.6 + Math.sin(t * 12) * 0.5 : Math.sin(t * 2) * 0.12;
+        if (pp.antenna) pp.antenna.rotation.z = Math.sin(t * 5) * 0.18 + (hop ? Math.sin(t * 16) * 0.2 : 0);
+        if (pp.eye) pp.eye.scale.y = (t % 3.2) < 0.12 ? 0.15 : 1;   // blink
+        if (pp.rec) pp.rec.visible = li >= 10 ? Math.floor(t * 3) % 2 === 0 : Math.floor(t * 1.2) % 2 === 0;
+        if (pp.jet) pp.jet.material.emissiveIntensity = 1.6 + Math.sin(t * 20) * 0.5;
+      }
+    }
     if (S.sol) { S.sol.position.set(-6, G(-6, 30), 30); S.sol.rotation.y = li === 1 ? 0.9 : 0.35; const sc = S.sol.getObjectByName('scarf'); if (sc) sc.rotation.y = Math.sin(t * 2.4) * 0.2; }
     if (S.mimosa) { S.mimosa.position.set(-28, G(-28, 38), 38); S.mimosa.rotation.y = li === 2 ? 1.0 : 0.45; const w = S.mimosa.getObjectByName('wingR'); if (w) w.rotation.z = S.cine ? -0.9 + Math.sin(t * 10) * 0.4 : 0; }
     if (S.hades) { S.hades.position.set(52, G(52, 14), 14); S.hades.rotation.y = li === 3 ? -1.0 : -0.3; cineHadesTick(S.hades, t); }

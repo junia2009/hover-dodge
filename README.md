@@ -11,7 +11,7 @@ Three.js + WebGL で描画する、タップひとつで遊べる横スクロー
 - **やり込み**：パイロットレベル（最大 Lv80）、42 スキルのツリー、装備枠、HULL（耐久）、シナジー、スキン、9 つの隠し要素
 - **3D モデル**（glTF）と、プレイに合わせて変化する **手続き合成の BGM**
 
-[![Play](https://img.shields.io/badge/play-online-00e8ff?style=flat-square)](https://junia2009.github.io/hover-dodge/) ![Version](https://img.shields.io/badge/version-3.6.2-aa44ff?style=flat-square)
+[![Play](https://img.shields.io/badge/play-online-00e8ff?style=flat-square)](https://junia2009.github.io/hover-dodge/) ![Version](https://img.shields.io/badge/version-3.6.3-aa44ff?style=flat-square)
 
 ---
 
@@ -165,6 +165,7 @@ Three.js + WebGL で描画する、タップひとつで遊べる横スクロー
 | `lethe.glb` / `erebus.glb` | 最終章のボス | 船首 -X・上面 +Z。レテは半透明のクラゲ船（前に伸びる 2 本の触手が発射口）、エレボスは黒い六角板の壁（上下の端が発射口） |
 | `nyx.glb` | 夜の女神 | 同上。星を縫い込んだ夜空のマント `wingL` / `wingR`、三日月の冠 `crown`、ヴェール `veil` |
 | `hades.glb` / `nyxbird.glb` / `lethebird.glb` | カットシーン用のハデス／ニュクス／レテ | レイと同じ規格。ハデスは `cape`、ニュクスは `veil`、レテは `bow` |
+| `paulo.glb` | パウロ（PILOT MODE の新米 AI） | 正面 +Z・ボールの中心が原点（浮いているドローン）。`armL` / `armR` / `antenna` はピボット付き、`eye` / `rec`（REC ランプ）/ `jet`（スラスター） |
 
 - モデルは Service Worker の専用キャッシュ（`hoverdodge-models-v1`）に長く保存されます。モデルを差し替えたときは `index.html` の `MODEL_REV`（URL に `?v=` を付ける）を上げると、端末のキャッシュを飛ばして新しいモデルが届きます
 - 第一部のボス・カットシーン用の小物（ひまわり、ポッド、焚き火など）はコードで生成しています
@@ -478,6 +479,7 @@ hover-dodge/
 
 | Version | 内容 |
 | :---: | --- |
+| **3.6.3**  | パウロの **3D モデル**（`models/paulo.glb`）を追加。オレンジの丸いドローンに、シアンの一つ目・アンテナ・小さな腕・耳センサー・記録係の赤い REC ランプ・浮遊スラスター。見送りシーンではレイの肩のあたりに浮かび、自己紹介で手を振り、パラスに会うと跳ねて REC ランプが点滅する |
 | **3.6.2**  | 見送りシーンのレイの制帽をやめて、憧れのパパ（ソル）と**おそろいのフライトゴーグル**に（ソルのモデルから写してレイの頭に合わせている）。赤いネッカチーフはそのまま |
 | **3.6.1**  | 見送りシーンのレイが、セリフどおり**防衛隊パイロットの制服姿**に（金の翼章つきの制帽・赤いネッカチーフ。頭の葉っぱは帽子から出ている） |
 | **3.6.0**  | ✈ PILOT MODE の相棒が新米 AI **パウロ** に。パラスは樹の中にいるので飛行中は話さず、代わりにパウロがあらゆる場面（開始・区間・被弾・コンボ・撃破・ワープ・距離の節目・放置など）でしゃべり、ソル・ミモザ・ハデス・双子とも掛け合う。見送りシーンにパウロ（オレンジの六角ドローン）とパラスとの初対面を追加、CAST にも登場 |
