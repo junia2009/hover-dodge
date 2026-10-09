@@ -2350,7 +2350,7 @@ import { GLTFLoader }      from 'three/addons/loaders/GLTFLoader.js';
 
 // Single source of truth for the version: shown on the title / portrait
 // screens and passed to the service worker, which names its cache after it.
-const VERSION = '2.7.0';
+const VERSION = '2.7.1';
 
 // ── 3D models (glTF). The ship, Ray and PALLAS are waited for (briefly) before
 // the scene is built; the flagships stream in the background — they are
@@ -7450,6 +7450,7 @@ Object.assign(BOSS_LINES, {
     defeatAgain: [
       [['C', '赤字……また赤字……'], ['R', '毎度あり。']],
       [['C', '請求書は……ハデス様に……'], ['P', '受け取りを拒否します。']],
+      [['C', '空荷の船では……商売に……なりません……'], ['R', 'もう誰も乗せさせない。'], ['P', 'ミモザさんにも、そう報告しておきます。']],
     ],
   },
   cerberus: {
@@ -7642,7 +7643,8 @@ function bossDefeat() {
   sfx.bossDown();
   commClear();
   const BL = BOSS_LINES[boss.def.id];
-  commSay(boss.again && Math.random() < 0.6 ? pick(BL.defeatAgain) : BL.defeat);
+  // the story lines (rescues, revelations) belong to the first win only — after that, the light ones
+  commSay(chBossBest() > boss.idx ? pick(BL.defeatAgain) : BL.defeat);
 }
 
 // ── Patterns ──
@@ -7883,6 +7885,7 @@ function finishBoss() {
   pushBonus(P.x, P.y - 30, `+${def.xp} XP`, '#ffd84a');
   pushBonus(P.x, P.y - 50, `${def.name} DEFEATED`, def.css);
   timeScale = 1;
+  const firstClear = chBossBest() <= idx;   // story scenes mid-chapter play on the first win only (LOG replays them)
   if (chapter === 3) { if (idx + 1 > bossBest3) { bossBest3 = idx + 1; localStorage.setItem('hd_boss3', String(bossBest3)); } }
   else if (chapter === 2) { if (idx + 1 > bossBest2) { bossBest2 = idx + 1; localStorage.setItem('hd_boss2', String(bossBest2)); } }
   else if (idx + 1 > bossBest) { bossBest = idx + 1; localStorage.setItem('hd_boss', String(bossBest)); }
@@ -7890,9 +7893,9 @@ function finishBoss() {
   if (hasSkill('nano_frame')) healHull(hullMax, 'NANO');
   Music.setSection('p' + (curPhase + 1));
   if (chapter === 1 && idx === BOSS_DEFS.length - 1) { loadPart2Models(); Epilogue.play(); }
-  if (chapter === 2 && idx === 1) Confession.play({ live: true });
+  if (chapter === 2 && idx === 1 && firstClear) Confession.play({ live: true });
   if (chapter === 2 && idx === BOSS_DEFS2.length - 1) { loadPart3Models(); Epilogue2.play({ live: true }); }
-  if (chapter === 3 && idx === 1) Dream.play({ live: true });
+  if (chapter === 3 && idx === 1 && firstClear) Dream.play({ live: true });
   if (chapter === 3 && idx === BOSS_DEFS3.length - 1) Epilogue3.play({ live: true });
 }
 // laser hit test (called from the collision section)
