@@ -2400,18 +2400,21 @@ import { GLTFLoader }      from 'three/addons/loaders/GLTFLoader.js';
 
 // Single source of truth for the version: shown on the title / portrait
 // screens and passed to the service worker, which names its cache after it.
-const VERSION = '3.6.5';
+const VERSION = '3.6.6';
 
 // ── Access analytics: GoatCounter (no cookies, no personal data). The page view is counted when
 // count.js loads; track() sends game events (run start, boss down, chapter clear, game over).
 // Empty GC_CODE = analytics off. Local / test hosts are never counted.
 const GC_CODE = 'hover-dodge';
 if (GC_CODE && location.protocol === 'https:' && !/^(localhost|127\.|game\.local)/.test(location.hostname)) {
+  // one tidy row for every way the page is opened (/, /index.html, ?query…)
+  window.goatcounter = { path: () => '🎮 ゲームを開いた' };
   const s = document.createElement('script');
   s.async = true; s.dataset.goatcounter = `https://${GC_CODE}.goatcounter.com/count`; s.src = 'https://gc.zgo.at/count.js';
   document.head.appendChild(s);
 }
-const chKey = c => c === 5 ? 'pilot' : 'ch' + c;
+// readable rows on the GoatCounter dashboard: emoji = kind of event, then the chapter / boss in plain words
+const chKey = c => c === 5 ? 'パイロットモード' : ['', '第一章', '第二章', '第三章', '最終章'][c] || 'ch' + c;
 function track(path, title) {
   try { if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path, title: title || path, event: true }); } catch (e) {}
 }
@@ -5586,7 +5589,7 @@ function sunBreak(w) {
 }
 function startGame(opts = {}) {
   loadProgression();           // refresh equipped skills from shop
-  track(`run/${chKey(chapter)}`, `出撃 ${chKey(chapter)}`);
+  track(`🚀 出撃：${chKey(chapter)}`, 'プレイを始めた');
   hardcoreRun = !!secOpts.hardcore;
   gstate = 'play'; score = frame = 0; spd = 3;
   applyWorldLook();
@@ -5750,7 +5753,7 @@ function die() {
     return;
   }
   gstate = 'dead';
-  track(`over/${chKey(chapter)}/phase${curPhase + 1}`, `撃墜 ${chKey(chapter)} PHASE ${curPhase + 1}`);
+  track(`💥 撃墜：${chKey(chapter)} PHASE ${curPhase + 1}`, 'ここでやられた');
   deadCooldown = 55;        // real-time frames: let the slow-mo explosion play
   timeScale = 0.18;
   fx.aberr = 1.6; fxFlash(0xffffff, 0.8);
@@ -5781,7 +5784,7 @@ let runClear = 0;
 function clearRun(ch) {
   if (gstate === 'menu') return;
   runClear = ch; deathCause = 'clear';
-  track(`clear/${chKey(ch)}`, `CHAPTER CLEAR ${chKey(ch)}`);
+  track(`🏆 クリア：${chKey(ch)}`, 'エンディングまで見た');
   gstate = 'dead'; deadCooldown = 1; timeScale = 1;
   comboCount = 0; comboTimer = 0;
   commClear();
@@ -8692,7 +8695,7 @@ function finishBoss() {
   pushBonus(P.x, P.y - 50, `${def.name} DEFEATED`, def.css);
   timeScale = 1;
   const firstClear = chBossBest() <= idx;   // story scenes mid-chapter play on the first win only (LOG replays them)
-  track(`boss/${def.id}${firstClear ? '/first' : ''}`, `${def.name} 撃破${firstClear ? '（初）' : ''}`);
+  track(`${firstClear ? '⭐ 初撃破' : '⚔ 撃破'}：${def.name}（${chKey(chapter)}）`, firstClear ? 'はじめて倒した' : 'もう一度倒した');
   if (chapter === 4) { if (idx + 1 > bossBest4) { bossBest4 = idx + 1; localStorage.setItem('hd_boss4', String(bossBest4)); } }
   else if (chapter === 3) { if (idx + 1 > bossBest3) { bossBest3 = idx + 1; localStorage.setItem('hd_boss3', String(bossBest3)); } }
   else if (chapter === 2) { if (idx + 1 > bossBest2) { bossBest2 = idx + 1; localStorage.setItem('hd_boss2', String(bossBest2)); } }
