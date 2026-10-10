@@ -11,7 +11,7 @@ Three.js + WebGL で描画する、タップひとつで遊べる横スクロー
 - **やり込み**：パイロットレベル（最大 Lv80）、42 スキルのツリー、装備枠、HULL（耐久）、シナジー、スキン、9 つの隠し要素
 - **3D モデル**（glTF）と、プレイに合わせて変化する **手続き合成の BGM**
 
-[![Play](https://img.shields.io/badge/play-online-00e8ff?style=flat-square)](https://junia2009.github.io/hover-dodge/) ![Version](https://img.shields.io/badge/version-3.6.5-aa44ff?style=flat-square)
+[![Play](https://img.shields.io/badge/play-online-00e8ff?style=flat-square)](https://junia2009.github.io/hover-dodge/) ![Version](https://img.shields.io/badge/version-3.6.6-aa44ff?style=flat-square)
 
 ---
 
@@ -396,11 +396,12 @@ Three.js + WebGL で描画する、タップひとつで遊べる横スクロー
 - **Canvas 2D** — ワールド座標に追従するスコアポップアップ
 - **Web Audio API** — SE・声・インタラクティブ BGM をすべて手続き合成（lookahead スケジューラ）
 - **Service Worker** — オフライン / PWA。ページ本体はネット優先、3D モデルは専用キャッシュ、その他は stale-while-revalidate。新しいバージョンが出るとタイトルに「NEW VERSION — タップで更新」
-- **アクセス解析（GoatCounter）** — Cookie なし・個人を特定する情報なし。`index.html` の `GC_CODE` にサイトコードを入れると有効になる（空なら何も送らない。localhost やテスト環境では送らない）。ページ表示のほか、次のイベントを記録：
-  - `run/ch1`〜`ch4` / `run/pilot` — 出撃
-  - `boss/<id>`（初撃破は `boss/<id>/first`）— ボス撃破
-  - `clear/ch1`〜`ch4` — 章クリア
-  - `over/<章>/phase<N>` — 撃墜（どこで落ちたか）
+- **アクセス解析（GoatCounter）** — Cookie なし・個人を特定する情報なし。`index.html` の `GC_CODE` にサイトコードを入れると有効になる（空なら何も送らない。localhost やテスト環境では送らない）。管理画面で読みやすいよう、記録名は日本語＋絵文字：
+  - `🎮 ゲームを開いた` — ページ表示（`/` と `/index.html` をまとめる）
+  - `🚀 出撃：第一章`〜`最終章` / `パイロットモード`
+  - `⭐ 初撃破：STYX（第一章）` / `⚔ 撃破：…` — ボス撃破（はじめてか、2 回目以降か）
+  - `🏆 クリア：第一章` — エンディング（スタッフロール）まで見た
+  - `💥 撃墜：最終章 PHASE 3` — どこでやられたか
 - **localStorage**:
   - `hd_hi` — 自己ベスト（秒）
   - `hd_xp` / `hd_xp_life` — 所持 XP / 累計獲得 XP（パイロットレベルの元）
@@ -484,6 +485,7 @@ hover-dodge/
 
 | Version | 内容 |
 | :---: | --- |
+| **3.6.6**  | アクセス解析の記録名を日本語＋絵文字に（🎮 ゲームを開いた／🚀 出撃：第一章／⭐ 初撃破：STYX（第一章）／🏆 クリア／💥 撃墜：最終章 PHASE 3）。ページ表示は 1 行にまとめる |
 | **3.6.5**  | アクセス解析を有効化（GoatCounter のサイトコード `hover-dodge`） |
 | **3.6.4**  | アクセス解析の仕組みを追加（GoatCounter・Cookie なし、`GC_CODE` を設定するまでは無効）：ページ表示に加えて、出撃・ボス撃破（初撃破かどうか）・章クリア・撃墜（章とフェーズ）をイベントとして記録 |
 | **3.6.3**  | パウロの **3D モデル**（`models/paulo.glb`）を追加。オレンジの丸いドローンに、シアンの一つ目・アンテナ・小さな腕・耳センサー・記録係の赤い REC ランプ・浮遊スラスター。見送りシーンではレイの肩のあたりに浮かび、自己紹介で手を振り、パラスに会うと跳ねて REC ランプが点滅する |
